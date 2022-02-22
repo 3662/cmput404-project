@@ -19,7 +19,7 @@ def display_authors(request):
 """
 Retrieve and display a single author
 """
-def display_author(request, slug):
-    author = Author.objects.get(slug=slug)
+def display_author(request, id):
+    author = Author.objects.get(id=id)
 
     return HttpResponse(author)

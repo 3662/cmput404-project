@@ -10,7 +10,7 @@
             {% for author in authors %}
 
             <div class="author">
-                <h2> <b> Author: </b> <a href="{% url 'display_author' slug=author.slug %}"> {{author.display_name}} </a></h2>
+                <h2> <b> Author: </b> <a href="{% url 'display_author' id=author.id %}"> {{author.display_name}} </a></h2>
                 <p> <b> Type: </b> {{author.type}} </p>
                 <p> <b> ID: </b> {{author.id}} </p>
                 <p> <b> ULR: </b> {{author.url}} </p>
