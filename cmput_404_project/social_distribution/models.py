@@ -23,3 +23,20 @@ class Author(AbstractUser):
         return self.username
 
 
+class Post(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    author = models.ForeignKey(Author, on_delete=models.CASCADE)
+    source = models.URLField(default=None)
+    origin = models.URLField(default=None)
+    title = models.CharField(max_length=100)
+    description = models.CharField(max_length=100, default='')
+    content_type = models.CharField(max_length=30, default=None)
+    # category = models.ManyToManyField("Category")
+    count = models.IntegerField(default=0)
+    published = models.DateTimeField(default=timezone.now, editable=False)
+    visibility = models.CharField(max_length=7, default='PUBLIC')
+    unlisted = models.BooleanField(default=False)
+
+
+    def __str__(self):
+        return self.title
