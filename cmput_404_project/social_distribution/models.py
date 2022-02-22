@@ -15,6 +15,9 @@ class Author(AbstractUser):
     host = models.URLField()
     github = models.URLField()
     profile_image = models.URLField()
+
+    followers = models.ManyToManyField('self')
+    following = models.ManyToManyField('self')
     
     objects = AuthorManager()
 
@@ -44,3 +47,11 @@ class Post(models.Model):
 
 class Category(models.Model):
     value = models.CharField(max_length=100)
+
+
+class FollowRequest(models.Model):
+    summmary = models.CharField(max_length=100)
+    from_author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='follow_request_from')
+    to_author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='follow_request_to')
+    date_created = models.DateTimeField(default=timezone.now, editable=False)
+
