@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Authors</title>
+    </head>
+    <body>
+        <h1>List of Authors</h1>
+        <div class="authors">
+            {% for author in authors %}
+
+            <div class="author">
+                <h2> <b> Author: </b> <a href="{% url 'display_author' slug=author.slug %}"> {{author.display_name}} </a></h2>
+                <p> <b> Type: </b> {{author.type}} </p>
+                <p> <b> ID: </b> {{author.id}} </p>
+                <p> <b> ULR: </b> {{author.url}} </p>
+                <p> <b> Host: </b> {{author.host}} </p>
+                <p> <b> Github: </b> {{author.github}} </p>
+                <p> <b> Profile Image: </b> {{author.profile_image}} </p>
+            </div>
+
+            {% endfor %}
+        </div>
+    </body>
+</html>
