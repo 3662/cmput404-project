@@ -1,4 +1,4 @@
 from django.contrib import admin
-from .models import Author
+from social_distribution.models import Author
 
-admin.site.register(Author)
+# admin.site.register(Author)

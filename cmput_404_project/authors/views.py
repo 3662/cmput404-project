@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import Author
+from social_distribution.models import Author
 from django.http import HttpResponse
 
 # Create your views here.
@@ -12,7 +12,7 @@ from django.http import HttpResponse
 Retrieve and display all authors saved as Author model instances in the database
 """
 def display_authors(request):
-    authors = Author.objects.all().order_by('display_name')
+    authors = Author.objects.all()
 
     return render(request, 'authors/authors_base.html', {'authors': authors})
 
