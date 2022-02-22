@@ -31,7 +31,7 @@ class Post(models.Model):
     title = models.CharField(max_length=100)
     description = models.CharField(max_length=100, default='')
     content_type = models.CharField(max_length=30, default=None)
-    # category = models.ManyToManyField("Category")
+    category = models.ManyToManyField("Category")
     count = models.IntegerField(default=0)
     published = models.DateTimeField(default=timezone.now, editable=False)
     visibility = models.CharField(max_length=7, default='PUBLIC')
@@ -40,3 +40,7 @@ class Post(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class Category(models.Model):
+    value = models.CharField(max_length=100)
