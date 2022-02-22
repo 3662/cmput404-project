@@ -12,11 +12,6 @@ class AuthorManager(BaseUserManager):
         if not username:
             raise ValueError('Username cannot be empty')
 
-        sha = hashlib.sha256()
-        sha.update(bytes(username, 'utf-8'))
-        user_id = sha.hexdigest()
-        extra_fields['user_id'] = user_id
-
         author = self.model(username=username, **extra_fields)
         author.set_password(password)
         author.save()
@@ -31,10 +26,5 @@ class AuthorManager(BaseUserManager):
             raise ValueError('Superuser must have is_staff=True')
         if extra_fields.get('is_superuser') is not True:
             raise ValueError('Superuser must have is_superuser=True')
-
-        sha = hashlib.sha256()
-        sha.update(bytes(username, 'utf-8'))
-        user_id = sha.hexdigest()
-        extra_fields['user_id'] = user_id
 
         return self.create_user(username, password, **extra_fields)

@@ -1,11 +1,11 @@
 import uuid
 import hashlib
 
-
 from django.db import models
 from django.contrib.auth.models import AbstractUser 
 from django.utils import timezone
-
+from django.utils.text import slugify
+        
 from .managers import AuthorManager
 
 
@@ -15,7 +15,7 @@ class Author(AbstractUser):
         verbose_name = 'Author'
 
     # user_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user_id = models.CharField(max_length=64, unique=True)
+    id = models.SlugField(primary_key=True, max_length=64, unique=True)
     host = models.URLField()
     github = models.URLField()
     profile_image = models.URLField()
@@ -26,13 +26,19 @@ class Author(AbstractUser):
     objects = AuthorManager()
 
 
+    def save(self, *args, **kwargs):
+        sha = hashlib.sha256()
+        sha.update(bytes(self.username, 'utf-8'))
+        self.id = slugify(sha.hexdigest())
+        super(Author, self).save(*args, **kwargs)
+
     def __str__(self):
         return self.username
 
 
 class Post(models.Model):
     # post_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    post_id = models.CharField(primary_key=True, default=hashlib.sha256, max_length=64, editable=False, null=False, blank=False, unique=True)
+    id = models.SlugField(primary_key=True, max_length=64, unique=True)
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
     source = models.URLField(default=None)
     origin = models.URLField(default=None)
@@ -46,6 +52,12 @@ class Post(models.Model):
     visibility = models.CharField(max_length=7, default='PUBLIC')
     unlisted = models.BooleanField(default=False)
 
+
+    def save(self, *args, **kwargs):
+        sha = hashlib.sha256()
+        sha.update(bytes(self.author.username + self.title, 'utf-8'))   # TODO should change where we get the hash value
+        self.post_id = slugify(sha.hexdigest())
+        super(Post, self).save(*args, **kwargs)
 
     def __str__(self):
         return self.title

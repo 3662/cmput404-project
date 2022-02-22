@@ -9,7 +9,7 @@ class AuthorAdmin(UserAdmin):
     add_form = AuthorCreationForm
     form = AuthorChangeForm
     model = Author
-    list_display = ('username', 'user_id', 'is_staff', 'is_active')
+    list_display = ('username', 'id', 'is_staff', 'is_active')
     list_filter = ('username', 'is_staff', 'is_active')
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
