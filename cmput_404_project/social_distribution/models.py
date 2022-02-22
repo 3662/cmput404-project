@@ -15,8 +15,7 @@ class Author(AbstractUser):
         verbose_name = 'Author'
 
     # user_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    username = models.CharField(primary_key=True, max_length=30, unique=True)
-    user_id = models.CharField(max_length=64, null=False, blank=False, unique=True)
+    user_id = models.CharField(max_length=64, unique=True)
     host = models.URLField()
     github = models.URLField()
     profile_image = models.URLField()

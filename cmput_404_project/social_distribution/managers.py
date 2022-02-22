@@ -15,8 +15,9 @@ class AuthorManager(BaseUserManager):
         sha = hashlib.sha256()
         sha.update(bytes(username, 'utf-8'))
         user_id = sha.hexdigest()
+        extra_fields['user_id'] = user_id
 
-        author = self.model(username=username, user_id=user_id, **extra_fields)
+        author = self.model(username=username, **extra_fields)
         author.set_password(password)
         author.save()
         return author

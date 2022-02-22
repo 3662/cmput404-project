@@ -7,12 +7,12 @@ class AuthorCreationForm(UserCreationForm):
 
     class Meta:
         model = Author
-        fields = ('username',)
+        fields = ('username', 'user_id', 'first_name', 'last_name', 'profile_image', 'host', 'github')
 
 
 class AuthorChangeForm(UserChangeForm):
 
     class Meta:
         model = Author
-        fields = ('username',)
+        fields = ('username', 'user_id', 'first_name', 'last_name', 'profile_image', 'host', 'github')
 
