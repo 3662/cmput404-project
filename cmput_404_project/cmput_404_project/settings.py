@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'social_distribution',
     'authors',
     'service',
+    'posts',
 ]
 
 MIDDLEWARE = [
