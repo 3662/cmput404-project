@@ -25,6 +25,8 @@ class Author(AbstractUser):
     
     objects = AuthorManager()
 
+    def get_type(self):
+        return 'author'
 
     def save(self, *args, **kwargs):
         sha = hashlib.sha256()
