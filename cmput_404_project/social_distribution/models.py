@@ -32,6 +32,12 @@ class Author(AbstractUser):
         self.id = slugify(sha.hexdigest())
         super(Author, self).save(*args, **kwargs)
 
+
+    def get_full_name(self):
+        full_name = f"{self.first_name} {self.last_name}"
+        return full_name.strip()
+
+
     def __str__(self):
         return self.username
 
