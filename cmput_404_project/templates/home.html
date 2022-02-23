@@ -5,7 +5,12 @@
 
 {% block content %}
 {% if user.is_authenticated %}
-  Hi {{ user.username }}!
+  <p> Hi {{ user.first_name }}! </p>
+  <p> Username: {{user.username}} </p>
+  <p> ID: {{user.id}} </p>
+  <p><a href="{% url 'display_public_posts' %}">See public posts</a></p>
+  <p><a href="{% url 'new_post' %}">Create a new post</a></p>
+  <p><a href="{% url 'display_authors' %}">See authors</a></p>
   <p><a href="{% url 'logout' %}">Log Out</a></p>
 {% else %}
   <p>You are not logged in</p>
