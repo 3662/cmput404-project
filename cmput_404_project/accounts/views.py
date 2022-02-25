@@ -16,11 +16,12 @@ def signup_request(request):
         if form.is_valid():
             username = form.cleaned_data['username']
             password = form.cleaned_data['password1']
-            display_name = f"{form.cleaned_data['first_name']} {form.cleaned_data['last_name']}".strip()
+            first_name = form.cleaned_data['first_name']
+            last_name = form.cleaned_data['last_name']
             profile_image = form.cleaned_data['profile_image']
             host = f"{request.scheme}://{request.get_host()}/"
             github = form.cleaned_data['github']
-            author = Author.objects.create_user(username=username, password=password, display_name=display_name, profile_image=profile_image, host=host, github=github)
+            author = Author.objects.create_user(username=username, password=password, first_name=first_name, last_name=last_name, profile_image=profile_image, host=host, github=github)
             login(request, author)
             messages.success(request, 'Signup successful.')
             return redirect('home')
