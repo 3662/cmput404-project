@@ -13,21 +13,20 @@ def display_public_posts(request):
     return render(request, 'posts/public_posts.html', {'posts': posts})
 
 def display_own_posts(request):
-    posts = Post.objects.filter(author=request.user)
+    posts = Post.objects.filter(author=request.user).order_by('-published')
 
     return render(request, 'posts/own_posts.html', {'posts': posts})
-
-    # return HttpResponse("test")
 
 def edit_post(request, id):
     post = Post.objects.filter(id=id)[0]
 
     if request.method == "POST":
         form = PostForm(request.POST)
-        obj = form.save(commit=False)                
+
+        obj = form.save(commit=False)   
+
         obj.author = post.author
         obj.id = post.id
-
         obj.source = post.source
         obj.origin = post.origin
 
@@ -35,24 +34,15 @@ def edit_post(request, id):
 
         return redirect("/")
     else:
-        # post = Post.objects.filter(id=id)[0]
-
         data = {
             'title': post.title,
             'description': post.description,
             'image': post.image,
-            # 'author': post.author,
-            # 'id': post.id,
         }
 
         form = PostForm(data)
 
-        # form['title'] = post.title
-        # form['description'] = post.description
-
         return render(request, "posts/new_post.html", {'form': form})
-
-    return HttpResponse(id)
 
 def new_post(request):
     if request.method == "POST":
