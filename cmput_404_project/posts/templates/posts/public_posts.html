@@ -12,8 +12,12 @@
             <div class="post">
                 <p> <b> Published: </b> {{post.published}} </p>
                 <p> <b> Author: </b> {{post.author}} </p>
+                {% if post.image != null and post.image != '' %}
+                    <img src="{{post.image}}"> 
+                {% endif %}
                 <p> <b> Title: </b> {{post.title}} </p>
                 <p> <b> Description: </b> {{post.description}} </p>
+                <p> <b> ////////////////////////////////////////////// </b> </p>
             </div>
 
             {% endfor %}
