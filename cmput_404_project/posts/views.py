@@ -42,7 +42,7 @@ def edit_post(request, id):
 
         form = PostForm(data)
 
-        return render(request, "posts/new_post.html", {'form': form})
+        return render(request, "posts/edit_post.html", {'form': form})
 
 def new_post(request):
     if request.method == "POST":
