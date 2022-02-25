@@ -15,6 +15,7 @@ class Author(AbstractUser):
         verbose_name = 'Author'
 
     # user_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    type = 'author'
     id = models.SlugField(primary_key=True, max_length=64, unique=True)
     host = models.URLField()
     github = models.URLField()
@@ -25,6 +26,8 @@ class Author(AbstractUser):
     
     objects = AuthorManager()
 
+    def get_type(self):
+        return 'author'
 
     def save(self, *args, **kwargs):
         sha = hashlib.sha256()
