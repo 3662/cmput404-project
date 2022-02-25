@@ -8,9 +8,41 @@ from django.utils.text import slugify
 import time
 
 def display_public_posts(request):
-    posts = Post.objects.all().order_by('published')
+    posts = Post.objects.all().order_by('-published')
 
     return render(request, 'posts/public_posts.html', {'posts': posts})
+
+def display_own_posts(request):
+    posts = Post.objects.filter(author=request.user).order_by('-published')
+
+    return render(request, 'posts/own_posts.html', {'posts': posts})
+
+def edit_post(request, id):
+    post = Post.objects.filter(id=id)[0]
+
+    if request.method == "POST":
+        form = PostForm(request.POST)
+
+        obj = form.save(commit=False)   
+
+        obj.author = post.author
+        obj.id = post.id
+        obj.source = post.source
+        obj.origin = post.origin
+
+        obj.save()
+
+        return redirect("/")
+    else:
+        data = {
+            'title': post.title,
+            'description': post.description,
+            'image': post.image,
+        }
+
+        form = PostForm(data)
+
+        return render(request, "posts/edit_post.html", {'form': form})
 
 def new_post(request):
     if request.method == "POST":
