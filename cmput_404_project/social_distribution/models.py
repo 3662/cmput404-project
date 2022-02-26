@@ -40,11 +40,11 @@ class Author(AbstractUser):
 class Post(models.Model):
     # id = models.SlugField(primary_key=True, max_length=64, unique=True)
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    author = models.ForeignKey(Author, on_delete=models.CASCADE)
+    author = models.ForeignKey(Author, on_delete=models.CASCADE, default=None, null=True, blank=True)
     source = models.URLField(null=True, default=None)
     origin = models.URLField(null=True, default=None)
     image = models.URLField(null=True, default=None)
-    title = models.CharField(max_length=100)
+    title = models.CharField(max_length=100, default='')
     description = models.TextField(max_length=1000, default='')
     content_type = models.CharField(max_length=30, default='text/plain')
     # category = models.ManyToManyField("Category")
