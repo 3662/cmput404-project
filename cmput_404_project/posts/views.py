@@ -26,7 +26,6 @@ def edit_post(request, id):
         obj = form.save(commit=False)   
 
         obj.author = post.author
-        obj.id = post.id
         obj.source = post.source
         obj.origin = post.origin
 
@@ -49,7 +48,6 @@ def new_post(request):
         form = PostForm(request.POST)
         obj = form.save(commit=False)                
         obj.author = request.user
-        obj.id = create_post_id(request.user.username)
 
         # TODO set proper URls
         obj.source = ""
@@ -62,9 +60,3 @@ def new_post(request):
         form = PostForm()
 
         return render(request, "posts/new_post.html", {'form': form})
-
-def create_post_id(username):
-    sha = hashlib.sha256()
-    sha.update(bytes(username+str(int(time.time())), 'utf-8'))
-
-    return slugify(sha.hexdigest())
