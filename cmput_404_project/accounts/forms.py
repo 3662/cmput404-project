@@ -19,5 +19,5 @@ class AuthorChangeForm(UserChangeForm):
 
     class Meta:
         model = Author
-        fields = ('username', 'first_name', 'last_name', 'profile_image', 'github')
+        fields = ('first_name', 'last_name', 'profile_image', 'github')
 
