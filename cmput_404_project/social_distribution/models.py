@@ -48,7 +48,7 @@ class Post(models.Model):
     description = models.TextField(max_length=1000, default='')
     content_type = models.CharField(max_length=30, default='text/plain')
     # category = models.ManyToManyField("Category")
-    category = models.CharField(max_length=100, default='')
+    categories = models.CharField(max_length=100, default='')
     count = models.IntegerField(default=0)
     published = models.DateTimeField(default=timezone.now, editable=False)
     visibility = models.CharField(max_length=7, default='PUBLIC')
