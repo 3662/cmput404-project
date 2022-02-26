@@ -15,7 +15,7 @@ class Author(AbstractUser):
         verbose_name = 'Author'
 
     # user_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    type = 'author'
+    type = models.CharField(max_length=6, default='author')
     id = models.SlugField(primary_key=True, max_length=64, unique=True)
     host = models.URLField()
     github = models.URLField()
@@ -25,6 +25,8 @@ class Author(AbstractUser):
     following = models.ManyToManyField('self')
     
     objects = AuthorManager()
+
+    REQUIRED_FIELDS = ['first_name', 'last_name', 'host', 'github', 'profile_image']
 
     def get_type(self):
         return 'author'
