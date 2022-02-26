@@ -22,7 +22,7 @@ class Author(AbstractUser):
     profile_image = models.URLField()
 
     followers = models.ManyToManyField('self')
-    following = models.ManyToManyField('self')
+    following = models.ManyToManyField('self')      # TODO is following field necessary? 
     
     objects = AuthorManager()
 
