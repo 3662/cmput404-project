@@ -14,26 +14,18 @@ class Author(AbstractUser):
     class Meta:
         verbose_name = 'Author'
 
-    # user_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    type = 'author'
-    id = models.SlugField(primary_key=True, max_length=64, unique=True)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    # id = models.SlugField(primary_key=True, max_length=64, unique=True)
     host = models.URLField()
     github = models.URLField()
     profile_image = models.URLField()
 
     followers = models.ManyToManyField('self')
-    following = models.ManyToManyField('self')
+    following = models.ManyToManyField('self')      # TODO is following field necessary? 
     
     objects = AuthorManager()
 
-    def get_type(self):
-        return 'author'
-
-    def save(self, *args, **kwargs):
-        sha = hashlib.sha256()
-        sha.update(bytes(self.username, 'utf-8'))
-        self.id = slugify(sha.hexdigest())
-        super(Author, self).save(*args, **kwargs)
+    REQUIRED_FIELDS = ['first_name', 'last_name', 'host', 'github', 'profile_image']
 
 
     def get_full_name(self):
@@ -46,13 +38,13 @@ class Author(AbstractUser):
 
 
 class Post(models.Model):
-    # post_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    id = models.SlugField(primary_key=True, max_length=64, unique=True)
-    author = models.ForeignKey(Author, on_delete=models.CASCADE)
+    # id = models.SlugField(primary_key=True, max_length=64, unique=True)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    author = models.ForeignKey(Author, on_delete=models.CASCADE, default=None, null=True, blank=True)
     source = models.URLField(null=True, default=None)
     origin = models.URLField(null=True, default=None)
     image = models.URLField(null=True, default=None)
-    title = models.CharField(max_length=100)
+    title = models.CharField(max_length=100, default='')
     description = models.TextField(max_length=1000, default='')
     content_type = models.CharField(max_length=30, default='text/plain')
     # category = models.ManyToManyField("Category")
@@ -62,12 +54,6 @@ class Post(models.Model):
     visibility = models.CharField(max_length=7, default='PUBLIC')
     unlisted = models.BooleanField(default=False)
 
-
-    def save(self, *args, **kwargs):
-        sha = hashlib.sha256()
-        sha.update(bytes(self.author.username + self.title, 'utf-8'))   # TODO should change where we get the hash value
-        self.post_id = slugify(sha.hexdigest())
-        super(Post, self).save(*args, **kwargs)
 
     def __str__(self):
         return self.title
