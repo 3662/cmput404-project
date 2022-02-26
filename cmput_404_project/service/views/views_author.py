@@ -1,9 +1,11 @@
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_http_methods
 from django.core.paginator import Paginator, EmptyPage
-from django.http import Http404, JsonResponse
+from django.http import Http404, HttpResponseRedirect, JsonResponse
+from django.db.models import F
 
 from social_distribution.models import Author
+from accounts.forms import AuthorChangeForm
 
 DEFAULT_PAGE = 1
 DEFAULT_SIZE = 25
@@ -31,13 +33,28 @@ def authors_detail(request):
     return JsonResponse(data)
 
 
-@require_http_methods(["GET"])
+@require_http_methods(["GET", "POST"])
 def author_detail(request, author_id):
     '''
-    Returns JSON response of the detail of the author with author_id.
+    GET: Returns JSON response of the detail of the author with author_id.
+    POST: Update author_id's profile and returns json response of the author's updated details.
     '''
     author = get_object_or_404(Author, pk=author_id)
-    return JsonResponse(get_author_detail(author))
+    if request.method == 'GET':
+        return JsonResponse(get_author_detail(author))
+    else:
+        # TODO test POST request
+        if not request.user.is_authenticated():
+            return render(request, '/accounts/login/')     # TODO change redirect url 
+        form = AuthorChangeForm(request.POST, instance=request.user)
+        if form.is_valid():
+            author.first_name = form.cleaned_data['first_name']
+            author.last_name = form.cleaned_data['last_name']
+            author.github = form.cleaned_data["github"]
+            author.profile_image = form.cleaned_data['profile_image']
+            author.save(update_fields=['first_name', 'last_name', 'github', 'profile_image'])
+
+            return HttpResponseRedirect(f'/service/authors/{author_id}')
 
 
 def get_author_detail(author) -> dict:
