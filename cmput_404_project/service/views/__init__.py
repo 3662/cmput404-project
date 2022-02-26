@@ -1,0 +1,1 @@
+from .views_author import authors_detail, author_detail
