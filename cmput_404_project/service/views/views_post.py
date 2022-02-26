@@ -19,6 +19,7 @@ class PostView(View):
         '''
         GET [local, remote]: Returns a JSON respone that contains the public post whose id is post_id.
         '''
+
         raise NotImplementedError()
 
     def head(self, request, *args, **kwargs):
@@ -90,7 +91,7 @@ class PostsView(View):
         author = get_object_or_404(Author, pk=author_id)
         try:
             q = Post.objects.all().filter(author=author)
-            q = q.filter(visibility='PUBLIC')
+            # q = q.filter(visibility='PUBLIC')
             q = q.order_by('-published')
             posts = Paginator(q, size).page(page)
         except EmptyPage:
