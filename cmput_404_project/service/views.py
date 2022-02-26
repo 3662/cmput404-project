@@ -1,13 +1,21 @@
 from django.shortcuts import render
-from django.core.paginator import Paginator
-from django.http import JsonResponse
+from django.core.paginator import Paginator, EmptyPage
+from django.http import Http404, JsonResponse
 
 from social_distribution.models import Author
 
+DEFAULT_PAGE = 1
+DEFAULT_SIZE = 25
 
-def authors_json(request):
-    # TODO pagination
-    authors = Author.objects.all()
+def authors(request):
+    page = int(request.GET.get('page', DEFAULT_PAGE))
+    size = int(request.GET.get('size', DEFAULT_SIZE))
+
+    try:
+        authors = Paginator(Author.objects.all(), size).page(page)
+    except EmptyPage:
+        raise Http404('Page does not exist')
+    
     data = dict()
     data['type'] = 'authors'
     data['items'] = []
