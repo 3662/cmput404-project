@@ -20,6 +20,7 @@ class PostView(View):
         GET [local, remote]: Returns a JSON respone that contains the public post whose id is post_id.
         '''
 
+        
         raise NotImplementedError()
 
     def head(self, request, *args, **kwargs):
@@ -58,7 +59,7 @@ class PostsView(View):
         recent posts from author_id.
         '''
         author_id = kwargs.get('author_id', '')
-        return JsonResponse(self._get_public_posts(request, author_id))
+        return JsonResponse(self._get_posts(request, author_id))
 
     def head(self, request, *args, **kwargs):
         '''
@@ -81,7 +82,7 @@ class PostsView(View):
         p.save()
         return JsonResponse(get_post_detail(p, author))
 
-    def _get_posts(request, author_id) -> dict:
+    def _get_posts(self, request, author_id) -> dict:
         '''
         Returns a dict that contains a list of posts.
         '''
@@ -91,7 +92,7 @@ class PostsView(View):
         author = get_object_or_404(Author, pk=author_id)
         try:
             q = Post.objects.all().filter(author=author)
-            # q = q.filter(visibility='PUBLIC')
+            q = q.filter(visibility='PUBLIC')
             q = q.order_by('-published')
             posts = Paginator(q, size).page(page)
         except EmptyPage:
@@ -117,7 +118,7 @@ def get_post_detail(post, author) -> dict:
     d['description'] = post.description
     d['contentType'] = post.content_type
     d['author'] = get_author_detail(author)
-    d['categories'] = post.categories.strip().split(',')
+    d['categories'] = [] if post.categories == '' else post.categories.strip().split(',')
     # TODO comments
 
     return d
