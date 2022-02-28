@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Authors</title>
+    </head>
+    <body>
+        <h1>List of Authors</h1>
+        <div class="authors">
+            {% for author in authors %}
+
+            <div class="author">
+                <h2> <b> Author: </b> <a href="{% url 'display_author' id=author.id %}"> {{author.get_full_name}} </a></h2>
+                <p> <b> Type: </b> author </p>
+                <p> <b> ID: </b> {{author.id}} </p>
+                <p> <b> Display Name: </b> {{author.first_name}} {{author.last_name}} </p>
+                <p> <b> ULR: </b> {{author.url}} </p>
+                <p> <b> Host: </b> {{author.host}} </p>
+                <p> <b> Github: </b> {{author.github}} </p>
+                <p> <b> Profile Image: </b> {{author.profile_image}} </p>
+                <div class="author">
+                    <form action="{% url 'author_friend_view' %}" method="POST" class='author_friend_view' id='{{author.id}}' >
+                       {% csrf_token %}
+                       <input type="hidden" name="user" value={{author.id}}>
+                            {% if author.id in f_send %}
+                                <button type="submit" class="ui button like-btn{{author.id}}" disabled="disabled">
+                                   Waiting for response
+                                </button>
+                                <button type="submit" name="action_flag" value="R" class="ui button like-btn{{author.id}}")>
+                                    Revoke/Withdraw
+                                </button>
+                            {% else %}
+                                {% if author.id in f_accept %}
+                                    <button type="submit" class="ui button like-btn{{author.id}}" disabled="disabled">
+                                       Friend
+                                    </button>
+                                    <button type="submit" name="action_flag" value="F" class="ui button like-btn{{author.id}}")>
+                                         Revoke/Withdraw
+                                    </button>
+                                {% else %}
+                                    <button type="submit" name="action_flag" value="I" class="ui button like-btn{{author.id}}">
+                                       Invite
+                                    </button>
+                                {% endif %}
+                            {% endif %}
+                    </form>
+                </div>
+            </div>
+
+            {% endfor %}
+        </div>
+    </body>
+</html>
