@@ -60,7 +60,7 @@ class Post(models.Model):
 
 
 class FollowRequest(models.Model):
-    summary = models.CharField(max_length=100)
+    summary = models.CharField(max_length=100, default='')
     from_author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='follow_request_from')
     to_author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='follow_request_to')
     date_created = models.DateTimeField(default=timezone.now, editable=False)
