@@ -31,9 +31,15 @@
                                 </button>
                             {% else %}
                                 {% if author.id in f_accept %}
-                                    <button type="submit" class="ui button like-btn{{author.id}}" disabled="disabled">
-                                       Friend
-                                    </button>
+                                    {% if author.id in cross_qs %}
+                                       <button type="submit" class="ui button like-btn{{author.id}}" disabled="disabled">
+                                          Friend
+                                       </button>
+                                    {% else %}
+                                       <button type="submit" class="ui button like-btn{{author.id}}" disabled="disabled">
+                                          Following
+                                       </button>
+                                    {% endif %}
                                     <button type="submit" name="action_flag" value="F" class="ui button like-btn{{author.id}}")>
                                          Revoke/Withdraw
                                     </button>
