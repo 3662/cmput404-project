@@ -1,0 +1,27 @@
+<!-- templates/accounts/manage_profile.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>{% block title %}Manage Profile{% endblock %}</title>
+</head>
+<body>
+  <main>
+    <h2>Manage your Profile</h2>
+    {% if user.is_authenticated %}
+    <p> Hi {{ user.first_name }}! </p>
+    <p> Username: {{user.username}} </p>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Save changes</button>
+    </form>
+
+    {% else %}
+    <p>You have to be logged in to view this page</p>
+    <a href="{% url 'login' %}">Log In</a>
+    <a href="{% url 'accounts:signup' %}">Sign up</a>
+    {% endif %}
+  </main>
+</body>
+</html>
