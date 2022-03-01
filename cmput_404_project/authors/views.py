@@ -30,8 +30,8 @@ def display_author(request, id):
 def author_list_view(request):
     qs = Author.objects.all().exclude(username=request.user)
     sender = Author.objects.get(username=request.user)
-    s_qs = Friends.objects.filter(sender=sender, status='send').values_list('receiver',flat=True)
-    r_qs = Friends.objects.filter(sender=sender, status='accepted').values_list('receiver',flat=True)
+    s_qs = Friends.objects.filter(sender=sender, status='send').values_list('receiver', flat=True)
+    r_qs = Friends.objects.filter(sender=sender, status='accepted').values_list('receiver', flat=True)
     context = {'authors': qs,
                'friend': request.user,
                'f_send': s_qs,
@@ -46,8 +46,8 @@ def author_friend_view(request):
 
         recv = Author.objects.get(id=user)
         send = Author.objects.get(username=request.user)
-        if action_flag=='I':
-            friend, inserted = Friends.objects.get_or_create(receiver=recv, sender=send,status='send')
+        if action_flag == 'I':
+            friend, inserted = Friends.objects.get_or_create(receiver=recv, sender=send, status='send')
             #if not inserted:
             if inserted:
                 #post.liked.remove(request.user)
@@ -57,11 +57,11 @@ def author_friend_view(request):
                 #post.liked.add(request.user)
                 #recv.save()
                 friend.save()
-        if action_flag=='R':
-            Friends.objects.get(receiver=recv, sender=send,status='send').delete()
+        if action_flag == 'R':
+            Friends.objects.get(receiver=recv, sender=send, status='send').delete()
             #friend.delete()
-        if action_flag=='F':
-            Friends.objects.get(receiver=recv, sender=send,status='accepted').delete()
+        if action_flag == 'F':
+            Friends.objects.get(receiver=recv, sender=send, status='accepted').delete()
             send.followers.remove(recv)
 
     return redirect('/authors/author_list')
@@ -71,10 +71,10 @@ def author_friend_view(request):
 def pending_action_list_view(request):
     me = Author.objects.get(username=request.user)
     qs = Author.objects.all().exclude(username=request.user)
-    f_qs = Friends.objects.filter(status='send',receiver=me).exclude(sender=me).values_list('sender',flat=True)
+    f_qs = Friends.objects.filter(status='send', receiver=me).exclude(sender=me).values_list('sender', flat=True)
     context = {
-        'authors':qs,
-        'f_qs':f_qs,
+        'authors': qs,
+        'f_qs': f_qs,
     }
     return render(request, 'authors/pending_response.html', context)
 
@@ -85,10 +85,10 @@ def pending_action_view(request):
         sender = Author.objects.get(id=user)
         me = Author.objects.get(username=request.user)
         if accept == 'A':
-            friend = Friends.objects.filter(receiver=me, sender=sender,status='send').update(status='accepted')
+            friend = Friends.objects.filter(receiver=me, sender=sender, status='send').update(status='accepted')
             me.followers.add(sender)
         if accept == 'R':
-            friend = Friends.objects.filter(receiver=me, sender=sender,status='send')
+            friend = Friends.objects.filter(receiver=me, sender=sender, status='send')
             friend.delete()
             #me.followers.remove(sender)
 

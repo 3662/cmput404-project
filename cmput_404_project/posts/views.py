@@ -78,7 +78,7 @@ def like_post1(request):
         like, inserted = Like.objects.get_or_create(author=request.user, post=post)
         if not inserted:
             post.liked.remove(request.user)
-            rec=Like.objects.get(author=request.user, post=post)
+            rec = Like.objects.get(author=request.user, post=post)
             rec.delete()
         else:
             post.liked.add(request.user)

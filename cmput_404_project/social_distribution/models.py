@@ -60,7 +60,7 @@ class Post(models.Model):
 
 
 class FollowRequest(models.Model):
-    summmary = models.CharField(max_length=100)
+    summary = models.CharField(max_length=100)
     from_author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='follow_request_from')
     to_author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='follow_request_to')
     date_created = models.DateTimeField(default=timezone.now, editable=False)
@@ -78,7 +78,7 @@ class Like(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4().hex, editable=False)
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
-    summary = models.CharField(max_length=100,null=True,blank=True)
+    summary = models.CharField(max_length=100, null=True, blank=True)
     date_created = models.DateTimeField(default=timezone.now, editable=False)
 
 STATUS_CHOICES = (
