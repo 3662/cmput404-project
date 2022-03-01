@@ -8,7 +8,6 @@
         <h1>List of Public Posts</h1>
         <div class="posts">
             {% for post in posts %}
-
             <div class="post">
                 <p> <b> Published: </b> {{post.published}} </p>
                 <p> <b> Author: </b> {{post.author}} </p>
@@ -17,6 +16,19 @@
                 {% endif %}
                 <p> <b> Title: </b> {{post.title}} </p>
                 <p> <b> Description: </b> {{post.description}} </p>
+                <div class="author">
+                    <form action="{% url 'like_post1' %}" method="POST" class='PostLike' id='{{post.id}}'>
+                       {% csrf_token %}
+                       <input type="hidden" name="post_id" value={{post.id}}>
+                       <button type="submit" class="ui button like-btn{{post.id}}">
+                        {% if author in post.liked.all %}
+                               UnLike
+                        {% else %}
+                               Like
+                        {% endif %}
+                       </button>
+                    </form>
+                </div>
                 <p> <b> ////////////////////////////////////////////// </b> </p>
             </div>
 

@@ -19,12 +19,9 @@ class Author(AbstractUser):
     host = models.URLField()
     github = models.URLField()
     profile_image = models.URLField()
-
     followers = models.ManyToManyField('self')
-    following = models.ManyToManyField('self')      # TODO is following field necessary? 
-    
+    following = models.ManyToManyField('self')      # TODO is following field necessary?
     objects = AuthorManager()
-
     REQUIRED_FIELDS = ['first_name', 'last_name', 'host', 'github', 'profile_image']
 
 
@@ -53,18 +50,17 @@ class Post(models.Model):
     published = models.DateTimeField(default=timezone.now, editable=False)
     visibility = models.CharField(max_length=7, default='PUBLIC')
     unlisted = models.BooleanField(default=False)
+    liked = models.ManyToManyField(Author, blank=True, related_name='likes')
 
-
-    def __str__(self):
-        return self.title
-
+#    def __str__(self):
+        #return self.title
 
 # class Category(models.Model):
     # value = models.CharField(max_length=100)
 
 
 class FollowRequest(models.Model):
-    summmary = models.CharField(max_length=100)
+    summary = models.CharField(max_length=100)
     from_author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='follow_request_from')
     to_author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='follow_request_to')
     date_created = models.DateTimeField(default=timezone.now, editable=False)
@@ -79,7 +75,32 @@ class Comment(models.Model):
 
 
 class Like(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4().hex, editable=False)
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
-    object = models.URLField(default=None)
-    summmary = models.CharField(max_length=100)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    summary = models.CharField(max_length=100, null=True, blank=True)
     date_created = models.DateTimeField(default=timezone.now, editable=False)
+
+STATUS_CHOICES = (
+    ('send', 'send'),
+    ('accepted', 'accepted')
+)
+class FriendManager(models.Manager):
+    def invatations_received(self, receiver):
+        qs = Friends.objects.filter(receiver=receiver, status='send')
+        return qs
+    def invatations_accepted(self, receiver):
+        qs = Friends.objects.filter(receiver=receiver, status='accepted')
+        return qs
+
+class Friends(models.Model):
+    sender = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='sender')
+    receiver = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='receiver')
+    status = models.CharField(max_length=8, choices=STATUS_CHOICES)
+    updated = models.DateTimeField(auto_now=True)
+    created = models.DateTimeField(auto_now_add=True)
+
+    objects = FriendManager()
+
+#    def __str__(self):
+#        return f"{self.sender}-{self.receiver}-{self.status}"
