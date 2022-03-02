@@ -17,8 +17,26 @@
                 {% endif %}
                 <p> <b> Title: </b> {{post.title}} </p>
                 <p> <b> Description: </b> {{post.description}} </p>
-                <p> <b> ////////////////////////////////////////////// </b> </p>
+
+                <div class="comments">
+                    <p><b>Comments...</b></p>
+                    {% for comment in post.comments %}
+                    <div class="comment">
+                        <p><b> {{comment.author}} </b> {{comment.content}} <i> {{comment.date_created}} </i></p>
+                    </div>
+                    {%endfor%}
+                </div>
+
+                <form action="{% url 'add_comment' id=post.id %}" method="POST" class='CommentForm' id='{{post.id}}'>
+                    <table>
+                        {{ comment_form }}
+                    </table>
+                    {% csrf_token %}
+                    <button> Post Comment</button>
+                </form>
             </div>
+            <br/>
+            <p> <b> ////////////////////////////////////////////// </b> </p>
 
             {% endfor %}
         </div>
