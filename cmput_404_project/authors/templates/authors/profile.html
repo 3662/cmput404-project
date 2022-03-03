@@ -3,7 +3,9 @@
 <html>
 <head>
   <meta charset="utf-8">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <title>Profile of {{author.get_full_name}}</title>
+  <button class="btn"><i class="fa fa-home" ></i> <a href="/">Home</a></button>
   <style>
       /* temporary quick styles for testing */
       body {
@@ -40,9 +42,10 @@
     <div class="box">
         {% if is_my_profile %}
             <p><a href="{% url 'display_like' %}">See My Liked Posts</a></p>
-            <p><a href="{% url 'author_list_view' %}">Send New Requests</a></p>
-            <p><a href="{% url 'pending_action_list_view' %}">See Incoming Requests</a></p>
+            <p><a href="{% url 'author_list_view' %}">Send New Follow Requests</a></p>
+            <p><a href="{% url 'pending_action_list_view' %}">Pending Requests</a></p>
             <p><a href="{% url 'accounts:manage_profile' %}">Edit my profile</a></p>
+            <p><a href="{% url 'friend_view' %}">My Friends</a></p>
             <p><a href="{% url 'logout' %}">Log Out</a></p>
         {% else %}
             <p><a href="#">Send A Request</a> (Not implemented yet)</p>

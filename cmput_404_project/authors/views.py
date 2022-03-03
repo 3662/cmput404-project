@@ -1,4 +1,4 @@
-from django.shortcuts import render,redirect
+from django.shortcuts import render, redirect
 from social_distribution.models import Author, Friends, FollowRequest, Post
 from django.http import HttpResponse
 from django.contrib.auth.mixins import LoginRequiredMixin
