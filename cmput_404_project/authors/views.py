@@ -1,5 +1,5 @@
 from django.shortcuts import render,redirect
-from social_distribution.models import Author,Friends,FollowRequest
+from social_distribution.models import Author, Friends, FollowRequest, Post
 from django.http import HttpResponse
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView, DetailView
@@ -25,8 +25,13 @@ Retrieve and display a single author
 """
 def display_author(request, id):
     author = Author.objects.get(id=id)
-
-    return HttpResponse(author)
+    posts = Post.objects.filter(author=author).order_by('-published')
+    context = {
+        'is_my_profile': request.user.id == id,
+        'author': author,
+        'posts': posts,
+    }
+    return render(request, 'authors/profile.html', context=context)
 
 
 def author_list_view(request):
