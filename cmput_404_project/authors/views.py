@@ -117,3 +117,18 @@ def follower_view1(request):
 def friends_view(request):
     authors = Author.objects.all()
     return render(request, 'authors/follower_list.html', {'authors': authors})
+
+
+def friends_view(request):
+    f_qs_list = []
+    authors = Friends.objects.filter(sender=request.user, status='accepted').values_list('receiver', flat=True)
+    for qs in authors:
+        cross_qs = Friends.objects.filter(sender=qs, receiver=request.user, status='accepted').count()
+        if cross_qs > 0:
+            f_qs_list.append(qs)
+    f_qs = Author.objects.filter(id__in=f_qs_list)
+    context = {
+        'authors': authors,
+        'f_qs': f_qs,
+    }
+    return render(request, 'authors/friends_list.html', context)
