@@ -1,5 +1,5 @@
 from django.forms import ModelForm
-from social_distribution.models import Post,Like
+from social_distribution.models import Post, Comment, Like
 
 class PostForm(ModelForm):
 
@@ -11,6 +11,14 @@ class PostForm(ModelForm):
         super(PostForm, self).__init__(*args, **kwargs)
         self.fields['image'].required = False
 
+class CommentForm(ModelForm):
+    
+    class Meta:
+        model = Comment
+        fields = ('content',)
+    
+    def __init__(self, *args, **kwargs):
+        super(CommentForm, self).__init__(*args, **kwargs)
 class PostLike(ModelForm):
 
     class Meta:
