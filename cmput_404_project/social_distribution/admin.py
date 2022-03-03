@@ -26,3 +26,4 @@ class AuthorAdmin(UserAdmin):
 
 
 admin.site.register(Author, AuthorAdmin)
+#admin.site.register(Like)

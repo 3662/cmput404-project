@@ -1,6 +1,5 @@
 from django.forms import ModelForm
-from social_distribution.models import Post
-from social_distribution.models import Comment
+from social_distribution.models import Post, Comment, Like
 
 class PostForm(ModelForm):
 
@@ -20,3 +19,12 @@ class CommentForm(ModelForm):
     
     def __init__(self, *args, **kwargs):
         super(CommentForm, self).__init__(*args, **kwargs)
+class PostLike(ModelForm):
+
+    class Meta:
+        model = Like
+        fields = ('post', 'author', 'summary')
+
+    def __init__(self, *args, **kwargs):
+        super(PostLike, self).__init__(*args, **kwargs)
+        #self.fields['date_created'].required = False
