@@ -1,0 +1,105 @@
+<!-- templates/authors/profile.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <title>Profile of {{author.get_full_name}}</title>
+  <button class="btn"><i class="fa fa-home" ></i> <a href="/">Home</a></button>
+  <style>
+      /* temporary quick styles for testing */
+      body {
+          font-family: Arial;
+      }
+      .box {
+          border: 1px solid grey;
+          padding: 10px;
+          margin: 5px;
+      }
+
+      .profile_image {
+          border: 1px solid grey;
+          width: 100px;
+          height: 100px;
+      }
+
+      .align-center {
+          text-align: center;
+          align-content: center;
+      }
+  </style>
+</head>
+<body>
+    <div class="box align-center">
+        <p>
+            <img class="profile_image" src="{{author.profile_image}}">
+        </p>
+        <h1>{{author.get_full_name}}</h1>
+        <p><b>Username:</b> {{author}}</p>
+        <p><b>Host:</b> {{author.host}}</p>
+        <p><b>GitHub:</b> {{author.github}}</p>
+    </div>
+    <div class="box">
+        {% if is_my_profile %}
+            <p><a href="{% url 'display_like' %}">See My Liked Posts</a></p>
+            <p><a href="{% url 'author_list_view' %}">Send New Follow Requests</a></p>
+            <p><a href="{% url 'pending_action_list_view' %}">Pending Requests</a></p>
+            <p><a href="{% url 'accounts:manage_profile' %}">Edit my profile</a></p>
+            <p><a href="{% url 'friend_view' %}">My Friends</a></p>
+            <p><a href="{% url 'logout' %}">Log Out</a></p>
+        {% else %}
+            <!-- <p><a href="#">Send A Request</a> (Not implemented yet)</p> -->
+            <div class="author">
+                    <form action="{% url 'author_profile_view' %}" method="POST" class='author_friend_view' id='{{author.id}}' >
+                       {% csrf_token %}
+                       <input type="hidden" name="user" value={{author.id}}>
+                            {% if author.id in f_send %}
+                                <button type="submit" class="ui button like-btn{{author.id}}" disabled="disabled">
+                                   Waiting for response
+                                </button>
+                                <button type="submit" name="action_flag" value="R" class="ui button like-btn{{author.id}}")>
+                                    Revoke/Withdraw
+                                </button>
+                            {% else %}
+                                {% if author.id in f_accept %}
+                                    {% if author.id in cross_qs %}
+                                       <button type="submit" class="ui button like-btn{{author.id}}" disabled="disabled">
+                                          Friend
+                                       </button>
+                                    {% else %}
+                                       <button type="submit" class="ui button like-btn{{author.id}}" disabled="disabled">
+                                          Following
+                                       </button>
+                                    {% endif %}
+                                    <button type="submit" name="action_flag" value="F" class="ui button like-btn{{author.id}}")>
+                                         Revoke/Withdraw
+                                    </button>
+                                {% else %}
+                                    <button type="submit" name="action_flag" value="I" class="ui button like-btn{{author.id}}">
+                                       Send Follow Request
+                                    </button>
+                                {% endif %}
+                            {% endif %}
+                    </form>
+                </div>
+        {% endif %}
+    </div>
+    
+    <h1>Posts:</h1>
+    <div class="box">
+        {% for post in posts %}
+            <div class="box">
+                <h2>{{post.title}}</h2>
+                <p><b> Published: </b> {{post.published}}</p>
+                {% if post.image != null and post.image != '' %}
+                    <img src="{{post.image}}"> 
+                {% endif %}
+                <p> <b> Description: </b> {{post.description}} </p>
+                {% if is_my_profile %}
+                    <a href="{% url 'edit_post' id=post.id %}"> Edit Post</a>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+</body>
+</html>
