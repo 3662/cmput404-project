@@ -1,4 +1,4 @@
-from social_distribution.models import Author, Post
+from social_distribution.models import Author, Post, Comment
 
 
 def create_dummy_authors(n):
@@ -51,7 +51,7 @@ def create_dummy_posts(n, author, visibility='PUBLIC', content_type='text/plain'
 
 
 def create_dummy_author_with_followers(num_followers):
-    '''Create a dummy author with num_followers followers.'''
+    '''Creates a dummy author with num_followers followers.'''
     author = Author.objects.create_user(username='test', 
                                         password='temporary',
                                         first_name = 'Test',
@@ -70,6 +70,15 @@ def create_dummy_author_with_followers(num_followers):
                                               profile_image='https://avatars.githubusercontent.com/u/55664235?v=4')
         author.followers.add(follower)
 
+
+def create_dummy_comments(n, author, post):
+    '''Creates n dummy comments to the post written by the author'''
+    for i in range(n):
+        Comment.objects.create(author=author, 
+                               post=post,
+                               content_type='text/plain',
+                               content=f'Test Comment{i}')
+        
 
     
 

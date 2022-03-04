@@ -3,7 +3,7 @@ import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractUser 
 from django.utils import timezone
-from django.utils.text import slugify
+from django.core.paginator import Paginator
         
 from .managers import AuthorManager
 
@@ -34,6 +34,20 @@ class Author(AbstractUser):
     def get_profile_url(self):
         return f'{self.host}authors/{self.id}'
 
+    def get_detail_dict(self) -> dict:
+        '''
+        Returns a dict containing the author information.
+        '''
+        d = {}
+        d['type'] = 'author'
+        d['id'] = self.get_id_url()
+        d['url'] = self.get_profile_url()
+        d['host'] = self.host
+        d['displayName'] = self.get_full_name()
+        d['github'] = self.github
+        d['profileImage'] = self.profile_image
+        return d
+
     def __str__(self):
         return self.username
 
@@ -47,7 +61,7 @@ class Post(models.Model):
     image = models.URLField(null=True, default=None)
     title = models.CharField(max_length=100, default='')
     description = models.TextField(max_length=150, default='')
-    content_type = models.CharField(max_length=30, default='text/plain')        # TODO change to ChoiceField
+    content_type = models.CharField(max_length=30, default='text/plain')        
     content = models.TextField(max_length=1000, default='')
     # category = models.ManyToManyField("Category")
     categories = models.CharField(max_length=100, default='')
@@ -57,6 +71,7 @@ class Post(models.Model):
     visibility = models.CharField(max_length=7, default='PUBLIC')
     unlisted = models.BooleanField(default=False)
     liked = models.ManyToManyField(Author, blank=True, related_name='likes')
+    comments_id = models.UUIDField(default=uuid.uuid4, editable=False)
 
     def save(self, *args, **kwargs):
         '''Upon save, update timestamps of the post'''
@@ -66,6 +81,9 @@ class Post(models.Model):
     def get_id_url(self):
         return f'{self.author.get_id_url()}/posts/{self.id}'
 
+    def get_comments_id_url(self):
+        return f'{self.author.get_id_url()}/posts/{self.comments_id}/comments'
+
     def get_list_of_categories(self):
         return [] if self.categories == '' else self.categories.strip().split(',')
 
@@ -74,6 +92,48 @@ class Post(models.Model):
 
     def get_iso_modified(self):
         return self.modified.replace(microsecond=0).isoformat()
+
+    def get_detail_dict(self) -> dict:
+        '''
+        Returns a dict that contains a post detail.
+        '''
+        d = {}
+        d['type'] = 'post'
+        d['title'] = self.title
+        d['id'] = self.get_id_url()
+        d['source'] = self.source
+        d['origin'] = self.origin
+        d['description'] = self.description
+        d['contentType'] = self.content_type
+        d['content'] = self.content
+        d['author'] = self.author.get_detail_dict()
+        d['categories'] = self.get_list_of_categories()
+        d['count'] = self.count
+        d['published'] = self.get_iso_published()
+        d['visibility'] = self.visibility
+        d['unlisted'] = self.unlisted
+
+        # TODO comments
+
+        return d
+
+    def get_comments_src_dict(self, page=1, size=5) -> dict:
+        '''
+        Returns a dict that contains the details of the comments for the post
+        '''
+        q = Comment.objects.all()  
+        q = q.filter(post=self)
+        q = q.order_by('-date_created')
+        comments = Paginator(q, size).page(page)
+
+        data = {}
+        data['type'] = 'comments'
+        data['page'] = page
+        data['size'] = size
+        data['post'] = self.get_id_url()
+        data['id'] = self.get_comments_id_url()
+        data['items'] = [c.get_detail_dict() for c in comments]
+        return data
 
 # class Category(models.Model):
     # value = models.CharField(max_length=100)
@@ -99,6 +159,22 @@ class Comment(models.Model):
 
     def get_iso_date_created(self):
         return self.date_created.replace(microsecond=0).isoformat()
+
+    def get_id_url(self):
+        return f'{self.post.get_comments_id_url()}/comments/{self.id}'
+
+    def get_detail_dict(self) -> dict:
+        '''
+        Returns a dict that contains a comment's detail.
+        '''
+        d = {}
+        d['type'] = 'comment' 
+        d['author'] = self.author.get_detail_dict()
+        d['comment'] = self.content
+        d['contentType'] = self.content_type
+        d['published'] = self.get_iso_date_created()
+        d['id'] = self.get_id_url()
+        return d
 
 class Like(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

@@ -8,7 +8,6 @@ from posts.forms import PostForm
 from django.core.exceptions import ValidationError
 
 from social_distribution.models import Author, Post
-from .views_author import get_author_detail
 
 
 class PostView(View):
@@ -28,7 +27,7 @@ class PostView(View):
         author = get_object_or_404(Author, pk=author_id)
         post = get_object_or_404(Post, pk=post_id, author_id=author_id, visibility="PUBLIC")
 
-        return JsonResponse(get_post_detail(post, author))
+        return JsonResponse(post.get_detail_dict())
 
 
     def head(self, request, *args, **kwargs):
@@ -43,7 +42,7 @@ class PostView(View):
         post_id = kwargs.get('post_id', '')
         author = get_object_or_404(Author, pk=author_id)
         post = get_object_or_404(Post, pk=post_id, author_id=author_id, visibility="PUBLIC")
-        data_json = json.dumps(get_post_detail(post, author))
+        data_json = json.dumps(post.get_detail_dict())
 
         response = HttpResponse()
         response.headers['Content-Type'] = 'application/json'
@@ -236,33 +235,10 @@ class PostsView(View):
 
         data = {}
         data['type'] = 'posts'
-        data['items'] = [get_post_detail(p, author) for p in posts]
+        data['items'] = [p.get_detail_dict() for p in posts]
         return data
 
 
 
-def get_post_detail(post, author) -> dict:
-    '''
-    Returns a dict that contains a post detail.
-    '''
-    d = {}
-    d['type'] = 'post'
-    d['title'] = post.title
-    d['id'] = post.get_id_url()
-    d['source'] = post.source
-    d['origin'] = post.origin
-    d['description'] = post.description
-    d['contentType'] = post.content_type
-    d['content'] = post.content
-    d['author'] = get_author_detail(author)
-    d['categories'] = post.get_list_of_categories()
-    d['count'] = post.count
-    d['published'] = post.get_iso_published()
-    d['visibility'] = post.visibility
-    d['unlisted'] = post.unlisted
-
-    # TODO comments
-
-    return d
 
         
