@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from social_distribution.models import Author, Friends, FollowRequest, Post
+from social_distribution.models import Author, Friends, FollowRequest, Post, Like
 from django.http import HttpResponse
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView, DetailView
@@ -38,6 +38,7 @@ def display_author(request, id):
         'f_accept': r_qs,
         'cross_qs': cross_qs,
         'friend': request.user,
+        'sender': sender,
     }
     return render(request, 'authors/profile.html', context=context)
 
@@ -154,11 +155,9 @@ def friends_view(request):
 def author_profile_view(request):
     if request.method == "POST":
         user = request.POST.get('user')
-        print(user)
         action_flag = request.POST.get('action_flag')
         recv = Author.objects.get(id=user)
         send = Author.objects.get(username=request.user)
-        send_id = Author.objects.values('id').filter(username=request.user)
 
         if action_flag == 'I':
             friend, inserted = Friends.objects.get_or_create(receiver=recv, sender=send,status='send')
@@ -182,3 +181,19 @@ def author_profile_view(request):
             send.followers.remove(recv)
 
     return redirect(f'/authors/{user}')
+
+
+def like_post2(request):
+    if request.method == "POST":
+        id = request.POST.get('post_id')
+        post = Post.objects.get(id=id)
+        like, inserted = Like.objects.get_or_create(author=request.user, post=post)
+        if not inserted:
+            post.liked.remove(request.user)
+            rec = Like.objects.get(author=request.user, post=post)
+            rec.delete()
+        else:
+            post.liked.add(request.user)
+            post.save()
+            like.save()
+    return redirect(f'/authors/{post.author.id}')
