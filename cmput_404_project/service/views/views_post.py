@@ -16,7 +16,11 @@ class PostView(View):
 
     def get(self, request, *args, **kwargs):
         '''
-        GET [local, remote]: Returns a JSON response that contains the public post whose id is post_id.
+        GET [local, remote]: Returns a JSON response with status code of 200 
+                             that contains the public post whose id is post_id.
+        
+        Returns: 
+            - 404: if author or post does not exist
         '''
         author_id = kwargs.get('author_id', '')
         post_id = kwargs.get('post_id', '')
@@ -29,6 +33,10 @@ class PostView(View):
     def head(self, request, *args, **kwargs):
         '''
         Handles HEAD request of the same GET request.
+
+        Returns: 
+            - 200: if the request is successful
+            - 404: if author or post does not exist 
         '''
         author_id = kwargs.get('author_id', '')
         post_id = kwargs.get('post_id', '')
@@ -47,7 +55,11 @@ class PostView(View):
         '''
         POST [local]: Updates the post whose id is post_id.
 
-        Note: author must be authenticated.
+        Returns: 
+            - 200: if the update is successful
+            - 400: if the data is invalid
+            - 403: if the user is not authenticated
+            - 404: if author or post does not exist 
         '''
         author_id = kwargs.get('author_id', '')
         post_id = kwargs.get('post_id', '')
@@ -70,10 +82,15 @@ class PostView(View):
     def delete(self, request, *args, **kwargs):
         '''
         DELETE [local]: removes the post whose id is post_id.
+
+        Returns: 
+            - 200: if the deletion was successful
+            - 404: if author or post does not exist 
         '''
         author_id = kwargs.get('author_id', '')
         post_id = kwargs.get('post_id', '')
-        post = get_object_or_404(Post, pk=post_id, author_id=author_id, visibility="PUBLIC")
+        author = Author.objects.get(id=author_id)
+        post = get_object_or_404(Post, pk=post_id, author=author)
         post.delete()
         return HttpResponse('Post successfully deleted')
 
@@ -84,6 +101,13 @@ class PostView(View):
 
         Note: if the post already exists, it will update the post with the new form data,
         but the user must be authenticated.
+
+        Returns:
+            - 200: if the post is successfully updated
+            - 201: if the post is successfully created
+            - 400: if the data is invalid
+            - 403: if the user is not authenticated
+            - 404: if author does not exist 
         '''
         status_code = 201
 
@@ -122,6 +146,7 @@ class PostView(View):
 
 
     def update_post(self, post, form):
+        '''Updates the fields of the post with the given valid form'''
         post.title = form.cleaned_data['title']
         post.description = form.cleaned_data['description']
         # TODO image
@@ -145,6 +170,10 @@ class PostsView(View):
         '''
         GET [local, remote]: Returns a JSON response that contains a list of the 
         recent posts from author_id.
+
+        Returns:
+            - 200: if successful
+            - 404: if author or page does not exist
         '''
         author_id = kwargs.get('author_id', '')
         return JsonResponse(self._get_posts(request, author_id))
@@ -152,6 +181,10 @@ class PostsView(View):
     def head(self, request, *args, **kwargs):
         '''
         Handles HEAD request of the same GET request.
+
+        Returns:
+            - 200: if successful
+            - 404: if author or page does not exist
         '''
         author_id = kwargs.get('author_id', '')
         data_json = json.dumps(self._get_posts(request, author_id))
@@ -164,7 +197,10 @@ class PostsView(View):
         '''
         POST [local]: Creates a new post, but generates a new id. 
 
-        If the post creation is successful, returns a JsonResponse with the content of the post.
+        Returns:
+            - 201: if the post is successfully created
+            - 400: if the data is invalid
+            - 404: if author does not exist 
         '''
         status_code = 201
         author_id = kwargs.get('author_id', '')
