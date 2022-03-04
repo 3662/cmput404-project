@@ -1,5 +1,4 @@
 import uuid
-import hashlib
 
 from django.db import models
 from django.contrib.auth.models import AbstractUser 
@@ -86,6 +85,9 @@ class FollowRequest(models.Model):
     to_author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='follow_request_to')
     date_created = models.DateTimeField(default=timezone.now, editable=False)
 
+    def get_iso_date_created(self):
+        return self.date_created.replace(microsecond=0).isoformat()
+
 
 class Comment(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -95,6 +97,8 @@ class Comment(models.Model):
     date_created = models.DateTimeField(default=timezone.now, editable=False)
     content = models.TextField(max_length=1000, default='')
 
+    def get_iso_date_created(self):
+        return self.date_created.replace(microsecond=0).isoformat()
 
 class Like(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -102,6 +106,10 @@ class Like(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
     summary = models.CharField(max_length=100, null=True, blank=True)
     date_created = models.DateTimeField(default=timezone.now, editable=False)
+
+    def get_iso_date_created(self):
+        return self.date_created.replace(microsecond=0).isoformat()
+
 
 STATUS_CHOICES = (
     ('send', 'send'),
