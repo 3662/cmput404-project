@@ -20,6 +20,7 @@ class PostView(View):
                              that contains the public post whose id is post_id.
         
         Returns: 
+            - 200: if successful
             - 404: if author or post does not exist
         '''
         author_id = kwargs.get('author_id', '')
@@ -169,7 +170,9 @@ class PostsView(View):
     def get(self, request, *args, **kwargs):
         '''
         GET [local, remote]: Returns a JSON response that contains a list of the 
-        recent posts from author_id.
+        recent posts from author_id. (paginated)
+
+        Default page = 1, size = 15
 
         Returns:
             - 200: if successful

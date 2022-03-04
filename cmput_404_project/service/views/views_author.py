@@ -12,21 +12,29 @@ from accounts.forms import AuthorChangeForm
 class AuthorsDetailView(View):
 
     DEFAULT_PAGE = 1
-    DEFAULT_SIZE = 25
+    DEFAULT_SIZE = 15
 
     http_method_names = ['get', 'head', 'options']
 
     def get(self, request, *args, **kwargs):
         '''
-        Returns JSON response of the details of the authors.
+        GET [local, remote]: Retrieves all author profiles on the server (paginated)
 
-        Default page = 1, size = 25
+        Default page = 1, size = 15
+
+        Returns: 
+            - 200: if successful
+            - 404: if page does not exist
         '''
         return JsonResponse(self._get_authors(request))
 
     def head(self, request, *args, **kwargs):
         '''
         Handles HEAD request the same GET request.
+
+        Returns: 
+            - 200: if successful
+            - 404: if page does not exist
         '''
         response = HttpResponse()
         response.headers['Content-Type'] = 'application/json'
@@ -34,6 +42,7 @@ class AuthorsDetailView(View):
         return response
 
     def _get_authors(self, request) -> dict:
+        '''Returns a dict of authors'''
         page = int(request.GET.get('page', self.DEFAULT_PAGE))
         size = int(request.GET.get('size', self.DEFAULT_SIZE))
 
@@ -54,7 +63,11 @@ class AuthorDetailView(View):
 
     def get(self, request, *args, **kwargs):
         '''
-        Returns JSON response of the detail of the author with author_id.
+        GET [local, remote]: Returns JSON response of the detail of the author with author_id.
+
+        Returns: 
+            - 200: if successful
+            - 404: if author does not exist
         '''
         author = get_object_or_404(Author, pk=kwargs.get('author_id', ''))
         return JsonResponse(get_author_detail(author))
@@ -62,6 +75,10 @@ class AuthorDetailView(View):
     def head(self, request, *args, **kwargs):
         '''
         Handles HEAD request the same GET request.
+
+        Returns: 
+            - 200: if successful
+            - 404: if author does not exist
         '''
         author = get_object_or_404(Author, pk=kwargs.get('author_id', ''))
         response = HttpResponse()
@@ -71,7 +88,13 @@ class AuthorDetailView(View):
 
     def post(self, request, *args, **kwargs):
         '''
-        Update author_id's profile and returns json response of the author's updated details.
+        POST [local]: Updates author_id's profile  
+
+        Returns:
+            - 200: if the post is successfully updated
+            - 400: if the data is invalid
+            - 403: if the user is not authenticated
+            - 404: if author does not exist 
         '''
         author_id = kwargs.pop('author_id', '')
         author = get_object_or_404(Author, pk=author_id)
