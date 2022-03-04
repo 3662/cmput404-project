@@ -1,15 +1,14 @@
-import json 
+import json
 
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from django.core.paginator import Paginator, EmptyPage
-from django.http import JsonResponse, HttpResponse, Http404
+from django.http import HttpResponseRedirect, JsonResponse, HttpResponse, Http404
 from django.views import View
+from posts.forms import PostForm
+from django.core.exceptions import ValidationError
 
 from social_distribution.models import Author, Post
 from .views_author import get_author_detail
-
-DEFAULT_PAGE = 1
-DEFAULT_SIZE = 15
 
 
 class PostView(View):
@@ -50,8 +49,23 @@ class PostView(View):
 
         Note: author must be authenticated.
         '''
-        raise NotImplementedError()
+        author_id = kwargs.get('author_id', '')
+        post_id = kwargs.get('post_id', '')
+        post = get_object_or_404(Post, pk=post_id, author_id=author_id)
+        if not request.user.is_authenticated:
+            status_code = 403
+            message = "You do not have permission to update this author's post."
+            return HttpResponse(message, status=status_code)     
 
+        form = PostForm(request.POST)
+        if form.is_valid():
+            self.update_post(post, form)
+
+            return HttpResponse("Post is successfully updated.")
+
+        status_code = 400
+        return HttpResponse('The form is not valid.', status=status_code)     
+            
 
     def delete(self, request, *args, **kwargs):
         '''
@@ -66,12 +80,65 @@ class PostView(View):
 
     def put(self, request, *args, **kwargs):
         '''
-        PUT [local]: creates a post where its id is post_id.
+        PUT [local]: creates a post where its id is post_id, if the given form data is valid.
+
+        Note: if the post already exists, it will update the post with the new form data,
+        but the user must be authenticated.
         '''
-        raise NotImplementedError()
+        status_code = 201
+
+        author_id = kwargs.pop('author_id', '')
+        post_id = kwargs.pop('post_id', '')
+        author = get_object_or_404(Author, pk=author_id)
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            status_code = 400
+            return HttpResponse('Data is not a valid json', status=status_code)
+
+        if Post.objects.filter(id=post_id, author=author).exists():
+            if not request.user.is_authenticated:
+                status_code = 403
+                message = "You do not have permission to update this author's post."
+                return HttpResponse(message, status=status_code)     
+
+            # update post with the given data
+            post = Post.objects.get(id=post_id, author=author)
+            form = PostForm(data)
+            if form.is_valid():
+                self.update_post(post, form)
+                return HttpResponse("Post is successfully updated.")
+
+            status_code = 400
+            return HttpResponse('The form is not valid.', status=status_code)     
+
+        try:
+            post = Post.objects.create(pk=post_id, author=author, **data)
+        except ValidationError as e:
+            status_code = 400
+            return HttpResponse('The form data is not valid.', status=status_code)
+        
+        return HttpResponse('Post successfully created', status=status_code)
 
 
+    def update_post(self, post, form):
+        post.title = form.cleaned_data['title']
+        post.description = form.cleaned_data['description']
+        # TODO image
+        # post.image = form.cleaned_data['image']
+        post.content_type = form.cleaned_data['content_type']
+        post.content = form.cleaned_data['content']
+        post.categories = form.cleaned_data['categories']
+        post.visibility = form.cleaned_data['visibility']
+        post.save(update_fields=['title', 'description', 'content_type', 'content', 'image', 'categories', 'visibility'])
+        post.save()     # update modified date
+
+            
 class PostsView(View):
+
+    DEFAULT_PAGE = 1
+    DEFAULT_SIZE = 15
+
     http_method_names = ['get', 'head', 'options', 'post']
 
     def get(self, request, *args, **kwargs):
@@ -96,19 +163,28 @@ class PostsView(View):
     def post(self, request, *args, **kwargs):
         '''
         POST [local]: Creates a new post, but generates a new id. 
+
+        If the post creation is successful, returns a JsonResponse with the content of the post.
         '''
+        status_code = 201
         author_id = kwargs.get('author_id', '')
-        author = get_object_or_404(Author, pk=author_id)
-        p = Post.objects.create(author=author)
-        p.save()
-        return JsonResponse(get_post_detail(p, author))
+        author = get_object_or_404(Author, id=author_id)
+
+        form = PostForm(request.POST)
+        if not form.is_valid():
+            status_code = 400
+            return HttpResponse('The form data is not valid.', status=status_code)
+        
+        Post.objects.create(author=author, **form.cleaned_data)
+        return HttpResponse('Post successfully created', status=status_code)
+
 
     def _get_posts(self, request, author_id) -> dict:
         '''
         Returns a dict that contains a list of posts.
         '''
-        page = int(request.GET.get('page', DEFAULT_PAGE))
-        size = int(request.GET.get('size', DEFAULT_SIZE))
+        page = int(request.GET.get('page', self.DEFAULT_PAGE))
+        size = int(request.GET.get('size', self.DEFAULT_SIZE))
 
         author = get_object_or_404(Author, pk=author_id)
         try:
@@ -133,13 +209,19 @@ def get_post_detail(post, author) -> dict:
     d = {}
     d['type'] = 'post'
     d['title'] = post.title
-    d['id'] = f"{author.host}authors/{author.id}/posts/{post.id}"
+    d['id'] = post.get_id_url()
     d['source'] = post.source
     d['origin'] = post.origin
     d['description'] = post.description
     d['contentType'] = post.content_type
+    d['content'] = post.content
     d['author'] = get_author_detail(author)
-    d['categories'] = [] if post.categories == '' else post.categories.strip().split(',')
+    d['categories'] = post.get_list_of_categories()
+    d['count'] = post.count
+    d['published'] = post.get_iso_published()
+    d['visibility'] = post.visibility
+    d['unlisted'] = post.unlisted
+
     # TODO comments
 
     return d

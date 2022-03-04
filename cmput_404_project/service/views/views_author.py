@@ -77,8 +77,8 @@ class AuthorDetailView(View):
         author = get_object_or_404(Author, pk=author_id)
         if not request.user.is_authenticated:
             status_code = 403
-            message = "You do not have permission to update this author's profile."
-            return HttpResponse({'message':message}, status=status_code)     
+            message = "You do not have permission to update this author's post."
+            return HttpResponse(message, status=status_code)     
 
         form = AuthorChangeForm(request.POST)
         if form.is_valid():
@@ -91,8 +91,7 @@ class AuthorDetailView(View):
             return HttpResponse("Author is successfully updated.")
 
         status_code = 400
-        message = "The form is not valid."
-        return HttpResponse({'message':message}, status=status_code)     
+        return HttpResponse('The form is not valid.', status=status_code)     
 
 
 def get_author_detail(author) -> dict:
