@@ -18,6 +18,7 @@
                 <p> <b> Title: </b> {{post.title}} </p>
                 <p> <b> Description: </b> {{post.description}} </p>
                 <h2> <a href="{% url 'edit_post' id=post.id %}"> Edit Post </a></h2>
+                <h2> <a href="{% url 'delete_post' id=post.id %}"> Delete Post </a></h2>
                 <p> <b> ////////////////////////////////////////////// </b> </p>
             </div>
 
