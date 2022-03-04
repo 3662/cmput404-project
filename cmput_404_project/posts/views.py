@@ -47,6 +47,8 @@ def edit_post(request, id):
         obj.title = form['title'].value()
         obj.description = form['description'].value()
         obj.image = form['image'].value()
+        obj.visibility = form['visibility'].value()
+        print(obj.visibility)
         obj.save()
 
         return redirect("/")
@@ -55,6 +57,7 @@ def edit_post(request, id):
             'title': post.title,
             'description': post.description,
             'image': post.image,
+            'visibility': post.visibility,
         }
 
         form = PostForm(data)
