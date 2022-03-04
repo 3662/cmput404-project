@@ -76,7 +76,7 @@ class Comment(models.Model):
 
 
 class Like(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4().hex, editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
     summary = models.CharField(max_length=100, null=True, blank=True)
