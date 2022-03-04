@@ -47,7 +47,7 @@ class Post(models.Model):
     image = models.URLField(null=True, default=None)
     title = models.CharField(max_length=100, default='')
     description = models.TextField(max_length=150, default='')
-    content_type = models.CharField(max_length=30, default='text/plain')
+    content_type = models.CharField(max_length=30, default='text/plain')        # TODO change to ChoiceField
     content = models.TextField(max_length=1000, default='')
     # category = models.ManyToManyField("Category")
     categories = models.CharField(max_length=100, default='')
