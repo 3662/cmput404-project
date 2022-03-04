@@ -100,7 +100,7 @@ class AuthorDetailViewTestCase(TestCase):
         response = c.post(f'/service/authors/{author.id}/')
         self.assertEqual(response.status_code, 403)
 
-        c.login(username='test0', password='temporary')
+        c.login(username=author.username, password='temporary')
 
         # post with invalid form
         data = {
