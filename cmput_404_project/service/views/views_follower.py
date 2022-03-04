@@ -81,6 +81,7 @@ class FollowerView(View):
         foreign_author = get_object_or_404(Author, pk=foreign_author_id)
         author.followers.remove(foreign_author)
         return HttpResponse('Follower successfully deleted from the author')
+
         
     def put(self, request, *args, **kwargs):
         '''
