@@ -29,3 +29,24 @@ def create_dummy_post(author, visibility='PUBLIC', content_type='text/plain'):
                         content_type=content_type,
                         content='Test post content',
                         categories='test,cmput404')
+
+
+def create_dummy_posts(n, author, visibility='PUBLIC', content_type='text/plain'):
+    '''Creates n dummy posts for the given author'''
+
+    if visibility not in ['PUBLIC', 'FRIENDS']:
+        raise ValueError('Invalid visibility')
+
+    if content_type not in ['text/plain', 'text/markdown', 'application/base64', 'image/png;base64', 'image/jpeg;base64']:
+        raise ValueError('Invalid content type')
+
+    for i in range(n):
+        Post.objects.create(author=author, 
+                            visibility=visibility,
+                            title=f'Test Post{i}',
+                            description=f'Test post{i} description',
+                            content_type=content_type,
+                            content=f'Test post{i} content',
+                            categories='test,cmput404')
+
+
