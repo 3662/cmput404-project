@@ -96,7 +96,7 @@ class AuthorDetailViewTestCase(TestCase):
 
         author = Author.objects.get(username='test0')
 
-        # test
+        # test without signed in 
         response = c.post(f'/service/authors/{author.id}/')
         self.assertEqual(response.status_code, 403)
 
