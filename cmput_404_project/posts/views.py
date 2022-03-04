@@ -12,7 +12,8 @@ import uuid
 
 
 def display_public_posts(request):
-    posts = Post.objects.filter(visibility='PUBLIC').exclude(author=request.user).order_by('-published')
+    # posts = Post.objects.filter(visibility='PUBLIC').exclude(author=request.user).order_by('-published')
+    posts = Post.objects.filter(visibility='PUBLIC').order_by('-published')
     for post in posts:
         post.comments = get_post_comments(post)
 
@@ -42,12 +43,10 @@ def edit_post(request, id):
     if request.method == "POST":
         form = PostForm(request.POST)
 
-        obj = form.save(commit=False)   
-
-        obj.author = post.author
-        obj.source = post.source
-        obj.origin = post.origin
-
+        obj = Post.objects.get(id=id)
+        obj.title = form['title'].value()
+        obj.description = form['description'].value()
+        obj.image = form['image'].value()
         obj.save()
 
         return redirect("/")
@@ -61,6 +60,11 @@ def edit_post(request, id):
         form = PostForm(data)
 
         return render(request, "posts/edit_post.html", {'form': form})
+
+def delete_post(request, id):
+    Post.objects.filter(id=id).delete()
+
+    return redirect("/")
 
 def new_post(request):
     if request.method == "POST":

@@ -8,12 +8,12 @@ from django.views import View
 from social_distribution.models import Author
 from accounts.forms import AuthorChangeForm
 
-DEFAULT_PAGE = 1
-DEFAULT_SIZE = 25
-
-
 
 class AuthorsDetailView(View):
+
+    DEFAULT_PAGE = 1
+    DEFAULT_SIZE = 25
+
     http_method_names = ['get', 'head', 'options']
 
     def get(self, request, *args, **kwargs):
@@ -34,8 +34,8 @@ class AuthorsDetailView(View):
         return response
 
     def _get_authors(self, request) -> dict:
-        page = int(request.GET.get('page', DEFAULT_PAGE))
-        size = int(request.GET.get('size', DEFAULT_SIZE))
+        page = int(request.GET.get('page', self.DEFAULT_PAGE))
+        size = int(request.GET.get('size', self.DEFAULT_SIZE))
 
         try:
             authors = Paginator(Author.objects.all(), size).page(page)
@@ -66,19 +66,21 @@ class AuthorDetailView(View):
         author = get_object_or_404(Author, pk=kwargs.get('author_id', ''))
         response = HttpResponse()
         response.headers['Content-Type'] = 'application/json'
-        response.headers['Content-Length'] = str(len(bytes(json.dumps(get_author_detail(author)))), 'utf-8')
+        response.headers['Content-Length'] = str(len(bytes(json.dumps(get_author_detail(author)), 'utf-8')))
         return response
 
     def post(self, request, *args, **kwargs):
         '''
         Update author_id's profile and returns json response of the author's updated details.
         '''
-        # TODO test POST request
         author_id = kwargs.pop('author_id', '')
         author = get_object_or_404(Author, pk=author_id)
-        if not request.user.is_authenticated():
-            return render(request, '/accounts/login/')     # TODO change redirect url 
-        form = AuthorChangeForm(request.POST, instance=request.user)
+        if not request.user.is_authenticated:
+            status_code = 403
+            message = "You do not have permission to update this author's profile."
+            return HttpResponse({'message':message}, status=status_code)     
+
+        form = AuthorChangeForm(request.POST)
         if form.is_valid():
             author.first_name = form.cleaned_data['first_name']
             author.last_name = form.cleaned_data['last_name']
@@ -86,7 +88,11 @@ class AuthorDetailView(View):
             author.profile_image = form.cleaned_data['profile_image']
             author.save(update_fields=['first_name', 'last_name', 'github', 'profile_image'])
 
-            return HttpResponseRedirect(f'/service/authors/{author_id}')
+            return HttpResponse("Author is successfully updated.")
+
+        status_code = 400
+        message = "The form is not valid."
+        return HttpResponse({'message':message}, status=status_code)     
 
 
 def get_author_detail(author) -> dict:
@@ -95,8 +101,8 @@ def get_author_detail(author) -> dict:
     '''
     author_d = {}
     author_d['type'] = 'author'
-    author_d['id'] = f"{author.host}authors/{author.id}"
-    author_d['url'] = f"{author.host}authors/{author.id}"
+    author_d['id'] = author.get_id_url()
+    author_d['url'] = author.get_profile_url()
     author_d['host'] = author.host
     author_d['displayName'] = author.get_full_name()
     author_d['github'] = author.github

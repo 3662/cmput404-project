@@ -5,7 +5,7 @@ class PostForm(ModelForm):
 
     class Meta:
         model = Post
-        fields = ('title', 'description', 'image')
+        fields = ('title', 'description', 'content_type', 'content', 'image', 'categories', 'visibility')
 
     def __init__(self, *args, **kwargs):
         super(PostForm, self).__init__(*args, **kwargs)
@@ -15,7 +15,7 @@ class CommentForm(ModelForm):
     
     class Meta:
         model = Comment
-        fields = ('content',)
+        fields = ('content_type', 'content',)
     
     def __init__(self, *args, **kwargs):
         super(CommentForm, self).__init__(*args, **kwargs)

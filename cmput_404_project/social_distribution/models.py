@@ -1,5 +1,4 @@
 import uuid
-import hashlib
 
 from django.db import models
 from django.contrib.auth.models import AbstractUser 
@@ -29,6 +28,11 @@ class Author(AbstractUser):
         full_name = f"{self.first_name} {self.last_name}"
         return full_name.strip()
 
+    def get_id_url(self):
+        return f'{self.host}authors/{self.id}'
+
+    def get_profile_url(self):
+        return f'{self.host}authors/{self.id}'
 
     def __str__(self):
         return self.username
@@ -42,18 +46,34 @@ class Post(models.Model):
     origin = models.URLField(null=True, default=None)
     image = models.URLField(null=True, default=None)
     title = models.CharField(max_length=100, default='')
-    description = models.TextField(max_length=1000, default='')
+    description = models.TextField(max_length=150, default='')
     content_type = models.CharField(max_length=30, default='text/plain')
+    content = models.TextField(max_length=1000, default='')
     # category = models.ManyToManyField("Category")
     categories = models.CharField(max_length=100, default='')
     count = models.IntegerField(default=0)
     published = models.DateTimeField(default=timezone.now, editable=False)
+    modified = models.DateTimeField(default=timezone.now)
     visibility = models.CharField(max_length=7, default='PUBLIC')
     unlisted = models.BooleanField(default=False)
     liked = models.ManyToManyField(Author, blank=True, related_name='likes')
 
-#    def __str__(self):
-        #return self.title
+    def save(self, *args, **kwargs):
+        '''Upon save, update timestamps of the post'''
+        self.modified = timezone.now()
+        return super(Post, self).save(*args, **kwargs)
+
+    def get_id_url(self):
+        return f'{self.author.get_id_url()}/posts/{self.id}'
+
+    def get_list_of_categories(self):
+        return [] if self.categories == '' else self.categories.strip().split(',')
+
+    def get_iso_published(self):
+        return self.published.replace(microsecond=0).isoformat()
+
+    def get_iso_modified(self):
+        return self.modified.replace(microsecond=0).isoformat()
 
 # class Category(models.Model):
     # value = models.CharField(max_length=100)
@@ -65,6 +85,9 @@ class FollowRequest(models.Model):
     to_author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='follow_request_to')
     date_created = models.DateTimeField(default=timezone.now, editable=False)
 
+    def get_iso_date_created(self):
+        return self.date_created.replace(microsecond=0).isoformat()
+
 
 class Comment(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -74,6 +97,8 @@ class Comment(models.Model):
     date_created = models.DateTimeField(default=timezone.now, editable=False)
     content = models.TextField(max_length=1000, default='')
 
+    def get_iso_date_created(self):
+        return self.date_created.replace(microsecond=0).isoformat()
 
 class Like(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -81,6 +106,10 @@ class Like(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
     summary = models.CharField(max_length=100, null=True, blank=True)
     date_created = models.DateTimeField(default=timezone.now, editable=False)
+
+    def get_iso_date_created(self):
+        return self.date_created.replace(microsecond=0).isoformat()
+
 
 STATUS_CHOICES = (
     ('send', 'send'),

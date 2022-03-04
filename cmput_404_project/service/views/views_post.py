@@ -17,17 +17,32 @@ class PostView(View):
 
     def get(self, request, *args, **kwargs):
         '''
-        GET [local, remote]: Returns a JSON respone that contains the public post whose id is post_id.
+        GET [local, remote]: Returns a JSON response that contains the public post whose id is post_id.
         '''
+        author_id = kwargs.get('author_id', '')
+        post_id = kwargs.get('post_id', '')
+        author = get_object_or_404(Author, pk=author_id)
+        post = get_object_or_404(Post, pk=post_id, author_id=author_id, visibility="PUBLIC")
 
-        
-        raise NotImplementedError()
+        return JsonResponse(get_post_detail(post, author))
+
 
     def head(self, request, *args, **kwargs):
         '''
         Handles HEAD request of the same GET request.
         '''
-        raise NotImplementedError()
+        author_id = kwargs.get('author_id', '')
+        post_id = kwargs.get('post_id', '')
+        author = get_object_or_404(Author, pk=author_id)
+        post = get_object_or_404(Post, pk=post_id, author_id=author_id, visibility="PUBLIC")
+        data_json = json.dumps(get_post_detail(post, author))
+
+        response = HttpResponse()
+        response.headers['Content-Type'] = 'application/json'
+        response.headers['Content-Length'] = str(len(bytes(data_json, 'utf-8')))
+
+        return response
+        
 
     def post(self, request, *args, **kwargs):
         '''
@@ -37,11 +52,17 @@ class PostView(View):
         '''
         raise NotImplementedError()
 
+
     def delete(self, request, *args, **kwargs):
         '''
         DELETE [local]: removes the post whose id is post_id.
         '''
-        raise NotImplementedError()
+        author_id = kwargs.get('author_id', '')
+        post_id = kwargs.get('post_id', '')
+        post = get_object_or_404(Post, pk=post_id, author_id=author_id, visibility="PUBLIC")
+        post.delete()
+        return HttpResponse('Post successfully deleted')
+
 
     def put(self, request, *args, **kwargs):
         '''
@@ -74,7 +95,7 @@ class PostsView(View):
 
     def post(self, request, *args, **kwargs):
         '''
-        POST [local]: Creates an empty post. It only generates a new id. 
+        POST [local]: Creates a new post, but generates a new id. 
         '''
         author_id = kwargs.get('author_id', '')
         author = get_object_or_404(Author, pk=author_id)
