@@ -29,6 +29,11 @@ class Author(AbstractUser):
         full_name = f"{self.first_name} {self.last_name}"
         return full_name.strip()
 
+    def get_id_url(self):
+        return f'{self.host}authors/{self.id}'
+
+    def get_profile_url(self):
+        return f'{self.host}authors/{self.id}'
 
     def __str__(self):
         return self.username
@@ -56,10 +61,20 @@ class Post(models.Model):
 
     def save(self, *args, **kwargs):
         '''Upon save, update timestamps of the post'''
-        if not self.id:
-            self.created = timezone.now()
         self.modified = timezone.now()
         return super(Post, self).save(*args, **kwargs)
+
+    def get_id_url(self):
+        return f'{self.author.get_id_url()}/posts/{self.id}'
+
+    def get_list_of_categories(self):
+        return [] if self.categories == '' else self.categories.strip().split(',')
+
+    def get_iso_published(self):
+        return self.published.replace(microsecond=0).isoformat()
+
+    def get_iso_modified(self):
+        return self.modified.replace(microsecond=0).isoformat()
 
 # class Category(models.Model):
     # value = models.CharField(max_length=100)

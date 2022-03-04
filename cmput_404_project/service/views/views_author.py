@@ -101,8 +101,8 @@ def get_author_detail(author) -> dict:
     '''
     author_d = {}
     author_d['type'] = 'author'
-    author_d['id'] = f"{author.host}authors/{author.id}"
-    author_d['url'] = f"{author.host}authors/{author.id}"
+    author_d['id'] = author.get_id_url()
+    author_d['url'] = author.get_profile_url()
     author_d['host'] = author.host
     author_d['displayName'] = author.get_full_name()
     author_d['github'] = author.github
