@@ -2,7 +2,7 @@ from social_distribution.models import Author, Post
 
 
 def create_dummy_authors(n):
-    '''Creates n dummy authors in db.'''
+    '''Creates n dummy authors.'''
     for i in range(n):
         Author.objects.create_user(username=f'test{i}', 
                                     password=f'temporary',
@@ -49,4 +49,27 @@ def create_dummy_posts(n, author, visibility='PUBLIC', content_type='text/plain'
                             content=f'Test post{i} content',
                             categories='test,cmput404')
 
+
+def create_dummy_author_with_followers(num_followers):
+    '''Create a dummy author with num_followers followers.'''
+    author = Author.objects.create_user(username='test', 
+                                        password='temporary',
+                                        first_name = 'Test',
+                                        last_name = 'Example',
+                                        host='http://localhost:8000/', 
+                                        github=f'https://github.com/test',
+                                        profile_image='https://avatars.githubusercontent.com/u/55664235?v=4')
+                            
+    for i in range(num_followers):
+        follower = Author.objects.create_user(username=f'test{i}', 
+                                              password=f'temporary',
+                                              first_name = f'Test{i}',
+                                              last_name = 'Example',
+                                              host='http://localhost:8000/', 
+                                              github=f'https://github.com/test{i}',
+                                              profile_image='https://avatars.githubusercontent.com/u/55664235?v=4')
+        author.followers.add(follower)
+
+
+    
 
