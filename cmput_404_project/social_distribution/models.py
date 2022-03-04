@@ -95,7 +95,7 @@ class Comment(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
     content_type = models.CharField(max_length=30, default='text/plain')
     date_created = models.DateTimeField(default=timezone.now, editable=False)
-    content = models.TextField(max_length=1100, default='')
+    content = models.TextField(max_length=1000, default='')
 
     def get_iso_date_created(self):
         return self.date_created.replace(microsecond=0).isoformat()
