@@ -49,6 +49,11 @@ class Post(models.Model):
     count = models.IntegerField(default=0)
     published = models.DateTimeField(default=timezone.now, editable=False)
     visibility = models.CharField(max_length=7, default='PUBLIC')
+    authors = Author.objects.all()
+    author_choices = []
+    for person in authors:
+        author_choices.append((person.id, person.get_full_name()))
+    recepient = models.CharField(null=True, max_length=100, choices=author_choices, default=None)
     unlisted = models.BooleanField(default=False)
     liked = models.ManyToManyField(Author, blank=True, related_name='likes')
 

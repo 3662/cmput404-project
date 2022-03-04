@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
-from social_distribution.models import Post,Like
+from social_distribution.models import Post, Like, Author
 from django.http import HttpResponse
-from .forms import PostForm, PostLike
+from .forms import PostForm, PostLike, PrivatePostForm
 from django.utils import timezone
 import hashlib
 from django.utils.text import slugify
@@ -17,6 +17,15 @@ def display_public_posts(request):
     }
 
     return render(request, 'posts/public_posts.html', context)
+
+def display_private_posts(request):
+    posts = Post.objects.filter(visibility='PRIVATE').filter(recepient=request.user.id)
+    context = {
+        'posts': posts,
+        'author': request.user,
+    }
+
+    return render(request, 'posts/private_posts.html', context)
 
 def display_own_posts(request):
     posts = Post.objects.filter(author=request.user).order_by('-published')
@@ -54,6 +63,7 @@ def new_post(request):
         form = PostForm(request.POST)
         obj = form.save(commit=False)                
         obj.author = request.user
+        obj.visibility = 'PRIVATE'
 
         # TODO set proper URls
         obj.source = ""
@@ -66,6 +76,26 @@ def new_post(request):
         form = PostForm()
 
         return render(request, "posts/new_post.html", {'form': form})
+
+def new_private_post(request):
+    if request.method == "POST":
+        form = PostForm(request.POST)
+        obj = form.save(commit=False)  
+        obj.author = request.user
+        obj.visibility = 'PRIVATE'
+        obj.recepient = request.POST.get('recepient')
+
+        # TODO set proper URls
+        obj.source = ""
+        obj.origin = ""
+
+        obj.save()
+
+        return redirect("/")
+    else:
+        form = PrivatePostForm()
+
+        return render(request, "posts/new_private_post.html", {'form': form})        
 
 def display_like(request):
     like = Like.objects.all()

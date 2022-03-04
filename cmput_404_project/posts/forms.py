@@ -11,6 +11,16 @@ class PostForm(ModelForm):
         super(PostForm, self).__init__(*args, **kwargs)
         self.fields['image'].required = False
 
+class PrivatePostForm(ModelForm):
+
+    class Meta:
+        model = Post
+        fields = ('title', 'description', 'image', 'recepient')
+
+    def __init__(self, *args, **kwargs):
+        super(PrivatePostForm, self).__init__(*args, **kwargs)
+        self.fields['image'].required = False
+
 class PostLike(ModelForm):
 
     class Meta:
