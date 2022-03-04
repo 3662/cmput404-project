@@ -42,18 +42,24 @@ class Post(models.Model):
     origin = models.URLField(null=True, default=None)
     image = models.URLField(null=True, default=None)
     title = models.CharField(max_length=100, default='')
-    description = models.TextField(max_length=1000, default='')
+    description = models.TextField(max_length=150, default='')
     content_type = models.CharField(max_length=30, default='text/plain')
+    content = models.TextField(max_length=1000, default='')
     # category = models.ManyToManyField("Category")
     categories = models.CharField(max_length=100, default='')
     count = models.IntegerField(default=0)
     published = models.DateTimeField(default=timezone.now, editable=False)
+    modified = models.DateTimeField(default=timezone.now)
     visibility = models.CharField(max_length=7, default='PUBLIC')
     unlisted = models.BooleanField(default=False)
     liked = models.ManyToManyField(Author, blank=True, related_name='likes')
 
-#    def __str__(self):
-        #return self.title
+    def save(self, *args, **kwargs):
+        '''Upon save, update timestamps of the post'''
+        if not self.id:
+            self.created = timezone.now()
+        self.modified = timezone.now()
+        return super(Post, self).save(*args, **kwargs)
 
 # class Category(models.Model):
     # value = models.CharField(max_length=100)
@@ -76,7 +82,7 @@ class Comment(models.Model):
 
 
 class Like(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4().hex, editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
     summary = models.CharField(max_length=100, null=True, blank=True)
