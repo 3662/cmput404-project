@@ -26,10 +26,18 @@ Retrieve and display a single author
 def display_author(request, id):
     author = Author.objects.get(id=id)
     posts = Post.objects.filter(author=author).order_by('-published')
+    sender = Author.objects.get(username=request.user)
+    s_qs = Friends.objects.filter(sender=sender, status='send').values_list('receiver', flat=True)
+    r_qs = Friends.objects.filter(sender=sender, status='accepted').values_list('receiver', flat=True)
+    cross_qs = Friends.objects.filter(receiver=sender, status='accepted').values_list('sender', flat=True)
     context = {
         'is_my_profile': request.user.id == id,
         'author': author,
         'posts': posts,
+        'f_send': s_qs,
+        'f_accept': r_qs,
+        'cross_qs': cross_qs,
+        'friend': request.user,
     }
     return render(request, 'authors/profile.html', context=context)
 
@@ -141,3 +149,36 @@ def friends_view(request):
         'f_qs': f_qs,
     }
     return render(request, 'authors/friends_list.html', context)
+
+
+def author_profile_view(request):
+    if request.method == "POST":
+        user = request.POST.get('user')
+        print(user)
+        action_flag = request.POST.get('action_flag')
+        recv = Author.objects.get(id=user)
+        send = Author.objects.get(username=request.user)
+        send_id = Author.objects.values('id').filter(username=request.user)
+
+        if action_flag == 'I':
+            friend, inserted = Friends.objects.get_or_create(receiver=recv, sender=send,status='send')
+            if inserted:
+                #post.liked.remove(request.user)
+                #rec=Like.objects.get(author=request.user, post=post)
+                #rec.delete()
+            #else:
+                summary = str(request.user) + " wants to follow " + str(recv.username)
+                follower, inserted = FollowRequest.objects.get_or_create(to_author=recv, from_author=send, summary=summary)
+                friend.save()
+                follower.save()
+        if action_flag == 'R':
+            #if (Friends.objects.get(receiver=recv, sender=send,status='send').count())>0:
+            Friends.objects.get(receiver=recv, sender=send, status='send').delete()
+            #if FollowRequest.objects.get(to_author=recv, from_author=send).count() > 0:
+            FollowRequest.objects.get(to_author=recv, from_author=send).delete()
+        if action_flag == 'F':
+            Friends.objects.get(receiver=recv, sender=send, status='accepted').delete()
+            FollowRequest.objects.get(to_author=recv, from_author=send).delete()
+            send.followers.remove(recv)
+
+    return redirect(f'/authors/{user}')

@@ -48,7 +48,40 @@
             <p><a href="{% url 'friend_view' %}">My Friends</a></p>
             <p><a href="{% url 'logout' %}">Log Out</a></p>
         {% else %}
-            <p><a href="#">Send A Request</a> (Not implemented yet)</p>
+            <!-- <p><a href="#">Send A Request</a> (Not implemented yet)</p> -->
+            <div class="author">
+                    <form action="{% url 'author_profile_view' %}" method="POST" class='author_friend_view' id='{{author.id}}' >
+                       {% csrf_token %}
+                       <input type="hidden" name="user" value={{author.id}}>
+                            {% if author.id in f_send %}
+                                <button type="submit" class="ui button like-btn{{author.id}}" disabled="disabled">
+                                   Waiting for response
+                                </button>
+                                <button type="submit" name="action_flag" value="R" class="ui button like-btn{{author.id}}")>
+                                    Revoke/Withdraw
+                                </button>
+                            {% else %}
+                                {% if author.id in f_accept %}
+                                    {% if author.id in cross_qs %}
+                                       <button type="submit" class="ui button like-btn{{author.id}}" disabled="disabled">
+                                          Friend
+                                       </button>
+                                    {% else %}
+                                       <button type="submit" class="ui button like-btn{{author.id}}" disabled="disabled">
+                                          Following
+                                       </button>
+                                    {% endif %}
+                                    <button type="submit" name="action_flag" value="F" class="ui button like-btn{{author.id}}")>
+                                         Revoke/Withdraw
+                                    </button>
+                                {% else %}
+                                    <button type="submit" name="action_flag" value="I" class="ui button like-btn{{author.id}}">
+                                       Send Follow Request
+                                    </button>
+                                {% endif %}
+                            {% endif %}
+                    </form>
+                </div>
         {% endif %}
     </div>
     
