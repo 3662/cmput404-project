@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
-from social_distribution.models import Post, Like, Author
+from social_distribution.models import Post, Comment, Like
 from django.http import HttpResponse
-from .forms import PostForm, PostLike, PrivatePostForm
+from .forms import PostForm, PostLike, PrivatePostForm, CommentForm
 from django.utils import timezone
 import hashlib
 from django.utils.text import slugify
@@ -10,10 +10,17 @@ import uuid
 
 
 def display_public_posts(request):
-    posts = Post.objects.filter(visibility='PUBLIC').exclude(author=request.user).order_by('-published')
+    # posts = Post.objects.filter(visibility='PUBLIC').exclude(author=request.user).order_by('-published')
+    posts = Post.objects.filter(visibility='PUBLIC').order_by('-published')
+    for post in posts:
+        post.comments = get_post_comments(post)
+
+    comment_form = CommentForm(request.POST)
+
     context = {
         'posts': posts,
         'author': request.user,
+        'comment_form': comment_form,
     }
 
     return render(request, 'posts/public_posts.html', context)
@@ -27,6 +34,10 @@ def display_private_posts(request):
 
     return render(request, 'posts/private_posts.html', context)
 
+def get_post_comments(post):
+    comments = Comment.objects.filter(post=post)
+    return comments
+
 def display_own_posts(request):
     posts = Post.objects.filter(author=request.user).order_by('-published')
 
@@ -38,12 +49,12 @@ def edit_post(request, id):
     if request.method == "POST":
         form = PostForm(request.POST)
 
-        obj = form.save(commit=False)   
-
-        obj.author = post.author
-        obj.source = post.source
-        obj.origin = post.origin
-
+        obj = Post.objects.get(id=id)
+        obj.title = form['title'].value()
+        obj.description = form['description'].value()
+        obj.image = form['image'].value()
+        obj.visibility = form['visibility'].value()
+        print(obj.visibility)
         obj.save()
 
         return redirect("/")
@@ -52,11 +63,17 @@ def edit_post(request, id):
             'title': post.title,
             'description': post.description,
             'image': post.image,
+            'visibility': post.visibility,
         }
 
         form = PostForm(data)
 
         return render(request, "posts/edit_post.html", {'form': form})
+
+def delete_post(request, id):
+    Post.objects.filter(id=id).delete()
+
+    return redirect("/")
 
 def new_post(request):
     if request.method == "POST":
@@ -79,11 +96,14 @@ def new_post(request):
 
 def new_private_post(request):
     if request.method == "POST":
-        form = PostForm(request.POST)
+        form = PrivatePostForm(request.POST)
+        if not form.is_valid():
+            print('ERRORS', form.errors)
         obj = form.save(commit=False)  
         obj.author = request.user
         obj.visibility = 'PRIVATE'
         obj.recepient = request.POST.get('recepient')
+        print('NOW')
 
         # TODO set proper URls
         obj.source = ""
@@ -97,6 +117,16 @@ def new_private_post(request):
 
         return render(request, "posts/new_private_post.html", {'form': form})        
 
+
+def add_comment(request, id):
+    if request.method == "POST":
+        post = Post.objects.get(id=id)
+        content = request.POST.get('content')
+        author = request.user
+        comment = Comment.objects.create(content=content, author=author, post=post)
+        comment.save()
+        
+    return redirect('/posts/')
 def display_like(request):
     like = Like.objects.all()
     return render(request, 'posts/display_like.html', {'like': like})

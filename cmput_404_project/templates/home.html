@@ -8,15 +8,19 @@
   <p> Hi {{ user.first_name }}! </p>
   <p> Username: {{user.username}} </p>
   <p> ID: {{user.id}} </p>
-  <p><a href="{% url 'display_public_posts' %}">See public posts</a></p>
-  <p><a href="{% url 'display_private_posts' %}">See private posts</a></p>
-  <p><a href="{% url 'display_own_posts' %}">Edit and delete own posts</a></p>
+  <p><a href="{% url 'display_author' id=user.id %}">View my profile</a></p>
   <p><a href="{% url 'new_post' %}">Create a new post</a></p>
   <p><a href="{% url 'new_private_post' %}">Send a private post</a></p>
-  <p><a href="{% url 'display_authors' %}">See authors</a></p>
-  <p><a href="{% url 'display_like' %}">See Likes</a></p>
-  <p><a href="{% url 'author_list_view' %}">Invitation</a></p>
-  <p><a href="{% url 'pending_action_list_view' %}">Pending action</a></p>
+  <p><a href="{% url 'display_own_posts' %}">Edit and delete own posts</a></p>
+  <p><a href="{% url 'display_public_posts' %}">See public posts</a></p>
+  <p><a href="{% url 'display_private_posts' %}">See private posts</a></p>
+  <p><a href="{% url 'display_authors' %}">See all authors</a></p>
+  <!-- <p><a href="{% url 'display_like' %}">See Likes</a></p>
+  <p><a href="{% url 'author_list_view' %}">Follow Requests</a></p>
+  <p><a href="{% url 'pending_action_list_view' %}">Pending actions</a></p>
+  <p><a href="{% url 'follower_view' %}">Followers List</a></p>
+  <p><a href="{% url 'follower_view1' %}">Followers List New(for inbox)</a></p>
+  <p><a href="{% url 'friend_view' %}">Friends List</a></p> -->
   <p><a href="{% url 'logout' %}">Log Out</a></p>
 {% else %}
   <p>You are not logged in</p>

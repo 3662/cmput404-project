@@ -2,7 +2,9 @@
 <html>
     <head>
         <meta charset="utf-8">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
         <title>Authors</title>
+        <button class="btn"><i class="fa fa-home" ></i> <a href="/">Home</a></button>
     </head>
     <body>
         <h1>List of Authors</h1>
@@ -31,15 +33,21 @@
                                 </button>
                             {% else %}
                                 {% if author.id in f_accept %}
-                                    <button type="submit" class="ui button like-btn{{author.id}}" disabled="disabled">
-                                       Friend
-                                    </button>
+                                    {% if author.id in cross_qs %}
+                                       <button type="submit" class="ui button like-btn{{author.id}}" disabled="disabled">
+                                          Friend
+                                       </button>
+                                    {% else %}
+                                       <button type="submit" class="ui button like-btn{{author.id}}" disabled="disabled">
+                                          Following
+                                       </button>
+                                    {% endif %}
                                     <button type="submit" name="action_flag" value="F" class="ui button like-btn{{author.id}}")>
                                          Revoke/Withdraw
                                     </button>
                                 {% else %}
                                     <button type="submit" name="action_flag" value="I" class="ui button like-btn{{author.id}}">
-                                       Invite
+                                       Send Follow Request
                                     </button>
                                 {% endif %}
                             {% endif %}

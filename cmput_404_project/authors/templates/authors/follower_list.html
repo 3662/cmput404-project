@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
         <meta charset="utf-8">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
         <title>Authors</title>
         <button class="btn"><i class="fa fa-home" ></i> <a href="/">Home</a></button>
     </head>
     <body>
-        <h1>List of Authors</h1>
+        <h1>List of Followers</h1>
         <div class="authors">
             {% for author in authors %}
-
-            <div class="author">
+             {% if author.id in f_qs %}
+              <div class="author">
                 <h2> <b> Author: </b> <a href="{% url 'display_author' id=author.id %}"> {{author.get_full_name}} </a></h2>
                 <p> <b> Type: </b> author </p>
                 <p> <b> ID: </b> {{author.id}} </p>
@@ -20,8 +20,8 @@
                 <p> <b> Host: </b> {{author.host}} </p>
                 <p> <b> Github: </b> {{author.github}} </p>
                 <p> <b> Profile Image: </b> {{author.profile_image}} </p>
-
-            </div>
+              </div>
+             {% endif %}
 
             {% endfor %}
         </div>

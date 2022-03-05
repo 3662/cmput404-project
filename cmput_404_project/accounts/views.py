@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.urls import reverse_lazy
 from django.views import generic
 
-from .forms import AuthorCreationForm
+from .forms import AuthorCreationForm, AuthorChangeForm
 from social_distribution.models import Author
 
 
@@ -29,4 +29,16 @@ def signup_request(request):
     form = AuthorCreationForm()
     return render(request=request, template_name='registration/signup.html', context={'form': form})
 
+def manage_profile(request):
+    if request.method == 'GET':
+        user_instance = request.user if request.user.is_authenticated else None
+        form = AuthorChangeForm(instance=user_instance)   # Pre-fill form details
+        return render(request=request, template_name='accounts/manage_profile.html', context={'form': form})
 
+    elif request.method == 'POST':
+        form = AuthorChangeForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            return redirect('home')
+        messages.error(request, 'Unsuccessful profile update. Invalid information')
+    messages.error(request, request.method + ' method not supported on this route.')

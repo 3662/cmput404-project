@@ -7,17 +7,14 @@
         <button class="btn"><i class="fa fa-home" ></i> <a href="/">Home</a></button>
     </head>
     <body>
-        <h1>List of own Likes</h1>
-        <div class="like">
-            {% for likes in like %}
-            <div class="Like">
-                <p> <b> Author: </b> {{likes.post.author}} </p>
-                <p> <b> Title: </b> {{likes.post.title}} </p>
-                <p> <b> Description: </b> {{likes.post.description}} </p>
-                <p> <b> Summary: </b> {{likes.summary}} </p>
+        <h1>List of Followers</h1>
+        <div class="f_qs">
+            {% for qs in f_qs %}
+            <div class="qs">
+                <p> <b> Author: </b> {{qs.from_author}} </p>
+                <p> <b> Summary: </b> {{qs.summary}} </p>
                 <p> <b> ////////////////////////////////////////////// </b> </p>
             </div>
-
             {% endfor %}
         </div>
     </body>
