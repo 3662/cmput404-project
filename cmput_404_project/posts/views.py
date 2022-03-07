@@ -46,7 +46,10 @@ def edit_post(request, id):
         obj = Post.objects.get(id=id)
         obj.title = form['title'].value()
         obj.description = form['description'].value()
+        obj.content_type = form['content_type'].value()
+        obj.content = form['content'].value()
         obj.image = form['image'].value()
+        obj.categories = form['categories'].value()
         obj.visibility = form['visibility'].value()
         print(obj.visibility)
         obj.save()
@@ -56,7 +59,10 @@ def edit_post(request, id):
         data = {
             'title': post.title,
             'description': post.description,
+            'content_type': post.content_type,
+            'content': post.content,
             'image': post.image,
+            'categories': post.categories,
             'visibility': post.visibility,
         }
 

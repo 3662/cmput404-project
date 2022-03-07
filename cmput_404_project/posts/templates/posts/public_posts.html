@@ -14,10 +14,12 @@
                 <p> <b> Published: </b> {{post.published}} </p>
                 <p> <b> Author: </b> {{post.author}} </p>
                 {% if post.image != null and post.image != '' %}
-                    <img src="{{post.image}}"> 
+                    <img src="{{post.image}}" width="300" height="300"> 
                 {% endif %}
                 <p> <b> Title: </b> {{post.title}} </p>
                 <p> <b> Description: </b> {{post.description}} </p>
+                <p> <b> Content: </b> {{post.content}} </p>
+                <p> <b> Categories: </b> {{post.categories}} </p>
 
                 <div class="author">
                     <form action="{% url 'like_post1' %}" method="POST" class='PostLike' id='{{post.id}}'>
@@ -32,7 +34,6 @@
                        </button>
                     </form>
                 </div>
-                <p> <b> ////////////////////////////////////////////// </b> </p>
                 <div class="comments">
                     <p><b>Comments...</b></p>
                     {% for comment in post.comments %}
@@ -51,7 +52,7 @@
                 </form>
             </div>
             <br/>
-            <p> <b> ////////////////////////////////////////////// </b> </p>
+            <p> <b> ################################################################################## </b> </p>
 
             {% endfor %}
         </div>
