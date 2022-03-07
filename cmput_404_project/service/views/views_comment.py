@@ -59,19 +59,20 @@ class CommentsView(View):
         author = get_object_or_404(Author, id=author_id)
         post = get_object_or_404(Post, id=post_id, author=author)
 
-        data = request.POST
+        # data = json.loads(request.body)
+        data = json.loads(request.body)
         # assume the data has a format of the one in the requirements but without 'published' and 'id' fields.
         # assume the comment object has not been created yet
         try:
             if data['type'] != 'comment':
-                raise ValueError
-            comment_author_id = data['id'].split('/')[-1]
-            comment_author = get_object_or_404(Author, id=comment_author_id)
+                raise ValueError()
             content_type = data['contentType']
             content = data['comment']
+            comment_author_id = data['author']['id'].split('/')[-1]
+            comment_author = get_object_or_404(Author, id=comment_author_id)
         except (KeyError, ValueError):
             status_code = 400
-            return HttpResponse('The form is not valid.', status=status_code)     
+            return HttpResponse('The form is invalid', status=status_code)     
         else:
             status_code = 201
             Comment.objects.create(author=comment_author, post=post, content_type=content_type, content=content)
