@@ -23,6 +23,7 @@ class Author(AbstractUser):
     objects = AuthorManager()
     REQUIRED_FIELDS = ['first_name', 'last_name', 'host', 'github', 'profile_image']
 
+    type = 'author'
 
     def get_full_name(self):
         full_name = f"{self.first_name} {self.last_name}"
@@ -39,7 +40,7 @@ class Author(AbstractUser):
         Returns a dict containing the author information.
         '''
         d = {}
-        d['type'] = 'author'
+        d['type'] = self.type
         d['id'] = self.get_id_url()
         d['url'] = self.get_profile_url()
         d['host'] = self.host
@@ -53,7 +54,11 @@ class Author(AbstractUser):
 
 
 class Post(models.Model):
-    # id = models.SlugField(primary_key=True, max_length=64, unique=True)
+
+    COMMENTS_PAGE = 1
+    COMMENTS_SIZE = 5
+    
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     author = models.ForeignKey(Author, on_delete=models.CASCADE, default=None, null=True, blank=True)
     source = models.URLField(null=True, default=None)
@@ -63,7 +68,6 @@ class Post(models.Model):
     description = models.TextField(max_length=150, default='')
     content_type = models.CharField(max_length=30, default='text/plain')        
     content = models.TextField(max_length=1000, default='')
-    # category = models.ManyToManyField("Category")
     categories = models.CharField(max_length=100, default='')
     count = models.IntegerField(default=0)
     published = models.DateTimeField(default=timezone.now, editable=False)
@@ -77,6 +81,8 @@ class Post(models.Model):
     unlisted = models.BooleanField(default=False)
     liked = models.ManyToManyField(Author, blank=True, related_name='likes')
     comments_id = models.UUIDField(default=uuid.uuid4, editable=False)
+
+    type = 'post'
 
     def save(self, *args, **kwargs):
         '''Upon save, update timestamps of the post'''
@@ -103,7 +109,7 @@ class Post(models.Model):
         Returns a dict that contains a post detail.
         '''
         d = {}
-        d['type'] = 'post'
+        d['type'] = self.type
         d['title'] = self.title
         d['id'] = self.get_id_url()
         d['source'] = self.source
@@ -122,7 +128,7 @@ class Post(models.Model):
 
         return d
 
-    def get_comments_src_dict(self, page=1, size=5) -> dict:
+    def get_comments_src_dict(self, page=COMMENTS_PAGE, size=COMMENTS_SIZE) -> dict:
         '''
         Returns a dict that contains the details of the comments for the post
         '''
@@ -139,9 +145,6 @@ class Post(models.Model):
         data['id'] = self.get_comments_id_url()
         data['items'] = [c.get_detail_dict() for c in comments]
         return data
-
-# class Category(models.Model):
-    # value = models.CharField(max_length=100)
 
 
 class FollowRequest(models.Model):
@@ -162,6 +165,8 @@ class Comment(models.Model):
     date_created = models.DateTimeField(default=timezone.now, editable=False)
     content = models.TextField(max_length=1000, default='')
 
+    type = 'comment'
+
     def get_iso_date_created(self):
         return self.date_created.replace(microsecond=0).isoformat()
 
@@ -173,7 +178,7 @@ class Comment(models.Model):
         Returns a dict that contains a comment's detail.
         '''
         d = {}
-        d['type'] = 'comment' 
+        d['type'] = self.type
         d['author'] = self.author.get_detail_dict()
         d['comment'] = self.content
         d['contentType'] = self.content_type
@@ -193,6 +198,8 @@ class Like(models.Model):
     object_id = models.UUIDField(default=uuid.uuid4, editable=False)
     date_created = models.DateTimeField(default=timezone.now, editable=False)
 
+    type = 'Like'
+
 
     def get_iso_date_created(self):
         return self.date_created.replace(microsecond=0).isoformat()
@@ -202,7 +209,7 @@ class Like(models.Model):
         d = {}
         d['@context'] = self.context
         d['summary'] = self.get_summary()
-        d['type'] = 'Like'
+        d['type'] = self.type
         d['author'] = self.author.get_detail_dict()
 
         if self.object_type == 'POST':
@@ -216,6 +223,49 @@ class Like(models.Model):
     def get_summary(self):
         '''Returns a summary for this like object.'''
         return f'{self.author.get_full_name()} Likes your {self.object_type.strip().lower()}'
+
+
+class Inbox(models.Model):
+    author = models.ForeignKey(Author, on_delete=models.CASCADE)
+    type = 'inbox'
+
+
+    def get_detail_dict(self):
+        '''Returns a dict that contains this inbox's detail.'''
+        d = {}
+        d['type'] = 'inbox'
+        d['author'] = self.author.get_id_url()
+        items = InboxItem.objects.filter(inbox=self).all()
+        d['items'] = [item.get_detail_dict() for item in items]
+
+        return d
+
+
+class InboxItem(models.Model):
+    OBJECT_TYPE_CHOICES = [
+        ('POST', 'Post'),
+        ('COMMENT', 'Comment'),
+        ('FOLLOW', 'Follow'),
+        ('LIKE', 'like')
+    ]
+
+    inbox = models.ForeignKey(Inbox, on_delete=models.CASCADE)
+    object_type = models.CharField(max_length=7, choices=OBJECT_TYPE_CHOICES, default='POST')
+    object_id = models.UUIDField(default=uuid.uuid4, editable=False)
+
+
+    def get_detail_dict(self) -> dict:
+        '''Returns a dict that contains this object's detail.'''
+        if self.object_type == 'POST':
+            object = Post.objects.get(id=self.object_id)
+        elif self.object_type == 'COMMENT':
+            object = Comment.objects.get(id=self.object_id)
+        elif self.object_type == 'FOLLOW':
+            object = FollowRequest.objects.get(id=self.object_id)
+        else:
+            object = Like.objects.get(id=self.object_id)
+        return object.get_detail_dict()
+
 
 
     
