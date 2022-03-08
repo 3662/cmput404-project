@@ -177,14 +177,43 @@ class Comment(models.Model):
         return d
 
 class Like(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    OBJECT_TYPE_CHOICES = [
+        ('POST', 'Post'),
+        ('COMMENT', 'Comment'),
+    ]
+    context = "https://www.w3.org/ns/activitystreams"
+
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
-    post = models.ForeignKey(Post, on_delete=models.CASCADE)
-    summary = models.CharField(max_length=100, null=True, blank=True)
+    object_type = models.CharField(max_length=7, choices=OBJECT_TYPE_CHOICES, default='POST')
+    object_id = models.UUIDField(default=uuid.uuid4, editable=False)
     date_created = models.DateTimeField(default=timezone.now, editable=False)
+
 
     def get_iso_date_created(self):
         return self.date_created.replace(microsecond=0).isoformat()
+
+    def get_detail_dict(self) -> dict:
+        '''Returns a dict that contains a like's detail.'''
+        d = {}
+        d['@context'] = self.context
+        d['summary'] = self.get_summary()
+        d['type'] = 'Like'
+        d['author'] = self.author.get_detail_dict()
+
+        if self.object_type == 'POST':
+            object = Post.objects.get(id=self.object_id)
+        else:
+            object = Comment.objects.get(id=self.object_id)
+        d['object'] = object.get_id_url()
+
+        return d
+        
+    def get_summary(self):
+        '''Returns a summary for this like object.'''
+        return f'{self.author.get_full_name()} Likes your {self.object_type.strip().lower()}'
+
+
+    
 
 
 STATUS_CHOICES = (

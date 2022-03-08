@@ -23,7 +23,8 @@ class PostLike(ModelForm):
 
     class Meta:
         model = Like
-        fields = ('post', 'author', 'summary')
+        # fields = ('post', 'author', 'summary')
+        fields = ('author',)    # TODO update fields
 
     def __init__(self, *args, **kwargs):
         super(PostLike, self).__init__(*args, **kwargs)
