@@ -1,4 +1,4 @@
-from social_distribution.models import Author, Post, Comment
+from social_distribution.models import Author, Post, Comment, Like
 
 
 def create_dummy_authors(n):
@@ -79,6 +79,13 @@ def create_dummy_comments(n, author, post):
                                content_type='text/plain',
                                content=f'Test Comment{i}')
         
+
+def create_dummy_likes_to_post(like_authors, post):
+    '''Creates likes from like_authors to the post'''
+    for like_author in like_authors:
+        Like.objects.create(author=like_author,
+                            object_type='POST',
+                            object_id=post.id)
 
     
 
