@@ -6,3 +6,6 @@
 2- Run command "python manage.py createsuperuser"
 3- Answer the prompts
 ```
+
+### References  
+https://www.w3schools.com/howto/howto_css_icon_buttons.asp
