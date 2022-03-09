@@ -16,4 +16,5 @@ urlpatterns = [
     path('authors/<uuid:author_id>/followers/<uuid:foreign_author_id>/', views.FollowerView.as_view(), name='follower'),
     path('authors/<uuid:author_id>/posts/<uuid:post_id>/comments', views.CommentsView.as_view(), name='comments'),
     path('authors/<uuid:author_id>/posts/<uuid:post_id>/comments/', views.CommentsView.as_view(), name='comments'),
+    path('authors/<uuid:author_id>/posts/<uuid:post_id>/comments/<uuid:comment_id>/likes', views.CommentLikesView.as_view(), name='comment_likes'),
 ]
