@@ -148,14 +148,31 @@ class Post(models.Model):
 
 
 class FollowRequest(models.Model):
-    summary = models.CharField(max_length=100, default='')
     from_author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='follow_request_from')
     to_author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='follow_request_to')
     date_created = models.DateTimeField(default=timezone.now, editable=False)
 
+    type = 'Follow'
+
     def get_iso_date_created(self):
         return self.date_created.replace(microsecond=0).isoformat()
 
+    def get_summary(self):
+        '''Returns a summary for this FollowRequest object.'''
+        return f'{self.from_author.first_name} wants to follow {self.to_author.first_name}'
+
+    def get_detail_dict(self) -> dict:
+        '''
+        Returns a dict that contains a FollowRequest objects's detail.
+        '''
+        d = {}
+        d['type'] = self.type
+        d['summary'] = self.get_summary()
+        d['actor'] = self.from_author.get_detail_dict()
+        d['object'] = self.to_author.get_detail_dict()
+
+        return d
+        
 
 class Comment(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
