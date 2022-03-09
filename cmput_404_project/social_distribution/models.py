@@ -148,6 +148,7 @@ class Post(models.Model):
 
 
 class FollowRequest(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     from_author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='follow_request_from')
     to_author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='follow_request_to')
     date_created = models.DateTimeField(default=timezone.now, editable=False)
@@ -210,6 +211,7 @@ class Like(models.Model):
     ]
     context = "https://www.w3.org/ns/activitystreams"
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
     object_type = models.CharField(max_length=7, choices=OBJECT_TYPE_CHOICES, default='POST')
     object_id = models.UUIDField(default=uuid.uuid4, editable=False)
