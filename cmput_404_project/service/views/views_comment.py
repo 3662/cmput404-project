@@ -59,7 +59,6 @@ class CommentsView(View):
         author = get_object_or_404(Author, id=author_id)
         post = get_object_or_404(Post, id=post_id, author=author)
 
-        # data = json.loads(request.body)
         data = json.loads(request.body)
         # assume the data has a format of the one in the requirements but without 'published' and 'id' fields.
         # assume the comment object has not been created yet
