@@ -13,13 +13,13 @@
              {% if author.id in f_qs %}
               <div class="author">
                 <h2> <b> Author: </b> <a href="{% url 'display_author' id=author.id %}"> {{author.get_full_name}} </a></h2>
-                <p> <b> Type: </b> author </p>
-                <p> <b> ID: </b> {{author.id}} </p>
+                <!-- <p> <b> Type: </b> author </p> 
+                <p> <b> ID: </b> {{author.id}} </p> -->
                 <p> <b> Display Name: </b> {{author.first_name}} {{author.last_name}} </p>
-                <p> <b> ULR: </b> {{author.url}} </p>
+                <!-- <p> <b> ULR: </b> {{author.url}} </p>
                 <p> <b> Host: </b> {{author.host}} </p>
                 <p> <b> Github: </b> {{author.github}} </p>
-                <p> <b> Profile Image: </b> {{author.profile_image}} </p>
+                <p> <b> Profile Image: </b> {{author.profile_image}} </p> -->
               </div>
              {% endif %}
 

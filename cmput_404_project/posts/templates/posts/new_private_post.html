@@ -1,0 +1,12 @@
+{% block title %}Create Private Post {% endblock %}
+{% block content %}
+<h2>Create a Private Post</h2>
+<form method="post">
+    
+    <table>
+        {{ form }}
+    </table>
+    {% csrf_token %}
+    <button type="create_post">Send private post</button>
+</form>
+{% endblock %}
