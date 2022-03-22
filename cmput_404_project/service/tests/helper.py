@@ -84,8 +84,18 @@ def create_dummy_likes_to_post(like_authors, post):
     '''Creates likes from like_authors to the post'''
     for like_author in like_authors:
         Like.objects.create(author=like_author,
+                            author_url = like_author.get_id_url(),
                             object_type='POST',
-                            object_id=post.id)
+                            object_url=post.get_id_url())
+
+
+def create_dummy_likes_to_comment(like_authors, comment):
+    '''Creates likes from like_authors to the comment'''
+    for like_author in like_authors:
+        Like.objects.create(author=like_author,
+                            author_url = like_author.get_id_url(),
+                            object_type='COMMENT',
+                            object_url=comment.get_id_url())
 
     
 

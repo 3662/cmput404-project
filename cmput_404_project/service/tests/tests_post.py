@@ -112,7 +112,7 @@ class PostViewTestCase(TestCase):
         post = Post.objects.get(title='Test Post')
 
         response = c.delete(f'/service/authors/{author.id}/posts/{post.id}/')
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 204)
 
         # make sure the post is deleted from database
         with self.assertRaises(ObjectDoesNotExist):

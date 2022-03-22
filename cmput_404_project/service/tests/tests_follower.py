@@ -108,7 +108,7 @@ class FollowersViewTestCase(TestCase):
 
         # test with valid author and follower ids
         response = c.delete(f'/service/authors/{author.id}/followers/{follower.id}/')
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 204)
         self.assertTrue(not author.followers.filter(id=follower.id).exists())
 
 

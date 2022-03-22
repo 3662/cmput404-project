@@ -26,3 +26,22 @@ class AuthorManager(BaseUserManager):
             raise ValueError('Superuser must have is_superuser=True')
 
         return self.create_user(username, password, **extra_fields)
+
+    def create_without_user(self, **extra_fields):
+        '''
+        Create an author but without user info.
+
+        Note: username gets the same value as the id 
+        '''
+        id = extra_fields.get('id', None)
+
+        if id is None:
+            raise ValueError('id cannot be empty')
+
+        extra_fields['is_staff'] = False
+        extra_fields['is_superuser'] = False
+        extra_fields['is_active'] = False
+
+        author = self.model(username=id, **extra_fields)
+        author.save()
+        return author

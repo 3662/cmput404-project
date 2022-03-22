@@ -47,7 +47,8 @@ class AuthorsDetailView(View):
         size = int(request.GET.get('size', self.DEFAULT_SIZE))
 
         try:
-            authors = Paginator(Author.objects.all(), size).page(page)
+            q = Author.objects.all().order_by('username')
+            authors = Paginator(q, size).page(page)
         except EmptyPage:
             raise Http404('Page does not exist')
 

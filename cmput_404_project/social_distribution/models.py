@@ -1,5 +1,7 @@
 import uuid
+import requests
 
+from urllib.parse import urlparse
 from django.db import models
 from django.contrib.auth.models import AbstractUser 
 from django.utils import timezone
@@ -10,6 +12,7 @@ from .managers import AuthorManager
 
 class Author(AbstractUser):
 
+    type = 'author'
     class Meta:
         verbose_name = 'Author'
 
@@ -39,7 +42,7 @@ class Author(AbstractUser):
         Returns a dict containing the author information.
         '''
         d = {}
-        d['type'] = 'author'
+        d['type'] = self.type
         d['id'] = self.get_id_url()
         d['url'] = self.get_profile_url()
         d['host'] = self.host
@@ -53,7 +56,25 @@ class Author(AbstractUser):
 
 
 class Post(models.Model):
-    # id = models.SlugField(primary_key=True, max_length=64, unique=True)
+
+    VISIBILITY_CHOICES = [
+        ('PUBLIC', 'Public'),
+        ('FRIENDS', 'Friends'),
+        ('PRIVATE', 'Private'),
+    ]
+
+    CONTENT_TYPE_CHOICES = [
+        ('text/plain', 'text'),
+        ('text/markdown', 'markdown'),
+        ('application/base64', 'application'),
+        ('image/png;base64', 'png'),
+        ('image/jpeg;base64', 'jpeg')
+    ]
+
+    DEFAULT_COMMENTS_PAGE = 1
+    DEFAULT_COMMENTS_SIZE = 5
+    
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     author = models.ForeignKey(Author, on_delete=models.CASCADE, default=None, null=True, blank=True)
     source = models.URLField(null=True, default=None)
@@ -61,14 +82,13 @@ class Post(models.Model):
     image = models.URLField(null=True, default=None)
     title = models.CharField(max_length=100, default='')
     description = models.TextField(max_length=150, default='')
-    content_type = models.CharField(max_length=30, default='text/plain')        
+    content_type = models.CharField(max_length=18, choices=CONTENT_TYPE_CHOICES, default='text/plain')        
     content = models.TextField(max_length=1000, default='')
-    # category = models.ManyToManyField("Category")
     categories = models.CharField(max_length=100, default='')
     count = models.IntegerField(default=0)
     published = models.DateTimeField(default=timezone.now, editable=False)
     modified = models.DateTimeField(default=timezone.now)
-    visibility = models.CharField(max_length=7, default='PUBLIC')
+    visibility = models.CharField(max_length=7, choices=VISIBILITY_CHOICES, default='PUBLIC')
     authors = Author.objects.all()
     author_choices = []
     for person in authors:
@@ -77,6 +97,8 @@ class Post(models.Model):
     unlisted = models.BooleanField(default=False)
     liked = models.ManyToManyField(Author, blank=True, related_name='likes')
     comments_id = models.UUIDField(default=uuid.uuid4, editable=False)
+
+    type = 'post'
 
     def save(self, *args, **kwargs):
         '''Upon save, update timestamps of the post'''
@@ -98,12 +120,12 @@ class Post(models.Model):
     def get_iso_modified(self):
         return self.modified.replace(microsecond=0).isoformat()
 
-    def get_detail_dict(self) -> dict:
+    def get_detail_dict(self, page=DEFAULT_COMMENTS_PAGE, size=DEFAULT_COMMENTS_SIZE) -> dict:
         '''
         Returns a dict that contains a post detail.
         '''
         d = {}
-        d['type'] = 'post'
+        d['type'] = self.type
         d['title'] = self.title
         d['id'] = self.get_id_url()
         d['source'] = self.source
@@ -114,21 +136,19 @@ class Post(models.Model):
         d['author'] = self.author.get_detail_dict()
         d['categories'] = self.get_list_of_categories()
         d['count'] = self.count
+        d['comments'] = self.get_comments_id_url()
+        d['commentsSrc'] = self.get_comments_src_dict(page, size)
         d['published'] = self.get_iso_published()
         d['visibility'] = self.visibility
         d['unlisted'] = self.unlisted
 
-        # TODO comments
-
         return d
 
-    def get_comments_src_dict(self, page=1, size=5) -> dict:
+    def get_comments_src_dict(self, page=DEFAULT_COMMENTS_PAGE, size=DEFAULT_COMMENTS_SIZE) -> dict:
         '''
         Returns a dict that contains the details of the comments for the post
         '''
-        q = Comment.objects.all()  
-        q = q.filter(post=self)
-        q = q.order_by('-date_created')
+        q = Comment.objects.filter(post=self).order_by('-date_created')
         comments = Paginator(q, size).page(page)
 
         data = {}
@@ -140,27 +160,52 @@ class Post(models.Model):
         data['items'] = [c.get_detail_dict() for c in comments]
         return data
 
-# class Category(models.Model):
-    # value = models.CharField(max_length=100)
-
 
 class FollowRequest(models.Model):
-    summary = models.CharField(max_length=100, default='')
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     from_author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='follow_request_from')
     to_author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='follow_request_to')
     date_created = models.DateTimeField(default=timezone.now, editable=False)
 
+    type = 'Follow'
+
     def get_iso_date_created(self):
         return self.date_created.replace(microsecond=0).isoformat()
 
+    def get_summary(self):
+        '''Returns a summary for this FollowRequest object.'''
+        return f'{self.from_author.first_name} wants to follow {self.to_author.first_name}'
+
+    def get_detail_dict(self) -> dict:
+        '''
+        Returns a dict that contains a FollowRequest objects's detail.
+        '''
+        d = {}
+        d['type'] = self.type
+        d['summary'] = self.get_summary()
+        d['actor'] = self.from_author.get_detail_dict()
+        d['object'] = self.to_author.get_detail_dict()
+
+        return d
+        
 
 class Comment(models.Model):
+    CONTENT_TYPE_CHOICES = [
+        ('text/plain', 'text'),
+        ('text/markdown', 'markdown'),
+        ('application/base64', 'application'),
+        ('image/png;base64', 'png'),
+        ('image/jpeg;base64', 'jpeg')
+    ]
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
-    post = models.ForeignKey(Post, on_delete=models.CASCADE)
-    content_type = models.CharField(max_length=30, default='text/plain')
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, null=True)
+    content_type = models.CharField(max_length=18, choices=CONTENT_TYPE_CHOICES, default='text/plain')        
     date_created = models.DateTimeField(default=timezone.now, editable=False)
     content = models.TextField(max_length=1000, default='')
+
+    type = 'comment'
 
     def get_iso_date_created(self):
         return self.date_created.replace(microsecond=0).isoformat()
@@ -173,13 +218,14 @@ class Comment(models.Model):
         Returns a dict that contains a comment's detail.
         '''
         d = {}
-        d['type'] = 'comment' 
+        d['type'] = self.type
         d['author'] = self.author.get_detail_dict()
         d['comment'] = self.content
         d['contentType'] = self.content_type
         d['published'] = self.get_iso_date_created()
         d['id'] = self.get_id_url()
         return d
+
 
 class Like(models.Model):
     OBJECT_TYPE_CHOICES = [
@@ -188,10 +234,16 @@ class Like(models.Model):
     ]
     context = "https://www.w3.org/ns/activitystreams"
 
-    author = models.ForeignKey(Author, on_delete=models.CASCADE)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    # Author object does not have to be given, but author url must be provided
+    author = models.ForeignKey(Author, on_delete=models.CASCADE, default=None, null=True)
+    author_url = models.URLField(max_length=1000, editable=False, null=False)   
     object_type = models.CharField(max_length=7, choices=OBJECT_TYPE_CHOICES, default='POST')
-    object_id = models.UUIDField(default=uuid.uuid4, editable=False)
+    # object_id = models.UUIDField(default=None, editable=False, null=True)
+    object_url = models.URLField(max_length=1000, default=None, editable=False)
     date_created = models.DateTimeField(default=timezone.now, editable=False)
+
+    type = 'Like'
 
 
     def get_iso_date_created(self):
@@ -202,14 +254,12 @@ class Like(models.Model):
         d = {}
         d['@context'] = self.context
         d['summary'] = self.get_summary()
-        d['type'] = 'Like'
-        d['author'] = self.author.get_detail_dict()
-
-        if self.object_type == 'POST':
-            object = Post.objects.get(id=self.object_id)
+        d['type'] = self.type
+        if self.author is None:
+            d['author'] = request_detail_dict(self.author_url)
         else:
-            object = Comment.objects.get(id=self.object_id)
-        d['object'] = object.get_id_url()
+            d['author'] = self.author.get_detail_dict()
+        d['object'] = self.object_url
 
         return d
         
@@ -217,7 +267,85 @@ class Like(models.Model):
         '''Returns a summary for this like object.'''
         return f'{self.author.get_full_name()} Likes your {self.object_type.strip().lower()}'
 
+    def is_object_public(self):
+        '''
+        Returns True if the liked object is publicly available.
+        Otherwise, returns False
+        '''
+        o = urlparse(self.object_url)
+        service_url = f'{o.scheme}://{o.netloc}/service{o.path}'
+        res = requests.get(service_url)
+        data = res.json() if res.status_code == 200 else {}
 
+        obj_type = data['type']
+        if obj_type == 'post':
+            return data['visibility'] == 'PUBLIC'
+        else:
+            # for a comment, must check whether its post is public
+            return request_detail_dict(data['id'])['visibility'] == 'PUBLIC'
+            
+
+
+
+
+
+class Inbox(models.Model):
+    author = models.ForeignKey(Author, on_delete=models.CASCADE)
+    type = 'inbox'
+
+
+    def get_detail_dict(self):
+        '''Returns a dict that contains this inbox's detail.'''
+        d = {}
+        d['type'] = 'inbox'
+        d['author'] = self.author.get_id_url()
+        items = InboxItem.objects.filter(inbox=self).all()
+        d['items'] = [item.get_detail_dict() for item in items]
+
+        return d
+
+
+class InboxItem(models.Model):
+    OBJECT_TYPE_CHOICES = [
+        ('POST', 'Post'),
+        ('COMMENT', 'Comment'),
+        ('FOLLOW', 'Follow'),
+        ('LIKE', 'like')
+    ]
+
+    inbox = models.ForeignKey(Inbox, on_delete=models.CASCADE)
+    object_type = models.CharField(max_length=7, choices=OBJECT_TYPE_CHOICES, default='POST')
+    object_id = models.UUIDField(default=None, editable=False, null=True)
+    object_url = models.URLField(max_length=1000, default=None, editable=False)
+
+
+    def get_detail_dict(self) -> dict:
+        '''Returns a dict that contains this object's detail.'''
+        if self.object_id is not None:
+            if self.object_type == 'POST':
+                object = Post.objects.get(id=self.object_id)
+            elif self.object_type == 'COMMENT':
+                object = Comment.objects.get(id=self.object_id)
+            elif self.object_type == 'FOLLOW':
+                object = FollowRequest.objects.get(id=self.object_id)
+            else:
+                object = Like.objects.get(id=self.object_id)
+            return object.get_detail_dict()
+
+
+
+
+
+
+def request_detail_dict(object_url) -> dict:
+    '''
+    Makes a GET request to service api of object_url.
+    Then, returns a parsed json data.
+    '''
+    o = urlparse(object_url)
+    service_url = f'{o.scheme}://{o.netloc}/service{o.path}'
+    res = requests.get(service_url)
+    return res.json() if res.status_code == 200 else {}
     
 
 
