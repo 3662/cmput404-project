@@ -1,4 +1,4 @@
-import django_heroku
+import django_on_heroku
 
 
-django_heroku.settings(locals())
+django_on_heroku.settings(locals())
