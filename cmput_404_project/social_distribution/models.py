@@ -69,8 +69,8 @@ class Post(models.Model):
         ('image/jpeg;base64', 'jpeg')
     ]
 
-    COMMENTS_PAGE = 1
-    COMMENTS_SIZE = 5
+    DEFAULT_COMMENTS_PAGE = 1
+    DEFAULT_COMMENTS_SIZE = 5
     
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -118,7 +118,7 @@ class Post(models.Model):
     def get_iso_modified(self):
         return self.modified.replace(microsecond=0).isoformat()
 
-    def get_detail_dict(self) -> dict:
+    def get_detail_dict(self, page=DEFAULT_COMMENTS_PAGE, size=DEFAULT_COMMENTS_SIZE) -> dict:
         '''
         Returns a dict that contains a post detail.
         '''
@@ -134,21 +134,19 @@ class Post(models.Model):
         d['author'] = self.author.get_detail_dict()
         d['categories'] = self.get_list_of_categories()
         d['count'] = self.count
+        d['comments'] = self.get_comments_id_url()
+        d['commentsSrc'] = self.get_comments_src_dict(page, size)
         d['published'] = self.get_iso_published()
         d['visibility'] = self.visibility
         d['unlisted'] = self.unlisted
 
-        # TODO comments
-
         return d
 
-    def get_comments_src_dict(self, page=COMMENTS_PAGE, size=COMMENTS_SIZE) -> dict:
+    def get_comments_src_dict(self, page=DEFAULT_COMMENTS_PAGE, size=DEFAULT_COMMENTS_SIZE) -> dict:
         '''
         Returns a dict that contains the details of the comments for the post
         '''
-        q = Comment.objects.all()  
-        q = q.filter(post=self)
-        q = q.order_by('-date_created')
+        q = Comment.objects.filter(post=self).order_by('-date_created')
         comments = Paginator(q, size).page(page)
 
         data = {}
