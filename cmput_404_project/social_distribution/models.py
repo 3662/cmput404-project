@@ -1,5 +1,7 @@
 import uuid
+import requests
 
+from urllib.parse import urlparse
 from django.db import models
 from django.contrib.auth.models import AbstractUser 
 from django.utils import timezone
@@ -10,6 +12,7 @@ from .managers import AuthorManager
 
 class Author(AbstractUser):
 
+    type = 'author'
     class Meta:
         verbose_name = 'Author'
 
@@ -23,7 +26,6 @@ class Author(AbstractUser):
     objects = AuthorManager()
     REQUIRED_FIELDS = ['first_name', 'last_name', 'host', 'github', 'profile_image']
 
-    type = 'author'
 
     def get_full_name(self):
         full_name = f"{self.first_name} {self.last_name}"
@@ -224,6 +226,7 @@ class Comment(models.Model):
         d['id'] = self.get_id_url()
         return d
 
+
 class Like(models.Model):
     OBJECT_TYPE_CHOICES = [
         ('POST', 'Post'),
@@ -232,9 +235,12 @@ class Like(models.Model):
     context = "https://www.w3.org/ns/activitystreams"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    author = models.ForeignKey(Author, on_delete=models.CASCADE)
+    # Author object does not have to be given, but author url must be provided
+    author = models.ForeignKey(Author, on_delete=models.CASCADE, default=None, null=True)
+    author_url = models.URLField(max_length=1000, editable=False, null=False)   
     object_type = models.CharField(max_length=7, choices=OBJECT_TYPE_CHOICES, default='POST')
-    object_id = models.UUIDField(default=uuid.uuid4, editable=False)
+    # object_id = models.UUIDField(default=None, editable=False, null=True)
+    object_url = models.URLField(max_length=1000, default=None, editable=False)
     date_created = models.DateTimeField(default=timezone.now, editable=False)
 
     type = 'Like'
@@ -249,19 +255,38 @@ class Like(models.Model):
         d['@context'] = self.context
         d['summary'] = self.get_summary()
         d['type'] = self.type
-        d['author'] = self.author.get_detail_dict()
-
-        if self.object_type == 'POST':
-            object = Post.objects.get(id=self.object_id)
+        if self.author is None:
+            d['author'] = request_detail_dict(self.author_url)
         else:
-            object = Comment.objects.get(id=self.object_id)
-        d['object'] = object.get_id_url()
+            d['author'] = self.author.get_detail_dict()
+        d['object'] = self.object_url
 
         return d
         
     def get_summary(self):
         '''Returns a summary for this like object.'''
         return f'{self.author.get_full_name()} Likes your {self.object_type.strip().lower()}'
+
+    def is_object_public(self):
+        '''
+        Returns True if the liked object is publicly available.
+        Otherwise, returns False
+        '''
+        o = urlparse(self.object_url)
+        service_url = f'{o.scheme}://{o.netloc}/service{o.path}'
+        res = requests.get(service_url)
+        data = res.json() if res.status_code == 200 else {}
+
+        obj_type = data['type']
+        if obj_type == 'post':
+            return data['visibility'] == 'PUBLIC'
+        else:
+            # for a comment, must check whether its post is public
+            return request_detail_dict(data['id'])['visibility'] == 'PUBLIC'
+            
+
+
+
 
 
 class Inbox(models.Model):
@@ -307,6 +332,15 @@ class InboxItem(models.Model):
 
 
 
+def request_detail_dict(object_url) -> dict:
+    '''
+    Makes a GET request to service api of object_url.
+    Then, returns a parsed json data.
+    '''
+    o = urlparse(object_url)
+    service_url = f'{o.scheme}://{o.netloc}/service{o.path}'
+    res = requests.get(service_url)
+    return res.json() if res.status_code == 200 else {}
     
 
 
