@@ -7,11 +7,15 @@ charset-normalizer==2.0.12
 curtsies==0.3.10
 cwcwidth==0.1.5
 dataclasses==0.8
+dj-database-url==0.5.0
 Django==3.2.12
+django-on-heroku==1.1.2
 djangorestframework==3.13.1
 greenlet==1.1.2
+gunicorn==20.1.0
 idna==3.3
 Pillow==8.4.0
+psycopg2-binary==2.9.3
 Pygments==2.11.2
 python-dateutil==2.8.2
 pytz==2021.3
@@ -22,3 +26,4 @@ sqlparse==0.4.2
 typing==3.7.4.3
 typing_extensions==4.1.0
 urllib3==1.26.8
+whitenoise==5.3.0
