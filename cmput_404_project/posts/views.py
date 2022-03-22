@@ -82,23 +82,23 @@ def delete_post(request, id):
     return redirect("/")
 
 def new_post(request):
-    if request.method == "POST":
-        form = PostForm(request.POST)
-        obj = form.save(commit=False)                
-        obj.author = request.user
-        obj.visibility = 'PRIVATE'
+    # if request.method == "POST":
+    #     form = PostForm(request.POST)
+    #     obj = form.save(commit=False)                
+    #     obj.author = request.user
+    #     obj.visibility = form.cleaned_data["visibility"]
 
-        # TODO set proper URls
-        obj.source = ""
-        obj.origin = ""
+    #     # TODO set proper URls
+    #     obj.source = ""
+    #     obj.origin = ""
 
-        obj.save()
+    #     obj.save()
 
-        return redirect("/")
-    else:
-        form = PostForm()
+    #     return redirect("/")
+    # else:
+    form = PostForm()
 
-        return render(request, "posts/new_post.html", {'form': form})
+    return render(request, "posts/new_post.html", {'form': form, 'author': request.user})
 
 def new_private_post(request):
     if request.method == "POST":
