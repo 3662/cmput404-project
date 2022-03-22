@@ -15,7 +15,8 @@ class PrivatePostForm(ModelForm):
 
     class Meta:
         model = Post
-        fields = ('title', 'description', 'image', 'recepient')
+        # fields = ('title', 'description', 'image', 'recepient')
+        fields = ('title', 'description', 'image')
 
     def __init__(self, *args, **kwargs):
         super(PrivatePostForm, self).__init__(*args, **kwargs)
