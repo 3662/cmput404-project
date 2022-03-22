@@ -315,20 +315,25 @@ class InboxItem(models.Model):
 
     inbox = models.ForeignKey(Inbox, on_delete=models.CASCADE)
     object_type = models.CharField(max_length=7, choices=OBJECT_TYPE_CHOICES, default='POST')
-    object_id = models.UUIDField(default=uuid.uuid4, editable=False)
+    object_id = models.UUIDField(default=None, editable=False, null=True)
+    object_url = models.URLField(max_length=1000, default=None, editable=False)
 
 
     def get_detail_dict(self) -> dict:
         '''Returns a dict that contains this object's detail.'''
-        if self.object_type == 'POST':
-            object = Post.objects.get(id=self.object_id)
-        elif self.object_type == 'COMMENT':
-            object = Comment.objects.get(id=self.object_id)
-        elif self.object_type == 'FOLLOW':
-            object = FollowRequest.objects.get(id=self.object_id)
-        else:
-            object = Like.objects.get(id=self.object_id)
-        return object.get_detail_dict()
+        if self.object_id is not None:
+            if self.object_type == 'POST':
+                object = Post.objects.get(id=self.object_id)
+            elif self.object_type == 'COMMENT':
+                object = Comment.objects.get(id=self.object_id)
+            elif self.object_type == 'FOLLOW':
+                object = FollowRequest.objects.get(id=self.object_id)
+            else:
+                object = Like.objects.get(id=self.object_id)
+            return object.get_detail_dict()
+
+
+
 
 
 
