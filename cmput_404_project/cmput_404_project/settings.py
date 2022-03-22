@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
 import os
+import django_on_heroku
 
 from pathlib import Path
 
@@ -133,3 +134,6 @@ STATIC_URL = '/static/'
 
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'home'
+
+
+django_on_heroku.settings(locals())
