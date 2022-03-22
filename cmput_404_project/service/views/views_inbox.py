@@ -169,8 +169,14 @@ class InboxView(View):
         context = data_dict['@context']
         if context != Like.context:
             raise ValueError('Invalid context: %s' % context)
-        like_author = self._create_author_if_not_exist(data_dict['author'])
-        object_id = data_dict['object'].split('/')[-1]
+        like_author_id = data_dict['author']['id'].split('/')[-1]
+        if Author.objects.filter(id=like_author_id).exists():
+            like_author = Author.objects.get(id=like_author_id)
+        else:
+            like_author = None
+        like_author_url = data_dict['author']['url']
+        object_url = data_dict['object']
+        object_id = object_url.split('/')[-1]
 
         if Post.objects.filter(id=object_id).exists():
             object_type = Like.OBJECT_TYPE_CHOICES[0][0]
@@ -179,7 +185,10 @@ class InboxView(View):
         else:
             raise ValueError('object id: %s is not associated with this author' % object_id)
         
-        return Like.objects.create(author=like_author, object_type=object_type, object_id=object_id)
+        return Like.objects.create(author=like_author, 
+                                   author_url=like_author_url, 
+                                   object_type=object_type, 
+                                   object_url=object_url)
 
 
     def _create_comment_if_not_exist(self, data_dict) -> Comment:

@@ -44,8 +44,8 @@ class PostLikesView(View):
         Returns a dict that contains a list of likes.
         '''
         post_author = get_object_or_404(Author, pk=author_id)
-        get_object_or_404(Post, pk=post_id, author=post_author)
-        likes = Like.objects.filter(object_type=Like.OBJECT_TYPE_CHOICES[0][0], object_id=post_id).all()
+        post = get_object_or_404(Post, pk=post_id, author=post_author)
+        likes = Like.objects.filter(object_type=Like.OBJECT_TYPE_CHOICES[0][0], object_url=post.get_id_url()).all()
 
         data = {}
         data['type'] = 'liked'
@@ -95,8 +95,8 @@ class CommentLikesView(View):
         '''
         post_author = get_object_or_404(Author, pk=author_id)
         post = get_object_or_404(Post, pk=post_id, author=post_author)
-        get_object_or_404(Comment, pk=comment_id, post=post)
-        likes = Like.objects.filter(object_type=Like.OBJECT_TYPE_CHOICES[1][0], object_id=comment_id).all()
+        comment = get_object_or_404(Comment, pk=comment_id, post=post)
+        likes = Like.objects.filter(object_type=Like.OBJECT_TYPE_CHOICES[1][0], object_url=comment.get_id_url()).all()
 
         data = {}
         data['type'] = 'liked'
