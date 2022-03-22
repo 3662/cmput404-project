@@ -106,7 +106,26 @@ class InboxView(View):
 
 
     def delete(self, request, *args, **kwargs):
-        pass
+        '''
+        DELETE [local]: clears the inbox
+
+        Returns:
+            - 204: if successfully cleared
+            - 404: if the author does not exist
+        '''
+
+        author_id = kwargs.get('author_id', '')
+        author = get_object_or_404(Author, id=author_id)
+
+        try:
+            inbox = Inbox.objects.get(author=author)
+        except ObjectDoesNotExist:
+            # create an inbox for this author if it doesn't exist
+            inbox = Inbox.objects.create(author=author)
+        
+        InboxItem.objects.filter(inbox=inbox).delete()
+    
+        return HttpResponse("The inbox is cleared", status=204)
 
 
     def _get_post_inbox_items(self, request, author_id) -> dict:
