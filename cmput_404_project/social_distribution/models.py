@@ -55,6 +55,20 @@ class Author(AbstractUser):
 
 class Post(models.Model):
 
+    VISIBILITY_CHOICES = [
+        ('PUBLIC', 'Public'),
+        ('FRIENDS', 'Friends'),
+        ('PRIVATE', 'Private'),
+    ]
+
+    CONTENT_TYPE_CHOICES = [
+        ('text/plain', 'text'),
+        ('text/markdown', 'markdown'),
+        ('application/base64', 'application'),
+        ('image/png;base64', 'png'),
+        ('image/jpeg;base64', 'jpeg')
+    ]
+
     COMMENTS_PAGE = 1
     COMMENTS_SIZE = 5
     
@@ -66,13 +80,13 @@ class Post(models.Model):
     image = models.URLField(null=True, default=None)
     title = models.CharField(max_length=100, default='')
     description = models.TextField(max_length=150, default='')
-    content_type = models.CharField(max_length=30, default='text/plain')        
+    content_type = models.CharField(max_length=18, choices=CONTENT_TYPE_CHOICES, default='text/plain')        
     content = models.TextField(max_length=1000, default='')
     categories = models.CharField(max_length=100, default='')
     count = models.IntegerField(default=0)
     published = models.DateTimeField(default=timezone.now, editable=False)
     modified = models.DateTimeField(default=timezone.now)
-    visibility = models.CharField(max_length=7, default='PUBLIC')
+    visibility = models.CharField(max_length=7, choices=VISIBILITY_CHOICES, default='PUBLIC')
     authors = Author.objects.all()
     author_choices = []
     for person in authors:
@@ -178,7 +192,7 @@ class FollowRequest(models.Model):
 class Comment(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
-    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, null=True)
     content_type = models.CharField(max_length=30, default='text/plain')
     date_created = models.DateTimeField(default=timezone.now, editable=False)
     content = models.TextField(max_length=1000, default='')
