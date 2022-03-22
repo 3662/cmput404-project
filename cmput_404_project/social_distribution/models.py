@@ -190,10 +190,18 @@ class FollowRequest(models.Model):
         
 
 class Comment(models.Model):
+    CONTENT_TYPE_CHOICES = [
+        ('text/plain', 'text'),
+        ('text/markdown', 'markdown'),
+        ('application/base64', 'application'),
+        ('image/png;base64', 'png'),
+        ('image/jpeg;base64', 'jpeg')
+    ]
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
     post = models.ForeignKey(Post, on_delete=models.CASCADE, null=True)
-    content_type = models.CharField(max_length=30, default='text/plain')
+    content_type = models.CharField(max_length=18, choices=CONTENT_TYPE_CHOICES, default='text/plain')        
     date_created = models.DateTimeField(default=timezone.now, editable=False)
     content = models.TextField(max_length=1000, default='')
 
