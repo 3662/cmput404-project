@@ -84,7 +84,7 @@ class PostView(View):
         DELETE [local]: removes the post whose id is post_id.
 
         Returns: 
-            - 200: if the deletion was successful
+            - 204: if the deletion was successful
             - 404: if author or post does not exist 
         '''
         author_id = kwargs.get('author_id', '')
@@ -92,7 +92,7 @@ class PostView(View):
         author = Author.objects.get(id=author_id)
         post = get_object_or_404(Post, pk=post_id, author=author)
         post.delete()
-        return HttpResponse('Post successfully deleted')
+        return HttpResponse('Post successfully deleted', status=204)
 
 
     def put(self, request, *args, **kwargs):

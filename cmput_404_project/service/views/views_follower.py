@@ -69,7 +69,7 @@ class FollowerView(View):
         DELETE [local]: remove foreign_author_id as a follower of author_id
 
         Returns:
-            - 200: if deleted successfully
+            - 204: if deleted successfully
             - 404: if foreign_author_id is not a follower of author_id, 
                     or if author with author_id does not exist,
                     or if author with foreign_author_id does not exist
@@ -79,7 +79,7 @@ class FollowerView(View):
         author = get_object_or_404(Author, pk=author_id)
         foreign_author = get_object_or_404(Author, pk=foreign_author_id)
         author.followers.remove(foreign_author)
-        return HttpResponse('Follower successfully deleted from the author')
+        return HttpResponse('Follower successfully deleted from the author', status=204)
 
         
     def put(self, request, *args, **kwargs):
