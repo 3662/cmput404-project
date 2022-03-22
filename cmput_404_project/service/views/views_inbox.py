@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 from django.views import View
 from django.http import JsonResponse, HttpResponse, Http404
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.paginator import Paginator, EmptyPage
 
 from social_distribution.models import Author, Post, Like, Comment, Inbox, InboxItem, FollowRequest
 
@@ -13,20 +14,36 @@ class InboxView(View):
 
     http_method_names = ['get', 'head', 'options', 'post', 'delete']
 
+    DEFAULT_PAGE = 1
+    DEFAULT_SIZE = 10
+
     def get(self, request, *args, **kwargs):
+        '''
+        GET [local]: if authenticated, get a list of posts sent to AUTHOR_ID (paginated)
+
+        Default page = 1, size = 10
+
+        Returns:
+            - 200: if successful
+            - 404: if author or page does not exist
+        '''
         author_id = kwargs.get('author_id', '')
-        author = get_object_or_404(Author, id=author_id)
-
-        try:
-            inbox = Inbox.objects.get(author=author)
-        except ObjectDoesNotExist:
-            # create an inbox for this author if it doesn't exist
-            inbox = Inbox.objects.create(author=author)
-
-        raise NotImplementedError()
+        return JsonResponse(self._get_post_inbox_items(request, author_id))
 
     def head(self, request, *args, **kwargs):
-        pass
+        '''
+        Handles HEAD request of the same GET request.
+
+        Returns:
+            - 200: if successful
+            - 404: if author or page does not exist
+        '''
+        author_id = kwargs.get('author_id', '')
+        data_json = json.dumps(self._get_post_inbox_items(request, author_id))
+        response = HttpResponse()
+        response.headers['Content-Type'] = 'application/json'
+        response.headers['Content-Length'] = str(len(bytes(data_json, 'utf-8')))
+        return response
 
     def post(self, request, *args, **kwargs):
         '''
@@ -90,6 +107,35 @@ class InboxView(View):
 
     def delete(self, request, *args, **kwargs):
         pass
+
+
+    def _get_post_inbox_items(self, request, author_id) -> dict:
+        '''
+        Returns a dict containing a list of posts in the author_id's inbox.
+        '''
+
+        page = int(request.GET.get('page', self.DEFAULT_PAGE))
+        size = int(request.GET.get('size', self.DEFAULT_SIZE))
+
+        author = get_object_or_404(Author, id=author_id)
+
+        try:
+            inbox = Inbox.objects.get(author=author)
+        except ObjectDoesNotExist:
+            # create an inbox for this author if it doesn't exist
+            inbox = Inbox.objects.create(author=author)
+
+        try:
+            q = InboxItem.objects.all().filter(inbox=inbox, object_type=InboxItem.OBJECT_TYPE_CHOICES[0][0])
+            q = q.order_by('-published')
+            post_items = Paginator(q, size).page(page)
+        except EmptyPage:
+            raise Http404('Page does not exist')
+
+        data = {}
+        data['type'] = 'posts'
+        data['items'] = [p.get_detail_dict() for p in post_items]
+        return data
 
 
     def _create_like(self, data_dict) -> Like:
