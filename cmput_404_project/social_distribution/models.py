@@ -290,8 +290,16 @@ class Like(models.Model):
         Returns True if the liked object is publicly available.
         Otherwise, returns False
         '''
-        data = request_detail_dict(self.object_url)
+        object_id = self.object_url.split('/')[-1]
 
+        # check local server
+        if self.object_type == 'POST' and Post.objects.filter(id=object_id).exists():
+            return Post.objects.get(id=object_id).visibility == 'PUBLIC'
+        elif self.object_type == 'COMMENT' and Comment.objects.filter(id=object_id).exists():
+            return Comment.objects.get(id=object_id).post.visibility == 'PUBLIC'
+
+        # check remote servers
+        data = request_detail_dict(self.object_url)
         obj_type = data['type']
         if obj_type == 'post':
             return data['visibility'] == 'PUBLIC'
