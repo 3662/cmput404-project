@@ -53,10 +53,10 @@ class AuthorDetailViewTestCase(TestCase):
         c = Client()
 
         author = Author.objects.get(username='test0')
-        response = c.get(f'/service/authors/{author.id}/')
+        response = c.get(f'/service/authors/{author.id}')
 
-        data = response.json()
         self.assertEqual(response.status_code, 200)
+        data = response.json()
 
         self.assertTrue('type' in data.keys())
         self.assertTrue('id' in data.keys())
@@ -85,7 +85,7 @@ class AuthorDetailViewTestCase(TestCase):
         c = Client()
 
         author = Author.objects.get(username='test0')
-        response = c.head(f'/service/authors/{author.id}/')
+        response = c.head(f'/service/authors/{author.id}')
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content, b'')
@@ -97,7 +97,7 @@ class AuthorDetailViewTestCase(TestCase):
         author = Author.objects.get(username='test0')
 
         # test without signed in 
-        response = c.post(f'/service/authors/{author.id}/')
+        response = c.post(f'/service/authors/{author.id}')
         self.assertEqual(response.status_code, 403)
 
         c.login(username=author.username, password='temporary')
@@ -106,7 +106,7 @@ class AuthorDetailViewTestCase(TestCase):
         data = {
             'github': 'invalid url',
         }
-        response = c.post(f'/service/authors/{author.id}/', data, follow=True)
+        response = c.post(f'/service/authors/{author.id}', data, follow=True)
         self.assertEqual(response.status_code, 400)
 
         # post with valid form
@@ -116,7 +116,7 @@ class AuthorDetailViewTestCase(TestCase):
             'profile_image': 'https://avatars.githubusercontent.com/u/71972141?s=200&v=4',
             'github': 'https://github.com/updated',
         }
-        response = c.post(f'/service/authors/{author.id}/', data, follow=True)
+        response = c.post(f'/service/authors/{author.id}', data, follow=True)
         self.assertEqual(response.status_code, 200)
 
         # check if the author is updated

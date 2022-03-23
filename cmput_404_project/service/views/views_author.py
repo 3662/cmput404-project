@@ -1,11 +1,15 @@
 import json 
+import socket
+from tkinter import W
 
 from django.shortcuts import get_object_or_404, render
 from django.core.paginator import Paginator, EmptyPage
 from django.http import Http404, HttpResponseRedirect, JsonResponse, HttpResponse
 from django.views import View
+from django.conf import settings
 
 from social_distribution.models import Author
+from service.models import ServerNode
 from accounts.forms import AuthorChangeForm
 
 
@@ -26,6 +30,7 @@ class AuthorsDetailView(View):
             - 200: if successful
             - 404: if page does not exist
         '''
+        # authorize_server(request)
         return JsonResponse(self._get_authors(request))
 
     def head(self, request, *args, **kwargs):
@@ -117,3 +122,13 @@ class AuthorDetailView(View):
         status_code = 400
         return HttpResponse('The form is not valid.', status=status_code)     
 
+
+def authorize_server(request):
+    if is_host_local(request):
+        return True
+    
+    request.META.get('HTTP_AUTHORIZATION', '')
+
+def is_host_local(request) -> bool:
+    return request.get_host() == settings.HOSTNAME
+        
