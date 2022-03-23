@@ -118,3 +118,82 @@ class CommentLikesViewTestCase(TestCase):
         response = c.head(f'/service/authors/{author.id}/posts/{post.id}/comments/{comment.id}/likes')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content, b'')
+
+
+class LikedViewTestCase(TestCase): 
+
+    NUM_LIKE_AUTHORS = 1
+    NUM_COMMENT_AUTHOR = 1
+    NUM_COMMENTS = 1
+
+    def setUp(self):
+        create_dummy_authors(self.NUM_LIKE_AUTHORS + self.NUM_COMMENT_AUTHOR + 1)
+        post_author = Author.objects.get(username='test0')
+        create_dummy_post(post_author, visibility='PUBLIC')
+        create_dummy_post(post_author, visibility='PRIVATE')
+        public_post = Post.objects.get(title='Test Post', visibility='PUBLIC')
+        private_post = Post.objects.get(title='Test Post', visibility='PRIVATE')
+        comment_author = Author.objects.get(username='test1')
+        create_dummy_comments(self.NUM_COMMENTS, comment_author, public_post)
+        create_dummy_comments(self.NUM_COMMENTS, comment_author, private_post)
+    
+    def test_get(self):
+        post_author = Author.objects.get(username='test0')
+        comment_author = Author.objects.get(username='test1')
+        like_author = Author.objects.all().exclude(id=post_author.id).exclude(id=comment_author.id)[0]
+        public_post = Post.objects.get(title='Test Post', visibility='PUBLIC')
+        private_post = Post.objects.get(title='Test Post', visibility='PRIVATE')
+        public_comment = Comment.objects.get(content='Test Comment0', post=public_post, author=comment_author)
+        private_comment = Comment.objects.get(content='Test Comment0', post=private_post, author=comment_author)
+
+        # create 4 likes: 2 for public objects and the other 2 for private objects
+        public_post_like = Like.objects.create(author=like_author, 
+                                               author_url=like_author.get_id_url(), 
+                                               object_type='POST', 
+                                               object_url=public_post.get_id_url())
+        
+        public_comment_like = Like.objects.create(author=like_author, 
+                                                  author_url=like_author.get_id_url(), 
+                                                  object_type='COMMENT', 
+                                                  object_url=public_comment.get_id_url())
+
+        private_post_like = Like.objects.create(author=like_author, 
+                                                author_url=like_author.get_id_url(), 
+                                                object_type='POST', 
+                                                object_url=private_post.get_id_url())
+
+        private_comment_like = Like.objects.create(author=like_author, 
+                                                   author_url=like_author.get_id_url(), 
+                                                   object_type='COMMENT', 
+                                                   object_url=private_comment.get_id_url())
+
+        self.assertTrue(public_post_like.is_object_public())
+        self.assertTrue(public_comment_like.is_object_public())
+        self.assertTrue(not private_post_like.is_object_public())
+        self.assertTrue(not private_comment_like.is_object_public())
+
+        c = Client()
+        # request with invalid url
+        response = c.get(f'/service/authors/invalid_author_url/liked')
+        self.assertEqual(response.status_code, 404)
+
+        # request with valid url
+        response = c.get(f'/service/authors/{like_author.id}/liked')
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        self.assertEqual(data['type'], 'liked')
+        self.assertTrue('items' in data)
+        likes = data['items']
+        self.assertEqual(len(likes), 2)
+
+        # likes must contain only public ones
+        for like_dict in likes:
+            if like_dict['object'] == public_post_like.object_url:
+                self.assertDictEqual(like_dict, public_post_like.get_detail_dict())
+            else:
+                self.assertDictEqual(like_dict, public_comment_like.get_detail_dict())
+
+
+        
+
