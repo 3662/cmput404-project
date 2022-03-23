@@ -24,5 +24,5 @@ def create_inbox(sender, instance, created, **kwargs):
     Upon ServerNode creation, hash the plain password and save it. 
     '''
     if created:
-        instance.password = make_password(instance.password)
+        # instance.password = make_password(instance.password)
         instance.save()
