@@ -45,7 +45,7 @@ class LikedView(View):
         '''
 
         author = get_object_or_404(Author, id=author_id)
-        likes = Like.filter(author=author, author_url=author.get_id_url()) 
+        likes = Like.objects.filter(author=author, author_url=author.get_id_url()) 
 
         data = {}
         data['type'] = 'liked'
