@@ -5,27 +5,80 @@
         <meta charset="utf-8">
         <title>Authors</title>
         <button class="btn"><i class="fa fa-home" ></i> <a href="/">Home</a></button>
+
+        <style>
+            div {
+                border: 2px solid black;
+            }
+        </style>
     </head>
     <body>
         <h1>List of Authors</h1>
-        <div class="authors">
-            {% for author in authors %}
+        <div id="authors"></div>
 
-            <div class="author">
-                <h2> <b> Author: </b> <a href="{% url 'display_author' id=author.id %}"> {{author.get_full_name}} </a></h2>
-                {% if author.profile_image != null and author.profile_image != '' %}
-                    <img src="{{author.profile_image}}" width="150" height="150"> 
-                {% endif %}
-                <p> <b> Type: </b> author </p>
-                <p> <b> ID: </b> {{author.id}} </p>
-                <p> <b> Display Name: </b> {{author.first_name}} {{author.last_name}} </p>
-                <p> <b> ULR: </b> {{author.url}} </p>
-                <p> <b> Host: </b> {{author.host}} </p>
-                <p> <b> Github: </b> {{author.github}} </p>
-                <p> <b> ################################################################################## </b> </p>
-            </div>
+        <script>
+            function update() {
+                document.getElementById("authors").innerHTML = "";
 
-            {% endfor %}
-        </div>
+                var xhr = new XMLHttpRequest();
+        
+                xhr.onreadystatechange = function() {
+                    if (this.readyState == 4 && this.status == 200) {
+                        authors = JSON.parse(xhr.responseText)['items'];
+
+                        for (let i in authors) {
+                            let array = authors[i].id.split("/");
+                            let id = array[array.length-1];
+
+                            var newTag = document.createElement("div");
+                            
+                            var profileLink = document.createElement("a"); 
+                            profileLink.appendChild(document.createTextNode(authors[i].displayName));
+                            profileLink.href = "http://127.0.0.1:8000/authors/" + id;
+                            newTag.appendChild(profileLink);
+                            newTag.appendChild(document.createElement("br"));
+
+                            var profileImage = document.createElement('img');
+                            profileImage.src = authors[i].profileImage;
+                            profileImage.width = 150;
+                            profileImage.height = 150;
+                            newTag.appendChild(profileImage);
+                            newTag.appendChild(document.createElement("br"));
+
+                            newTag.appendChild(document.createTextNode("Display Name: " + authors[i].displayName));
+                            newTag.appendChild(document.createElement("br"));
+
+                            newTag.appendChild(document.createTextNode("ID: " + id));
+                            newTag.appendChild(document.createElement("br"));
+
+                            newTag.appendChild(document.createTextNode("URL: " + authors[i].url));
+                            newTag.appendChild(document.createElement("br"));
+
+                            newTag.appendChild(document.createTextNode("Host: " + authors[i].host));
+                            newTag.appendChild(document.createElement("br"));
+
+                            newTag.appendChild(document.createTextNode("Github: " + authors[i].github));
+                            newTag.appendChild(document.createElement("br"));
+
+                            document.getElementById("authors").appendChild(newTag);
+                        }  
+                    }
+                };
+        
+                // xhr.open("GET", "https://projectcmput404sfrodrig.herokuapp.com/service/authors/", true);
+                xhr.open("GET", "http://127.0.0.1:8000/service/authors/", true);
+                
+                xhr.send();
+            }
+
+            window.addEventListener('load', event => {
+                update();
+            });
+
+            // setInterval(update, 5000);
+
+        </script>
+
     </body>
 </html>
+

@@ -15,9 +15,7 @@ from django.views.generic import ListView, DetailView
 Retrieve and display all authors saved as Author model instances in the database
 """
 def display_authors(request):
-    authors = Author.objects.all()
-
-    return render(request, 'authors/authors_base.html', {'authors': authors})
+    return render(request, 'authors/authors_base.html')
 
 
 """

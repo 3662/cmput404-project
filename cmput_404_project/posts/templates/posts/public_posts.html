@@ -5,56 +5,135 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
         <title>Posts</title>
         <button class="btn"><i class="fa fa-home" ></i> <a href="/">Home</a></button>
+
+        <style>
+            div {
+                border: 2px solid black;
+            }
+        </style>
     </head>
     <body>
         <h1>List of Public Posts</h1>
-        <div class="posts">
-            {% for post in posts %}
-            <div class="post">
-                <p> <b> Published: </b> {{post.published}} </p>
-                <p> <b> Author: </b> {{post.author}} </p>
-                {% if post.image != null and post.image != '' %}
-                    <img src="{{post.image}}" width="300" height="300"> 
-                {% endif %}
-                <p> <b> Title: </b> {{post.title}} </p>
-                <p> <b> Description: </b> {{post.description}} </p>
-                <p> <b> Content: </b> {{post.content}} </p>
-                <p> <b> Categories: </b> {{post.categories}} </p>
+        <p id="posts"></p>
 
-                <div class="author">
-                    <form action="{% url 'like_post1' %}" method="POST" class='PostLike' id='{{post.id}}'>
-                       {% csrf_token %}
-                       <input type="hidden" name="post_id" value={{post.id}}>
-                       <button type="submit" class="ui button like-btn{{post.id}}">
-                        {% if author in post.liked.all %}
-                               UnLike
-                        {% else %}
-                               Like
-                        {% endif %}
-                       </button>
-                    </form>
-                </div>
-                <div class="comments">
-                    <p><b>Comments...</b></p>
-                    {% for comment in post.comments %}
-                    <div class="comment">
-                        <p><b> {{comment.author}} </b> {{comment.content}} <i> {{comment.date_created}} </i></p>
-                    </div>
-                    {%endfor%}
-                </div>
+        <script>
+            function update() {
+                document.getElementById("posts").innerHTML = "";
 
-                <form action="{% url 'add_comment' id=post.id %}" method="POST" class='CommentForm' id='{{post.id}}'>
-                    <table>
-                        {{ comment_form }}
-                    </table>
-                    {% csrf_token %}
-                    <button> Post Comment</button>
-                </form>
-            </div>
-            <br/>
-            <p> <b> ################################################################################## </b> </p>
+                var getAuthors = new XMLHttpRequest();
+        
+                getAuthors.onreadystatechange = function() {
+                    if (this.readyState == 4 && this.status == 200) {
+                        authors = JSON.parse(getAuthors.responseText)['items'];
 
-            {% endfor %}
-        </div>
+                        // id of all authors
+                        var authorIds = new Set();
+
+                        for (let i in authors) {
+                            let array = authors[i].id.split("/");
+                            authorIds.add(array[array.length-1]);
+                        } 
+
+                        authorIds.forEach(authorId => {
+                            // find all public posts from each author
+
+                            var getPosts = new XMLHttpRequest();
+
+                            getPosts.onreadystatechange = function() {
+                                if (this.readyState == 4 && this.status == 200) {
+                                    posts = JSON.parse(getPosts.responseText)['items'];
+
+                                    for (let i in posts) {
+                                        let arrayTemp = posts[i].id.split("/");
+                                        postId = arrayTemp[arrayTemp.length-1];
+
+                                        var newTag = document.createElement("div");
+
+                                        newTag.appendChild(document.createTextNode("Published: " + posts[i].published));
+                                        newTag.appendChild(document.createElement("br"));
+
+                                        newTag.appendChild(document.createTextNode("Author: " + posts[i].author.displayName));
+                                        newTag.appendChild(document.createElement("br"));
+
+                                        var image = document.createElement('img');
+                                        image.src = posts[i].image;
+                                        image.width = 150;
+                                        image.height = 150;
+                                        newTag.appendChild(image);
+                                        newTag.appendChild(document.createElement("br"));
+
+                                        newTag.appendChild(document.createTextNode("Post ID: " + postId));
+                                        newTag.appendChild(document.createElement("br"));
+
+                                        newTag.appendChild(document.createTextNode("Title: " + posts[i].title));
+                                        newTag.appendChild(document.createElement("br"));
+
+                                        newTag.appendChild(document.createTextNode("Description: " + posts[i].description));
+                                        newTag.appendChild(document.createElement("br"));
+
+                                        newTag.appendChild(document.createTextNode("Content: " + posts[i].content));
+                                        newTag.appendChild(document.createElement("br"));
+
+                                        newTag.appendChild(document.createTextNode("Category: " + posts[i].category));
+                                        newTag.appendChild(document.createElement("br"));
+
+                                        var getComments = new XMLHttpRequest();
+
+                                        getComments.onreadystatechange = function() {
+                                            if (this.readyState == 4 && this.status == 200) {
+                                                comments = JSON.parse(getComments.responseText)['items'];
+
+                                                newTag.appendChild(document.createTextNode("COMMENTS:"));
+                                                newTag.appendChild(document.createElement("br"));
+
+                                                for (let i in comments) {
+                                                    var newComment = document.createElement("div");
+
+                                                    newComment.appendChild(document.createTextNode("Published: " + comments[i].published));
+                                                    newComment.appendChild(document.createElement("br"));
+
+                                                    newComment.appendChild(document.createTextNode("Author: " + comments[i].author.displayName));
+                                                    newComment.appendChild(document.createElement("br"));
+
+                                                    newComment.appendChild(document.createTextNode("Comment: " + comments[i].comment));
+                                                    newComment.appendChild(document.createElement("br"));
+
+                                                    newTag.appendChild(newComment);
+                                                }
+                                            }
+
+                                            document.getElementById("posts").appendChild(newTag);
+
+                                        }
+
+                                        // alert("http://127.0.0.1:8000/service/authors/"+authorId+"/posts/"+postId+"/comments");
+
+                                        getComments.open("GET", "http://127.0.0.1:8000/service/authors/"+authorId+"/posts/"+postId+"/comments", true);
+                                        getComments.send();
+                                    } 
+                                }
+                            }
+
+                            getPosts.open("GET", "http://127.0.0.1:8000/service/authors/"+authorId+"/posts", true);
+                            getPosts.send(); 
+                        });
+                    }
+                };
+        
+                // getAuthors.open("GET", "https://projectcmput404sfrodrig.herokuapp.com/service/authors/", true);
+                getAuthors.open("GET", "http://127.0.0.1:8000/service/authors/", true);
+                
+                getAuthors.send();
+            }
+
+            window.addEventListener('load', event => {
+                update();
+            });
+
+            // setInterval(update, 5000);
+
+        </script>
+
     </body>
 </html>
+
