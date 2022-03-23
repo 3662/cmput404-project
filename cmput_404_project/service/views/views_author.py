@@ -1,6 +1,5 @@
 import json 
 import socket
-from tkinter import W
 
 from django.shortcuts import get_object_or_404, render
 from django.core.paginator import Paginator, EmptyPage
