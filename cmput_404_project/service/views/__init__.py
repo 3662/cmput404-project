@@ -4,3 +4,4 @@ from .views_post import PostView, PostsView
 from .views_comment import CommentsView
 from .views_like import PostLikesView, CommentLikesView
 from .views_inbox import InboxView
+from .views_liked import LikedView

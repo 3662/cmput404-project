@@ -9,6 +9,7 @@ urlpatterns = [
     # path('authors/', views.AuthorsDetailView.as_view(), name='authors'),
     path('authors/<uuid:author_id>', views.AuthorDetailView.as_view(), name='author'),
     path('authors/<uuid:author_id>/posts', views.PostsView.as_view(), name='posts'),
+    path('authors/<uuid:author_id>/liked', views.LikedView.as_view(), name='liked'),
     # path('authors/<uuid:author_id>/posts/', views.PostsView.as_view(), name='posts'),
     path('authors/<uuid:author_id>/posts/<uuid:post_id>', views.PostView.as_view(), name='post'),
     path('authors/<uuid:author_id>/posts/<uuid:post_id>/likes', views.PostLikesView.as_view(), name='post_likes'),
