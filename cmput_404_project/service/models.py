@@ -9,7 +9,7 @@ class ServerNode(models.Model):
     class Meta:
         verbose_name = 'ServerNode'
 
-    host = models.URLField(null=False)
+    host = models.CharField(max_length=500, null=False)
     username = models.CharField(max_length=100, null=False)
     password = models.CharField(max_length=128, null=False)
 
