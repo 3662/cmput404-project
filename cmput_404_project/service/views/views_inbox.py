@@ -109,7 +109,7 @@ class InboxView(View):
                 object_id = object.id
                 object_url = None
 
-            if not InboxItem.objects.filter(object_id=object.id).exists():
+            if not InboxItem.objects.filter(object_id=object_id).exists():
                 # Only create if the object is not already in the inbox
                 # If the object exists in the inbox, it has been already updated at this point.
                 InboxItem.objects.create(inbox=inbox, 

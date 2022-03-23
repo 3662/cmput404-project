@@ -179,7 +179,7 @@ class FollowRequest(models.Model):
         if self.from_author:
             from_first_name = self.from_author.first_name
         else:
-            from_full_name = request_detail_dict(from_author_url).get('displayName', '')
+            from_full_name = request_detail_dict(self.from_author_url).get('displayName', '')
             from_first_name = '' if from_full_name == '' else from_full_name.strip().split(' ')[0]
 
         if self.to_author:
@@ -290,10 +290,7 @@ class Like(models.Model):
         Returns True if the liked object is publicly available.
         Otherwise, returns False
         '''
-        o = urlparse(self.object_url)
-        service_url = f'{o.scheme}://{o.netloc}/service{o.path}'
-        res = requests.get(service_url)
-        data = res.json() if res.status_code == 200 else {}
+        data = request_detail_dict(self.object_url)
 
         obj_type = data['type']
         if obj_type == 'post':
@@ -335,7 +332,7 @@ class InboxItem(models.Model):
     object_type = models.CharField(max_length=7, choices=OBJECT_TYPE_CHOICES, default='POST')
     object_id = models.UUIDField(default=None, editable=False, null=True)
     # object url is None if the object is FollowRequest or Like
-    object_url = models.URLField(max_length=1000, default=None, editable=False)
+    object_url = models.URLField(max_length=1000, default=None, editable=False, null=True)
 
 
     def get_detail_dict(self) -> dict:
