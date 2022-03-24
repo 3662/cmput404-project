@@ -78,8 +78,8 @@ class CommentsView(View):
             return HttpResponse('The form is invalid', status=status_code)     
         else:
             status_code = 201
-            Comment.objects.create(author=comment_author, author_url=comment_author_id_url, post=post, content_type=content_type, content=content)
-            return HttpResponse('Comment has been successfully created.', status=status_code)
+            comment = Comment.objects.create(author=comment_author, author_url=comment_author_id_url, post=post, content_type=content_type, content=content)
+            return JsonResponse(comment.get_detail_dict(), status=status_code)
 
         
     def _get_comments(self, request, author_id, post_id):
