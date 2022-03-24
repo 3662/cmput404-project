@@ -17,7 +17,7 @@ class AuthorsDetailViewTestCase(TestCase):
         c = Client()
 
         num_authors = len(Author.objects.all())
-        response = c.get(f'/service/authors/?page=1&size={num_authors}')
+        response = c.get(f'/service/authors?page=1&size={num_authors}')
         data = response.json()
         self.assertEqual(data['type'], 'authors')
         self.assertEqual(len(data['items']), num_authors)
@@ -31,14 +31,14 @@ class AuthorsDetailViewTestCase(TestCase):
         self.assertTrue('github' in first.keys())
         self.assertTrue('profileImage' in first.keys())
 
-        response = c.get(f'/service/authors/?page=2&size={num_authors}')
+        response = c.get(f'/service/authors?page=2&size={num_authors}')
         self.assertEqual(response.status_code, 404)
 
     def test_head(self):
         c = Client()
 
         num_authors = len(Author.objects.all())
-        response = c.head(f'/service/authors/?page=1&size={num_authors}')
+        response = c.head(f'/service/authors?page=1&size={num_authors}')
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content, b'')

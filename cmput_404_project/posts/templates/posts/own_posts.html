@@ -15,13 +15,15 @@
                 <p> <b> Published: </b> {{post.published}} </p>
                 <p> <b> Author: </b> {{post.author}} </p>
                 {% if post.image != null and post.image != '' %}
-                <img src="{{post.image}}"> 
+                    <img src="{{post.image}}" width="300" height="300"> 
                 {% endif %}
                 <p> <b> Title: </b> {{post.title}} </p>
                 <p> <b> Description: </b> {{post.description}} </p>
+                <p> <b> Content: </b> {{post.content}} </p>
+                <p> <b> Categories: </b> {{post.categories}} </p>
                 <h2> <a href="{% url 'edit_post' id=post.id %}"> Edit Post </a></h2>
                 <h2> <a href="{% url 'delete_post' id=post.id %}"> Delete Post </a></h2>
-                <p> <b> ////////////////////////////////////////////// </b> </p>
+                <p> <b> ################################################################################## </b> </p>
             </div>
 
             {% endfor %}

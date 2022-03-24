@@ -12,6 +12,9 @@
             {% for likes in like %}
             <div class="Like">
                 <p> <b> Author: </b> {{likes.post.author}} </p>
+                {% if likes.post.image != null and likes.post.image != '' %}
+                    <img src="{{likes.post.image}}" width="150" height="150"> 
+                {% endif %}
                 <p> <b> Title: </b> {{likes.post.title}} </p>
                 <p> <b> Description: </b> {{likes.post.description}} </p>
                 <p> <b> Summary: </b> {{likes.summary}} </p>

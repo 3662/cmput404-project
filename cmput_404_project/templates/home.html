@@ -10,8 +10,10 @@
   <p> ID: {{user.id}} </p>
   <p><a href="{% url 'display_author' id=user.id %}">View my profile</a></p>
   <p><a href="{% url 'new_post' %}">Create a new post</a></p>
+  <p><a href="{% url 'new_private_post' %}">Send a private post</a></p>
   <p><a href="{% url 'display_own_posts' %}">Edit and delete own posts</a></p>
   <p><a href="{% url 'display_public_posts' %}">See public posts</a></p>
+  <p><a href="{% url 'display_private_posts' %}">See private posts</a></p>
   <p><a href="{% url 'display_authors' %}">See all authors</a></p>
   <!-- <p><a href="{% url 'display_like' %}">See Likes</a></p>
   <p><a href="{% url 'author_list_view' %}">Follow Requests</a></p>
