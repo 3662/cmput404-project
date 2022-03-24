@@ -73,7 +73,7 @@ def author_friend_view(request):
                 #rec.delete()
             #else:
                 #summary = str(request.user) + " wants to follow " + str(recv.username)
-                follower, inserted = FollowRequest.objects.get_or_create(to_author=recv, from_author=send)#, summary=summary)
+                follower, inserted = FollowRequest.objects.get_or_create(to_author=recv, from_author=send) #, summary=summary)
                 friend.save()
                 follower.save()
         if action_flag == 'R':
@@ -167,7 +167,7 @@ def author_profile_view(request):
                 #rec.delete()
             #else:
                 #summary = str(request.user) + " wants to follow " + str(recv.username)
-                follower, inserted = FollowRequest.objects.get_or_create(to_author=recv, from_author=send)#, summary=summary)
+                follower, inserted = FollowRequest.objects.get_or_create(to_author=recv, from_author=send) #, summary=summary)
                 friend.save()
                 follower.save()
         if action_flag == 'R':
