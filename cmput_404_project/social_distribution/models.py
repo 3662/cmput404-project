@@ -157,7 +157,7 @@ class Post(models.Model):
         data['size'] = size
         data['post'] = self.get_id_url()
         data['id'] = self.get_comments_id_url()
-        data['items'] = [c.get_detail_dict() for c in comments]
+        data['comments'] = [c.get_detail_dict() for c in comments]
         return data
 
 
