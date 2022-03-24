@@ -27,40 +27,7 @@
                         authors = JSON.parse(xhr.responseText)['items'];
 
                         for (let i in authors) {
-                            let array = authors[i].id.split("/");
-                            let id = array[array.length-1];
-
-                            var newTag = document.createElement("div");
-                            
-                            var profileLink = document.createElement("a"); 
-                            profileLink.appendChild(document.createTextNode(authors[i].displayName));
-                            profileLink.href = "http://127.0.0.1:8000/authors/" + id;
-                            newTag.appendChild(profileLink);
-                            newTag.appendChild(document.createElement("br"));
-
-                            var profileImage = document.createElement('img');
-                            profileImage.src = authors[i].profileImage;
-                            profileImage.width = 150;
-                            profileImage.height = 150;
-                            newTag.appendChild(profileImage);
-                            newTag.appendChild(document.createElement("br"));
-
-                            newTag.appendChild(document.createTextNode("Display Name: " + authors[i].displayName));
-                            newTag.appendChild(document.createElement("br"));
-
-                            newTag.appendChild(document.createTextNode("ID: " + id));
-                            newTag.appendChild(document.createElement("br"));
-
-                            newTag.appendChild(document.createTextNode("URL: " + authors[i].url));
-                            newTag.appendChild(document.createElement("br"));
-
-                            newTag.appendChild(document.createTextNode("Host: " + authors[i].host));
-                            newTag.appendChild(document.createElement("br"));
-
-                            newTag.appendChild(document.createTextNode("Github: " + authors[i].github));
-                            newTag.appendChild(document.createElement("br"));
-
-                            document.getElementById("authors").appendChild(newTag);
+                            updateAuthor(authors[i]);
                         }  
                     }
                 };
@@ -69,6 +36,43 @@
                 xhr.open("GET", "http://127.0.0.1:8000/service/authors/", true);
                 
                 xhr.send();
+            }
+
+            function updateAuthor(author) {
+                let array = author.id.split("/");
+                let id = array[array.length-1];
+
+                var newTag = document.createElement("div");
+                
+                var profileLink = document.createElement("a"); 
+                profileLink.appendChild(document.createTextNode(author.displayName));
+                profileLink.href = "http://127.0.0.1:8000/authors/" + id;
+                newTag.appendChild(profileLink);
+                newTag.appendChild(document.createElement("br"));
+
+                var profileImage = document.createElement('img');
+                profileImage.src = author.profileImage;
+                profileImage.width = 150;
+                profileImage.height = 150;
+                newTag.appendChild(profileImage);
+                newTag.appendChild(document.createElement("br"));
+
+                newTag.appendChild(document.createTextNode("Display Name: " + author.displayName));
+                newTag.appendChild(document.createElement("br"));
+
+                newTag.appendChild(document.createTextNode("ID: " + id));
+                newTag.appendChild(document.createElement("br"));
+
+                newTag.appendChild(document.createTextNode("URL: " + author.url));
+                newTag.appendChild(document.createElement("br"));
+
+                newTag.appendChild(document.createTextNode("Host: " + author.host));
+                newTag.appendChild(document.createElement("br"));
+
+                newTag.appendChild(document.createTextNode("Github: " + author.github));
+                newTag.appendChild(document.createElement("br"));
+
+                document.getElementById("authors").appendChild(newTag);
             }
 
             window.addEventListener('load', event => {

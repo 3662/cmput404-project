@@ -8,12 +8,30 @@
 
         <style>
             div {
-                border: 2px solid black;
+                border: 4px solid black;
+            }
+            div#commentBox {
+                border: 1px solid black;
             }
         </style>
     </head>
     <body>
+
+        <form name="forms" id="forms">
+        <label>Whats your username?
+            <input name="username" type="text" />
+        </label>
+        <label>How many years have you been a developer?
+            <input name="age" type="number" />
+        </label>
+        <button type="submit">Submit</button>
+        </form>
+
+
         <h1>List of Public Posts</h1>
+
+        <p id="commentAuthorId">{{author_id}}</p>
+
         <p id="posts"></p>
 
         <script>
@@ -44,72 +62,13 @@
                                     posts = JSON.parse(getPosts.responseText)['items'];
 
                                     for (let i in posts) {
-                                        let arrayTemp = posts[i].id.split("/");
-                                        postId = arrayTemp[arrayTemp.length-1];
-
                                         var newTag = document.createElement("div");
 
-                                        newTag.appendChild(document.createTextNode("Published: " + posts[i].published));
-                                        newTag.appendChild(document.createElement("br"));
+                                        updatePost(posts[i], newTag);
 
-                                        newTag.appendChild(document.createTextNode("Author: " + posts[i].author.displayName));
-                                        newTag.appendChild(document.createElement("br"));
+                                        addTextboxInput(newTag, posts[i]);
 
-                                        var image = document.createElement('img');
-                                        image.src = posts[i].image;
-                                        image.width = 150;
-                                        image.height = 150;
-                                        newTag.appendChild(image);
-                                        newTag.appendChild(document.createElement("br"));
-
-                                        newTag.appendChild(document.createTextNode("Post ID: " + postId));
-                                        newTag.appendChild(document.createElement("br"));
-
-                                        newTag.appendChild(document.createTextNode("Title: " + posts[i].title));
-                                        newTag.appendChild(document.createElement("br"));
-
-                                        newTag.appendChild(document.createTextNode("Description: " + posts[i].description));
-                                        newTag.appendChild(document.createElement("br"));
-
-                                        newTag.appendChild(document.createTextNode("Content: " + posts[i].content));
-                                        newTag.appendChild(document.createElement("br"));
-
-                                        newTag.appendChild(document.createTextNode("Category: " + posts[i].category));
-                                        newTag.appendChild(document.createElement("br"));
-
-                                        var getComments = new XMLHttpRequest();
-
-                                        getComments.onreadystatechange = function() {
-                                            if (this.readyState == 4 && this.status == 200) {
-                                                comments = JSON.parse(getComments.responseText)['items'];
-
-                                                newTag.appendChild(document.createTextNode("COMMENTS:"));
-                                                newTag.appendChild(document.createElement("br"));
-
-                                                for (let i in comments) {
-                                                    var newComment = document.createElement("div");
-
-                                                    newComment.appendChild(document.createTextNode("Published: " + comments[i].published));
-                                                    newComment.appendChild(document.createElement("br"));
-
-                                                    newComment.appendChild(document.createTextNode("Author: " + comments[i].author.displayName));
-                                                    newComment.appendChild(document.createElement("br"));
-
-                                                    newComment.appendChild(document.createTextNode("Comment: " + comments[i].comment));
-                                                    newComment.appendChild(document.createElement("br"));
-
-                                                    newTag.appendChild(newComment);
-                                                }
-                                            }
-
-                                            document.getElementById("posts").appendChild(newTag);
-
-                                        }
-
-                                        // alert("http://127.0.0.1:8000/service/authors/"+authorId+"/posts/"+postId+"/comments");
-
-                                        getComments.open("GET", "http://127.0.0.1:8000/service/authors/"+authorId+"/posts/"+postId+"/comments", true);
-                                        getComments.send();
+                                        document.getElementById("posts").appendChild(newTag);
                                     } 
                                 }
                             }
@@ -119,6 +78,248 @@
                         });
                     }
                 };
+
+                function addTextboxInput(newTag, post) {
+                    let arrayTemp = post.id.split("/");
+                    postId = arrayTemp[arrayTemp.length-1];
+
+                    arrayTemp = post.author.id.split("/");
+                    authorId = arrayTemp[arrayTemp.length-1];
+
+                    // newTag.appendChild(document.createTextNode("Content Type: "))
+                    // var contentTypeSelect = document.createElement("select");
+                    // contentTypeSelect.name = "contentType";
+                    // addSelectOption(contentTypeSelect, "text");
+                    // addSelectOption(contentTypeSelect, "markdown");
+                    // addSelectOption(contentTypeSelect, "application");
+                    // addSelectOption(contentTypeSelect, "png");
+                    // addSelectOption(contentTypeSelect, "jpeg");
+
+                    // newTag.appendChild(contentTypeSelect);
+                    // newTag.appendChild(document.createElement("br"));
+
+                    // newTag.appendChild(document.createTextNode("Content: "))
+                    // var comment = document.createElement("INPUT");
+                    // comment.type = "text";
+                    // comment.name = "comment";
+
+                    // newTag.appendChild(comment);
+                    // newTag.appendChild(document.createElement("br"));
+
+
+                    // var data = {
+                    //     'type': 'comment',
+                    //     'contentType': ,
+                    //     'comment': ,
+                    //     'author': "http://127.0.0.1:8000/authors/"+document.getElementById("commentAuthorId").innerHTML,
+                    // } 
+
+                    var h1 = document.createElement("H2");
+                    h1.appendChild(document.createTextNode("New Comment:"));
+                    newTag.appendChild(h1);
+
+                    var inputForm = document.createElement("FORM");
+                    inputForm.id = postId;
+                    inputForm.class = postId;
+                    inputForm.action = "http://127.0.0.1:8000/service/authors/"+authorId+"/posts/"+postId+"/comments";
+                    inputForm.method = "post"
+
+                    inputForm.addEventListener("submit", handler)
+
+                    // authentication 
+                    var token = document.createElement("INPUT");
+                    token.type = 'hidden';
+                    token.name = 'csrfmiddlewaretoken';
+                    token.value = '{{ csrf_token }}';
+                    inputForm.appendChild(token);
+
+                    var type = document.createElement("INPUT");
+                    type.type = 'hidden';
+                    type.name = "type";
+                    type.value = "comment";
+                    inputForm.appendChild(type);
+
+                    var postURL = document.createElement("INPUT");
+                    postURL.type = 'hidden';
+                    postURL.name = "postURL";
+                    postURL.value = "http://127.0.0.1:8000/service/authors/"+authorId+"/posts/"+postId+"/comments";;
+                    inputForm.appendChild(postURL);
+
+                    inputForm.appendChild(document.createTextNode("Content Type: "))
+                    var contentTypeSelect = document.createElement("select");
+                    contentTypeSelect.name = "contentType";
+                    addSelectOption(contentTypeSelect, "text");
+                    addSelectOption(contentTypeSelect, "markdown");
+                    addSelectOption(contentTypeSelect, "application");
+                    addSelectOption(contentTypeSelect, "png");
+                    addSelectOption(contentTypeSelect, "jpeg");
+
+                    inputForm.appendChild(contentTypeSelect);
+                    inputForm.appendChild(document.createElement("br"));
+
+                    inputForm.appendChild(document.createTextNode("Content: "))
+                    var comment = document.createElement("INPUT");
+                    comment.type = "text";
+                    comment.name = "comment";
+
+                    inputForm.appendChild(comment);
+                    inputForm.appendChild(document.createElement("br"));
+
+                    var commentAuthor = document.createElement("INPUT");
+                    commentAuthor.type = 'hidden';
+                    commentAuthor.name = "author";
+                    commentAuthor.value = "http://127.0.0.1:8000/authors/"+document.getElementById("commentAuthorId").innerHTML;
+                    inputForm.appendChild(commentAuthor);
+
+                    var newSubmit = document.createElement("INPUT");
+                    newSubmit.type = "submit";
+                    newSubmit.value = "Post Comment";
+
+                    // var submitButton = document.createElement("BUTTON");
+                    // submitButton.onclick = onSubmitButtonClick(postId);
+                    // submitButton.appendChild(document.createTextNode("Click me"));
+                    // inputForm.appendChild(submitButton);
+
+                    inputForm.appendChild(newSubmit);
+
+                    // newTag.appendChild(inputForm);
+
+                    // var submitButton = document.createElement("BUTTON");
+                    // submitButton.onclick = onSubmitButtonClick(postId);
+                    // submitButton.appendChild(document.createTextNode("Click me"));
+                    // inputForm.appendChild(submitButton);
+
+                    newTag.appendChild(inputForm);
+                }
+
+
+                // get the form element from dom
+                const formElement = document.querySelector('form#forms')
+
+                // convert the form to JSON
+                const getFormJSON = (form) => {
+                    const data = new FormData(form);
+                    return Array.from(data.keys()).reduce((result, key) => {
+                        result[key] = data.get(key);
+                        return result;
+                    }, {});
+                };
+
+                // handle the form submission event, prevent default form behaviour, check validity, convert form to JSON
+                const handler = (event) => {
+                    console.log(event.target);
+                    event.preventDefault();
+                    const result = getFormJSON(event.target);
+                    console.log(result)
+                    
+                    var xhr = new XMLHttpRequest();
+                    xhr.open("POST", result.postURL);
+                    xhr.setRequestHeader("Content-Type", "application/json")
+                    xhr.setRequestHeader('X-CSRFToken', result.csrfmiddlewaretoken)
+
+                    xhr.send(JSON.stringify(result));
+
+                    update();
+
+                }
+
+                formElement.addEventListener("submit", handler)
+
+
+
+
+                // function onSubmitButtonClick(id) {
+                //     // var form = document.getElementById(id);
+                //     var form = document.getElementsByClassName(id)[0];
+                //     console.log(form);
+
+                //     // for (const element of form.elements) {
+                //     //     console.log(element);
+                //     // }
+                // }
+
+                function addSelectOption(contentTypeSelect, textOption) {
+                    var option = document.createElement("option");
+                    option.text = textOption;
+
+                    contentTypeSelect.add(option);
+                }
+
+                function updatePost(post, newTag) {
+                    let arrayTemp = post.id.split("/");
+                    postId = arrayTemp[arrayTemp.length-1];
+
+                    arrayTemp = post.author.id.split("/");
+                    authorId = arrayTemp[arrayTemp.length-1];
+
+                    newTag.appendChild(document.createTextNode("Published: " + post.published));
+                    newTag.appendChild(document.createElement("br"));
+
+                    var h1Author = document.createElement("H2");
+                    h1Author.appendChild(document.createTextNode("Author:"));
+                    newTag.appendChild(h1Author);
+
+                    var profileLink = document.createElement("a"); 
+                    profileLink.appendChild(document.createTextNode(post.author.displayName));
+                    profileLink.href = "http://127.0.0.1:8000/authors/" + authorId;
+                    newTag.appendChild(profileLink);
+                    newTag.appendChild(document.createElement("br"));
+
+                    // newTag.appendChild(document.createTextNode("Author: " + post.author.displayName));
+                    // newTag.appendChild(document.createElement("br"));
+
+                    var image = document.createElement('img');
+                    image.src = post.image;
+                    image.width = 150;
+                    image.height = 150;
+                    newTag.appendChild(image);
+                    newTag.appendChild(document.createElement("br"));
+
+                    newTag.appendChild(document.createTextNode("Post ID: " + postId));
+                    newTag.appendChild(document.createElement("br"));
+
+                    newTag.appendChild(document.createTextNode("Title: " + post.title));
+                    newTag.appendChild(document.createElement("br"));
+
+                    newTag.appendChild(document.createTextNode("Description: " + post.description));
+                    newTag.appendChild(document.createElement("br"));
+
+                    newTag.appendChild(document.createTextNode("Content: " + post.content));
+                    newTag.appendChild(document.createElement("br"));
+
+                    newTag.appendChild(document.createTextNode("Category: " + post.category));
+                    newTag.appendChild(document.createElement("br"));
+
+                    var comments = post.commentsSrc['items'];
+
+                    if (Object.keys(comments).length > 0) {
+                        var h1Conmments = document.createElement("H2");
+                        h1Conmments.appendChild(document.createTextNode("Comments:"));
+                        newTag.appendChild(h1Conmments);
+
+                        for (let i in comments) {
+                            updateComment(comments[i], newTag);
+                        }
+                    }
+
+                }
+
+                function updateComment(comment, newTag) {
+                    var newComment = document.createElement("div");
+
+                    newComment.setAttribute("id", "commentBox");
+
+                    newComment.appendChild(document.createTextNode("Published: " + comment.published));
+                    newComment.appendChild(document.createElement("br"));
+
+                    newComment.appendChild(document.createTextNode("Author: " + comment.author.displayName));
+                    newComment.appendChild(document.createElement("br"));
+
+                    newComment.appendChild(document.createTextNode("Comment: " + comment.comment));
+                    newComment.appendChild(document.createElement("br"));
+
+                    newTag.appendChild(newComment);   
+                }
         
                 // getAuthors.open("GET", "https://projectcmput404sfrodrig.herokuapp.com/service/authors/", true);
                 getAuthors.open("GET", "http://127.0.0.1:8000/service/authors/", true);

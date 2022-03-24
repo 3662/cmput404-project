@@ -25,7 +25,11 @@ def display_public_posts(request):
 
     # return render(request, 'posts/public_posts.html', context)
 
-    return render(request, 'posts/public_posts.html')
+    context = {
+        'author_id': request.user.id,
+    }
+
+    return render(request, 'posts/public_posts.html', context)
 
 def display_private_posts(request):
     posts = Post.objects.filter(visibility='PRIVATE').filter(recepient=request.user.id)
