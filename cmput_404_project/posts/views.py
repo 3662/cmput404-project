@@ -7,6 +7,7 @@ import hashlib
 from django.utils.text import slugify
 import time
 import uuid
+import requests
 
 
 def display_public_posts(request):
@@ -75,15 +76,20 @@ def delete_post(request, id):
 def new_post(request):
     if request.method == "POST":
         form = PostForm(request.POST)
-        obj = form.save(commit=False)                
-        obj.author = request.user
-        obj.visibility = form.cleaned_data["visibility"]
 
-        # TODO set proper URls
-        obj.source = ""
-        obj.origin = ""
+        data = {
+            'title': form['title'].value(),
+            'description': form['description'].value(),
+            'content_type': form['content_type'].value(),
+            'content': form['content'].value(),
+            'image': form['image'].value(),
+            'categories': form['categories'].value(),
+            'visibility': form['visibility'].value(),
+        }
 
-        obj.save()
+        post_url = "http://127.0.0.1:8000/service/authors/{}/posts".format(request.user.id)
+
+        post_request = requests.post(post_url, data)
 
         return redirect("/")
     else:
