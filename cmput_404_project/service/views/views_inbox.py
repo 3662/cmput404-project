@@ -200,7 +200,7 @@ class InboxView(View):
         else:
             # is a remote author
             like_author = None
-        like_author_url = data_dict['author']['url']
+        like_author_url = data_dict['author']['id']
         object_url = data_dict['object']
 
         # object id must exist in our database
