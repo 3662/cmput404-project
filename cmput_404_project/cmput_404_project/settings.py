@@ -34,6 +34,11 @@ ALLOWED_HOSTS = []
 
 AUTH_USER_MODEL = 'social_distribution.Author'
 
+
+# TODO allow all origin for now
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -49,15 +54,15 @@ INSTALLED_APPS = [
     'authors',
     'service',
     'posts',
-    "corsheaders",
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
-    'django.middleware.common.CommonMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -127,9 +132,6 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
-
-# TODO allow all origin for now
-CORS_ALLOW_ALL_ORIGINS = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
