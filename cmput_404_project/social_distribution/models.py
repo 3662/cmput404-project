@@ -109,7 +109,7 @@ class Post(models.Model):
         return f'{self.author.get_id_url()}/posts/{self.id}'
 
     def get_comments_id_url(self):
-        return f'{self.author.get_id_url()}/posts/{self.comments_id}/comments'
+        return f'{self.get_id_url()}/comments'
 
     def get_list_of_categories(self):
         return [] if self.categories == '' else self.categories.strip().split(',')
@@ -213,7 +213,8 @@ class Comment(models.Model):
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    author = models.ForeignKey(Author, on_delete=models.CASCADE)
+    author = models.ForeignKey(Author, on_delete=models.CASCADE, null=True)
+    author_url = models.URLField(max_length=1000, editable=False, null=False)
     post = models.ForeignKey(Post, on_delete=models.CASCADE, null=True)
     content_type = models.CharField(max_length=18, choices=CONTENT_TYPE_CHOICES, default='text/plain')
     date_created = models.DateTimeField(default=timezone.now, editable=False)
@@ -225,7 +226,7 @@ class Comment(models.Model):
         return self.date_created.replace(microsecond=0).isoformat()
 
     def get_id_url(self):
-        return f'{self.post.get_comments_id_url()}/comments/{self.id}'
+        return f'{self.post.get_comments_id_url()}/{self.id}'
 
     def get_detail_dict(self) -> dict:
         '''
@@ -233,7 +234,7 @@ class Comment(models.Model):
         '''
         d = {}
         d['type'] = self.type
-        d['author'] = self.author.get_detail_dict()
+        d['author'] = self.author.get_detail_dict() if self.author else request_detail_dict(self.author_url)
         d['comment'] = self.content
         d['contentType'] = self.content_type
         d['published'] = self.get_iso_date_created()
@@ -306,9 +307,6 @@ class Like(models.Model):
         else:
             # for a comment, must check whether its post is public
             return request_detail_dict(data['id'])['visibility'] == 'PUBLIC'
-
-
-
 
 
 
