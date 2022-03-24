@@ -170,7 +170,7 @@ class InboxView(View):
 
         try:
             q = InboxItem.objects.all().filter(inbox=inbox, object_type=InboxItem.OBJECT_TYPE_CHOICES[0][0])
-            q = q.order_by('-published')
+            q = q.order_by('-id')
             post_items = Paginator(q, size).page(page)
         except EmptyPage:
             raise Http404('Page does not exist')
