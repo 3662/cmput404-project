@@ -17,7 +17,14 @@
         <div id="authors"></div>
 
         <script>
+            // TODO: change this to a remote server
+            const hostServerURL = "http://127.0.0.1:8000/";
+
             function update() {
+                updateAuthorsFromServer(hostServerURL);
+            }
+
+            function updateAuthorsFromServer(url) {
                 document.getElementById("authors").innerHTML = "";
 
                 var xhr = new XMLHttpRequest();
@@ -27,18 +34,18 @@
                         authors = JSON.parse(xhr.responseText)['items'];
 
                         for (let i in authors) {
-                            updateAuthor(authors[i]);
+                            updateAuthor(authors[i], url);
                         }  
                     }
                 };
         
                 // xhr.open("GET", "https://projectcmput404sfrodrig.herokuapp.com/service/authors/", true);
-                xhr.open("GET", "http://127.0.0.1:8000/service/authors/", true);
+                xhr.open("GET", url+"service/authors/", true);
                 
                 xhr.send();
             }
 
-            function updateAuthor(author) {
+            function updateAuthor(author, url) {
                 let array = author.id.split("/");
                 let id = array[array.length-1];
 
@@ -46,7 +53,7 @@
                 
                 var profileLink = document.createElement("a"); 
                 profileLink.appendChild(document.createTextNode(author.displayName));
-                profileLink.href = "http://127.0.0.1:8000/authors/" + id;
+                profileLink.href = url+"authors/" + id;
                 newTag.appendChild(profileLink);
                 newTag.appendChild(document.createElement("br"));
 
