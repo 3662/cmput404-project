@@ -49,9 +49,11 @@ INSTALLED_APPS = [
     'authors',
     'service',
     'posts',
+    "corsheaders",
 ]
 
 MIDDLEWARE = [
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -126,6 +128,8 @@ USE_L10N = True
 
 USE_TZ = True
 
+# TODO allow all origin for now
+CORS_ALLOW_ALL_ORIGINS = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
