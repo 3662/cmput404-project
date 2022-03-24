@@ -77,7 +77,7 @@ def new_post(request):
         form = PostForm(request.POST)
         obj = form.save(commit=False)                
         obj.author = request.user
-        obj.visibility = 'PRIVATE'
+        obj.visibility = form.cleaned_data["visibility"]
 
         # TODO set proper URls
         obj.source = ""

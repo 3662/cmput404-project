@@ -3,10 +3,10 @@ import requests
 
 from urllib.parse import urlparse
 from django.db import models
-from django.contrib.auth.models import AbstractUser 
+from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 from django.core.paginator import Paginator
-        
+
 from .managers import AuthorManager
 
 
@@ -32,7 +32,7 @@ class Author(AbstractUser):
         return full_name.strip()
 
     def get_id_url(self):
-        return f'{self.host}authors/{self.id}'
+        return f'{self.host}service/authors/{self.id}'
 
     def get_profile_url(self):
         return f'{self.host}authors/{self.id}'
@@ -73,7 +73,7 @@ class Post(models.Model):
 
     DEFAULT_COMMENTS_PAGE = 1
     DEFAULT_COMMENTS_SIZE = 5
-    
+
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     author = models.ForeignKey(Author, on_delete=models.CASCADE, default=None, null=True, blank=True)
@@ -82,7 +82,7 @@ class Post(models.Model):
     image = models.URLField(null=True, default=None)
     title = models.CharField(max_length=100, default='')
     description = models.TextField(max_length=150, default='')
-    content_type = models.CharField(max_length=18, choices=CONTENT_TYPE_CHOICES, default='text/plain')        
+    content_type = models.CharField(max_length=18, choices=CONTENT_TYPE_CHOICES, default='text/plain')
     content = models.TextField(max_length=1000, default='')
     categories = models.CharField(max_length=100, default='')
     count = models.IntegerField(default=0)
@@ -163,8 +163,10 @@ class Post(models.Model):
 
 class FollowRequest(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    from_author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='follow_request_from')
-    to_author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='follow_request_to')
+    from_author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='follow_request_from', null=True)
+    from_author_url = models.URLField(max_length=1000, editable=False, null=False)
+    to_author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='follow_request_to', null=True)
+    to_author_url = models.URLField(max_length=1000, editable=False, null=False)
     date_created = models.DateTimeField(default=timezone.now, editable=False)
 
     type = 'Follow'
@@ -174,7 +176,19 @@ class FollowRequest(models.Model):
 
     def get_summary(self):
         '''Returns a summary for this FollowRequest object.'''
-        return f'{self.from_author.first_name} wants to follow {self.to_author.first_name}'
+        if self.from_author:
+            from_first_name = self.from_author.first_name
+        else:
+            from_full_name = request_detail_dict(self.from_author_url).get('displayName', '')
+            from_first_name = '' if from_full_name == '' else from_full_name.strip().split(' ')[0]
+
+        if self.to_author:
+            to_first_name = self.to_author.first_name
+        else:
+            to_full_name = request_detail_dict(to_author_url).get('displayName', '')
+            to_first_name = '' if to_full_name == '' else to_full_name.strip().split(' ')[0]
+
+        return f'{from_first_name} wants to follow {to_first_name}'
 
     def get_detail_dict(self) -> dict:
         '''
@@ -183,11 +197,11 @@ class FollowRequest(models.Model):
         d = {}
         d['type'] = self.type
         d['summary'] = self.get_summary()
-        d['actor'] = self.from_author.get_detail_dict()
-        d['object'] = self.to_author.get_detail_dict()
+        d['actor'] = self.from_author.get_detail_dict() if self.from_author else request_detail_dict(self.from_author_url)
+        d['object'] = self.to_author.get_detail_dict() if self.to_author else request_detail_dict(self.to_author_url)
 
         return d
-        
+
 
 class Comment(models.Model):
     CONTENT_TYPE_CHOICES = [
@@ -201,7 +215,7 @@ class Comment(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
     post = models.ForeignKey(Post, on_delete=models.CASCADE, null=True)
-    content_type = models.CharField(max_length=18, choices=CONTENT_TYPE_CHOICES, default='text/plain')        
+    content_type = models.CharField(max_length=18, choices=CONTENT_TYPE_CHOICES, default='text/plain')
     date_created = models.DateTimeField(default=timezone.now, editable=False)
     content = models.TextField(max_length=1000, default='')
 
@@ -237,7 +251,7 @@ class Like(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     # Author object does not have to be given, but author url must be provided
     author = models.ForeignKey(Author, on_delete=models.CASCADE, default=None, null=True)
-    author_url = models.URLField(max_length=1000, editable=False, null=False)   
+    author_url = models.URLField(max_length=1000, editable=False, null=False)
     object_type = models.CharField(max_length=7, choices=OBJECT_TYPE_CHOICES, default='POST')
     # object_id = models.UUIDField(default=None, editable=False, null=True)
     object_url = models.URLField(max_length=1000, default=None, editable=False)
@@ -262,28 +276,37 @@ class Like(models.Model):
         d['object'] = self.object_url
 
         return d
-        
+
     def get_summary(self):
         '''Returns a summary for this like object.'''
-        return f'{self.author.get_full_name()} Likes your {self.object_type.strip().lower()}'
+        if self.author:
+            return f'{self.author.get_full_name()} Likes your {self.object_type.strip().lower()}'
+        full_name = request_detail_dict(self.author_url).get('displayName', '')
+        return f'{full_name} Likes your {self.object_type.strip().lower()}'
+
 
     def is_object_public(self):
         '''
         Returns True if the liked object is publicly available.
         Otherwise, returns False
         '''
-        o = urlparse(self.object_url)
-        service_url = f'{o.scheme}://{o.netloc}/service{o.path}'
-        res = requests.get(service_url)
-        data = res.json() if res.status_code == 200 else {}
+        object_id = self.object_url.split('/')[-1]
 
+        # check local server
+        if self.object_type == 'POST' and Post.objects.filter(id=object_id).exists():
+            return Post.objects.get(id=object_id).visibility == 'PUBLIC'
+        elif self.object_type == 'COMMENT' and Comment.objects.filter(id=object_id).exists():
+            return Comment.objects.get(id=object_id).post.visibility == 'PUBLIC'
+
+        # check remote servers
+        data = request_detail_dict(self.object_url)
         obj_type = data['type']
         if obj_type == 'post':
             return data['visibility'] == 'PUBLIC'
         else:
             # for a comment, must check whether its post is public
             return request_detail_dict(data['id'])['visibility'] == 'PUBLIC'
-            
+
 
 
 
@@ -316,7 +339,8 @@ class InboxItem(models.Model):
     inbox = models.ForeignKey(Inbox, on_delete=models.CASCADE)
     object_type = models.CharField(max_length=7, choices=OBJECT_TYPE_CHOICES, default='POST')
     object_id = models.UUIDField(default=None, editable=False, null=True)
-    object_url = models.URLField(max_length=1000, default=None, editable=False)
+    # object url is None if the object is FollowRequest or Like
+    object_url = models.URLField(max_length=1000, default=None, editable=False, null=True)
 
 
     def get_detail_dict(self) -> dict:
@@ -332,9 +356,7 @@ class InboxItem(models.Model):
                 object = Like.objects.get(id=self.object_id)
             return object.get_detail_dict()
 
-
-
-
+        return request_detail_dict(self.object_url)
 
 
 def request_detail_dict(object_url) -> dict:
@@ -343,10 +365,10 @@ def request_detail_dict(object_url) -> dict:
     Then, returns a parsed json data.
     '''
     o = urlparse(object_url)
-    service_url = f'{o.scheme}://{o.netloc}/service{o.path}'
-    res = requests.get(service_url)
-    return res.json() if res.status_code == 200 else {}
-    
+    # service_url = f'{o.scheme}://{o.netloc}/service{o.path}'
+    res = requests.get(object_url)
+    return dict(res.json()) if res.status_code == 200 else {}
+
 
 
 STATUS_CHOICES = (
