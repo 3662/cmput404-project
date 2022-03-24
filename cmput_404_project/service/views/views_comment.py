@@ -67,14 +67,18 @@ class CommentsView(View):
                 raise ValueError()
             content_type = data['contentType']
             content = data['comment']
-            comment_author_id = data['author']['id'].split('/')[-1]
-            comment_author = get_object_or_404(Author, id=comment_author_id)
+            comment_author_id_url = data['author']['id']
+            comment_author_id = comment_author_id_url.split('/')[-1]
+            comment_author = None
+            if Author.objects.filter(id=comment_author_id).exists():
+                comment_author = Author.objects.get(id=comment_author_id)
+
         except (KeyError, ValueError):
             status_code = 400
             return HttpResponse('The form is invalid', status=status_code)     
         else:
             status_code = 201
-            Comment.objects.create(author=comment_author, post=post, content_type=content_type, content=content)
+            Comment.objects.create(author=comment_author, author_url=comment_author_id_url, post=post, content_type=content_type, content=content)
             return HttpResponse('Comment has been successfully created.', status=status_code)
 
         
