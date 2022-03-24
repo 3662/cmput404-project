@@ -77,8 +77,8 @@ class AuthorDetailViewTestCase(TestCase):
         except ValidationError as e:
             self.assertTrue(False, "This field must be a valid url")
         else:
-            self.assertEqual(data['id'], f'{author.host}authors/{author.id}')
-            self.assertEqual(data['url'], f'{author.host}authors/{author.id}')
+            self.assertEqual(data['id'], author.get_id_url())
+            self.assertEqual(data['url'], author.get_profile_url())
             self.assertEqual(data['github'], author.github)
 
     def test_head(self):
