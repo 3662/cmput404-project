@@ -32,7 +32,7 @@ class Author(AbstractUser):
         return full_name.strip()
 
     def get_id_url(self):
-        return f'{self.host}authors/{self.id}'
+        return f'{self.host}service/authors/{self.id}'
 
     def get_profile_url(self):
         return f'{self.host}authors/{self.id}'
