@@ -365,9 +365,9 @@ def request_detail_dict(object_url) -> dict:
     Then, returns a parsed json data.
     '''
     o = urlparse(object_url)
-    service_url = f'{o.scheme}://{o.netloc}/service{o.path}'
-    res = requests.get(service_url)
-    return res.json() if res.status_code == 200 else {}
+    # service_url = f'{o.scheme}://{o.netloc}/service{o.path}'
+    res = requests.get(object_url)
+    return dict(res.json()) if res.status_code == 200 else {}
 
 
 
