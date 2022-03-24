@@ -87,7 +87,7 @@ def new_post(request):
             'visibility': form['visibility'].value(),
         }
 
-        post_url = "http://127.0.0.1:8000/service/authors/{}/posts".format(request.user.id)
+        post_url = "https://cmput404-project-team9.herokuapp.com/service/authors/{}/posts".format(request.user.id)
 
         post_request = requests.post(post_url, data)
 
