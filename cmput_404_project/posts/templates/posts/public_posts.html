@@ -16,26 +16,21 @@
         </style>
     </head>
     <body>
-
-        <form name="forms" id="forms">
-        <label>Whats your username?
-            <input name="username" type="text" />
-        </label>
-        <label>How many years have you been a developer?
-            <input name="age" type="number" />
-        </label>
-        <button type="submit">Submit</button>
-        </form>
-
-
         <h1>List of Public Posts</h1>
-
-        <p id="commentAuthorId">{{author_id}}</p>
-
         <p id="posts"></p>
 
         <script>
+            // TODO: change this to a remote server
+            const hostServerURL = "http://127.0.0.1:8000/";
+
             function update() {
+                document.getElementById("posts").innerHTML = "";
+                // TODO: update posts from other servers
+                updatePostsFromServer(hostServerURL);
+            }
+
+            // Updates posts and comments from a server given a URL
+            function updatePostsFromServer(url) {
                 document.getElementById("posts").innerHTML = "";
 
                 var getAuthors = new XMLHttpRequest();
@@ -44,7 +39,7 @@
                     if (this.readyState == 4 && this.status == 200) {
                         authors = JSON.parse(getAuthors.responseText)['items'];
 
-                        // id of all authors
+                        // IDs of all authors
                         var authorIds = new Set();
 
                         for (let i in authors) {
@@ -53,7 +48,7 @@
                         } 
 
                         authorIds.forEach(authorId => {
-                            // find all public posts from each author
+                            // Find all public posts from each author
 
                             var getPosts = new XMLHttpRequest();
 
@@ -66,271 +61,234 @@
 
                                         updatePost(posts[i], newTag);
 
-                                        addTextboxInput(newTag, posts[i]);
+                                        addTextboxInput(newTag, posts[i], url);
 
                                         document.getElementById("posts").appendChild(newTag);
                                     } 
                                 }
                             }
 
-                            getPosts.open("GET", "http://127.0.0.1:8000/service/authors/"+authorId+"/posts", true);
+                            getPosts.open("GET", url+"service/authors/"+authorId+"/posts", true);
                             getPosts.send(); 
                         });
                     }
                 };
-
-                function addTextboxInput(newTag, post) {
-                    let arrayTemp = post.id.split("/");
-                    postId = arrayTemp[arrayTemp.length-1];
-
-                    arrayTemp = post.author.id.split("/");
-                    authorId = arrayTemp[arrayTemp.length-1];
-
-                    // newTag.appendChild(document.createTextNode("Content Type: "))
-                    // var contentTypeSelect = document.createElement("select");
-                    // contentTypeSelect.name = "contentType";
-                    // addSelectOption(contentTypeSelect, "text");
-                    // addSelectOption(contentTypeSelect, "markdown");
-                    // addSelectOption(contentTypeSelect, "application");
-                    // addSelectOption(contentTypeSelect, "png");
-                    // addSelectOption(contentTypeSelect, "jpeg");
-
-                    // newTag.appendChild(contentTypeSelect);
-                    // newTag.appendChild(document.createElement("br"));
-
-                    // newTag.appendChild(document.createTextNode("Content: "))
-                    // var comment = document.createElement("INPUT");
-                    // comment.type = "text";
-                    // comment.name = "comment";
-
-                    // newTag.appendChild(comment);
-                    // newTag.appendChild(document.createElement("br"));
-
-
-                    // var data = {
-                    //     'type': 'comment',
-                    //     'contentType': ,
-                    //     'comment': ,
-                    //     'author': "http://127.0.0.1:8000/authors/"+document.getElementById("commentAuthorId").innerHTML,
-                    // } 
-
-                    var h1 = document.createElement("H2");
-                    h1.appendChild(document.createTextNode("New Comment:"));
-                    newTag.appendChild(h1);
-
-                    var inputForm = document.createElement("FORM");
-                    inputForm.id = postId;
-                    inputForm.class = postId;
-                    inputForm.action = "http://127.0.0.1:8000/service/authors/"+authorId+"/posts/"+postId+"/comments";
-                    inputForm.method = "post"
-
-                    inputForm.addEventListener("submit", handler)
-
-                    // authentication 
-                    var token = document.createElement("INPUT");
-                    token.type = 'hidden';
-                    token.name = 'csrfmiddlewaretoken';
-                    token.value = '{{ csrf_token }}';
-                    inputForm.appendChild(token);
-
-                    var type = document.createElement("INPUT");
-                    type.type = 'hidden';
-                    type.name = "type";
-                    type.value = "comment";
-                    inputForm.appendChild(type);
-
-                    var postURL = document.createElement("INPUT");
-                    postURL.type = 'hidden';
-                    postURL.name = "postURL";
-                    postURL.value = "http://127.0.0.1:8000/service/authors/"+authorId+"/posts/"+postId+"/comments";;
-                    inputForm.appendChild(postURL);
-
-                    inputForm.appendChild(document.createTextNode("Content Type: "))
-                    var contentTypeSelect = document.createElement("select");
-                    contentTypeSelect.name = "contentType";
-                    addSelectOption(contentTypeSelect, "text");
-                    addSelectOption(contentTypeSelect, "markdown");
-                    addSelectOption(contentTypeSelect, "application");
-                    addSelectOption(contentTypeSelect, "png");
-                    addSelectOption(contentTypeSelect, "jpeg");
-
-                    inputForm.appendChild(contentTypeSelect);
-                    inputForm.appendChild(document.createElement("br"));
-
-                    inputForm.appendChild(document.createTextNode("Content: "))
-                    var comment = document.createElement("INPUT");
-                    comment.type = "text";
-                    comment.name = "comment";
-
-                    inputForm.appendChild(comment);
-                    inputForm.appendChild(document.createElement("br"));
-
-                    var commentAuthor = document.createElement("INPUT");
-                    commentAuthor.type = 'hidden';
-                    commentAuthor.name = "author";
-                    commentAuthor.value = "http://127.0.0.1:8000/authors/"+document.getElementById("commentAuthorId").innerHTML;
-                    inputForm.appendChild(commentAuthor);
-
-                    var newSubmit = document.createElement("INPUT");
-                    newSubmit.type = "submit";
-                    newSubmit.value = "Post Comment";
-
-                    // var submitButton = document.createElement("BUTTON");
-                    // submitButton.onclick = onSubmitButtonClick(postId);
-                    // submitButton.appendChild(document.createTextNode("Click me"));
-                    // inputForm.appendChild(submitButton);
-
-                    inputForm.appendChild(newSubmit);
-
-                    // newTag.appendChild(inputForm);
-
-                    // var submitButton = document.createElement("BUTTON");
-                    // submitButton.onclick = onSubmitButtonClick(postId);
-                    // submitButton.appendChild(document.createTextNode("Click me"));
-                    // inputForm.appendChild(submitButton);
-
-                    newTag.appendChild(inputForm);
-                }
-
-
-                // get the form element from dom
-                const formElement = document.querySelector('form#forms')
-
-                // convert the form to JSON
-                const getFormJSON = (form) => {
-                    const data = new FormData(form);
-                    return Array.from(data.keys()).reduce((result, key) => {
-                        result[key] = data.get(key);
-                        return result;
-                    }, {});
-                };
-
-                // handle the form submission event, prevent default form behaviour, check validity, convert form to JSON
-                const handler = (event) => {
-                    console.log(event.target);
-                    event.preventDefault();
-                    const result = getFormJSON(event.target);
-                    console.log(result)
-                    
-                    var xhr = new XMLHttpRequest();
-                    xhr.open("POST", result.postURL);
-                    xhr.setRequestHeader("Content-Type", "application/json")
-                    xhr.setRequestHeader('X-CSRFToken', result.csrfmiddlewaretoken)
-
-                    xhr.send(JSON.stringify(result));
-
-                    update();
-
-                }
-
-                formElement.addEventListener("submit", handler)
-
-
-
-
-                // function onSubmitButtonClick(id) {
-                //     // var form = document.getElementById(id);
-                //     var form = document.getElementsByClassName(id)[0];
-                //     console.log(form);
-
-                //     // for (const element of form.elements) {
-                //     //     console.log(element);
-                //     // }
-                // }
-
-                function addSelectOption(contentTypeSelect, textOption) {
-                    var option = document.createElement("option");
-                    option.text = textOption;
-
-                    contentTypeSelect.add(option);
-                }
-
-                function updatePost(post, newTag) {
-                    let arrayTemp = post.id.split("/");
-                    postId = arrayTemp[arrayTemp.length-1];
-
-                    arrayTemp = post.author.id.split("/");
-                    authorId = arrayTemp[arrayTemp.length-1];
-
-                    newTag.appendChild(document.createTextNode("Published: " + post.published));
-                    newTag.appendChild(document.createElement("br"));
-
-                    var h1Author = document.createElement("H2");
-                    h1Author.appendChild(document.createTextNode("Author:"));
-                    newTag.appendChild(h1Author);
-
-                    var profileLink = document.createElement("a"); 
-                    profileLink.appendChild(document.createTextNode(post.author.displayName));
-                    profileLink.href = "http://127.0.0.1:8000/authors/" + authorId;
-                    newTag.appendChild(profileLink);
-                    newTag.appendChild(document.createElement("br"));
-
-                    // newTag.appendChild(document.createTextNode("Author: " + post.author.displayName));
-                    // newTag.appendChild(document.createElement("br"));
-
-                    var image = document.createElement('img');
-                    image.src = post.image;
-                    image.width = 150;
-                    image.height = 150;
-                    newTag.appendChild(image);
-                    newTag.appendChild(document.createElement("br"));
-
-                    newTag.appendChild(document.createTextNode("Post ID: " + postId));
-                    newTag.appendChild(document.createElement("br"));
-
-                    newTag.appendChild(document.createTextNode("Title: " + post.title));
-                    newTag.appendChild(document.createElement("br"));
-
-                    newTag.appendChild(document.createTextNode("Description: " + post.description));
-                    newTag.appendChild(document.createElement("br"));
-
-                    newTag.appendChild(document.createTextNode("Content: " + post.content));
-                    newTag.appendChild(document.createElement("br"));
-
-                    newTag.appendChild(document.createTextNode("Category: " + post.category));
-                    newTag.appendChild(document.createElement("br"));
-
-                    var comments = post.commentsSrc['items'];
-
-                    if (Object.keys(comments).length > 0) {
-                        var h1Conmments = document.createElement("H2");
-                        h1Conmments.appendChild(document.createTextNode("Comments:"));
-                        newTag.appendChild(h1Conmments);
-
-                        for (let i in comments) {
-                            updateComment(comments[i], newTag);
-                        }
-                    }
-
-                }
-
-                function updateComment(comment, newTag) {
-                    var newComment = document.createElement("div");
-
-                    newComment.setAttribute("id", "commentBox");
-
-                    newComment.appendChild(document.createTextNode("Published: " + comment.published));
-                    newComment.appendChild(document.createElement("br"));
-
-                    newComment.appendChild(document.createTextNode("Author: " + comment.author.displayName));
-                    newComment.appendChild(document.createElement("br"));
-
-                    newComment.appendChild(document.createTextNode("Comment: " + comment.comment));
-                    newComment.appendChild(document.createElement("br"));
-
-                    newTag.appendChild(newComment);   
-                }
         
-                // getAuthors.open("GET", "https://projectcmput404sfrodrig.herokuapp.com/service/authors/", true);
-                getAuthors.open("GET", "http://127.0.0.1:8000/service/authors/", true);
-                
+                getAuthors.open("GET", url+"service/authors/", true);
                 getAuthors.send();
+            }
+
+            function addTextboxInput(newTag, post, url) {
+                let arrayTemp = post.id.split("/");
+                postId = arrayTemp[arrayTemp.length-1];
+
+                arrayTemp = post.author.id.split("/");
+                authorId = arrayTemp[arrayTemp.length-1];
+
+                var h1 = document.createElement("H2");
+                h1.appendChild(document.createTextNode("New Comment:"));
+                newTag.appendChild(h1);
+
+                var inputForm = document.createElement("FORM");
+                inputForm.id = postId;
+                inputForm.class = postId;
+                inputForm.action = url+"service/authors/"+authorId+"/posts/"+postId+"/comments";
+                inputForm.method = "post"
+
+                inputForm.addEventListener("submit", handler)
+
+                var type = document.createElement("INPUT");
+                type.type = 'hidden';
+                type.name = "type";
+                type.value = "comment";
+                inputForm.appendChild(type);
+
+                var host = document.createElement("INPUT");
+                host.type = 'hidden';
+                host.name = "host";
+                host.value = url;
+                inputForm.appendChild(host);
+
+                var postURL = document.createElement("INPUT");
+                postURL.type = 'hidden';
+                postURL.name = "postURL";
+                postURL.value = url+"service/authors/"+authorId+"/posts/"+postId+"/comments";;
+                inputForm.appendChild(postURL);
+
+                inputForm.appendChild(document.createTextNode("Content Type: "))
+                var contentTypeSelect = document.createElement("select");
+                contentTypeSelect.name = "contentType";
+                addSelectOption(contentTypeSelect, "text");
+                addSelectOption(contentTypeSelect, "markdown");
+                addSelectOption(contentTypeSelect, "application");
+                addSelectOption(contentTypeSelect, "png");
+                addSelectOption(contentTypeSelect, "jpeg");
+
+                inputForm.appendChild(contentTypeSelect);
+                inputForm.appendChild(document.createElement("br"));
+
+                inputForm.appendChild(document.createTextNode("Content: "))
+                var comment = document.createElement("INPUT");
+                comment.type = "text";
+                comment.name = "comment";
+
+                inputForm.appendChild(comment);
+                inputForm.appendChild(document.createElement("br"));
+
+                // var commentAuthor = document.createElement("INPUT");
+                // commentAuthor.type = 'hidden';
+                // commentAuthor.name = "author";
+                // commentAuthor.value = url+"authors/"+"{{author_id}}";
+                // inputForm.appendChild(commentAuthor);
+
+                var newSubmit = document.createElement("INPUT");
+                newSubmit.type = "submit";
+                newSubmit.value = "Post Comment";
+
+                inputForm.appendChild(newSubmit);
+
+                newTag.appendChild(inputForm);
+            }
+
+            function addSelectOption(contentTypeSelect, textOption) {
+                var option = document.createElement("option");
+                option.text = textOption;
+
+                contentTypeSelect.add(option);
+            }
+
+            function updatePost(post, newTag, url) {
+                let arrayTemp = post.id.split("/");
+                postId = arrayTemp[arrayTemp.length-1];
+
+                arrayTemp = post.author.id.split("/");
+                authorId = arrayTemp[arrayTemp.length-1];
+
+                newTag.appendChild(document.createTextNode("Published: " + post.published));
+                newTag.appendChild(document.createElement("br"));
+
+                var h1Author = document.createElement("H2");
+                h1Author.appendChild(document.createTextNode("Author:"));
+                newTag.appendChild(h1Author);
+
+                var profileLink = document.createElement("a"); 
+                profileLink.appendChild(document.createTextNode(post.author.displayName));
+                profileLink.href = url+"authors/" + authorId;
+                newTag.appendChild(profileLink);
+                newTag.appendChild(document.createElement("br"));
+
+                // TODO: Host images in the server and update the path 
+                // var image = document.createElement('img');
+                // image.src = post.image;
+                // image.width = 150;
+                // image.height = 150;
+                // newTag.appendChild(image);
+                // newTag.appendChild(document.createElement("br"));
+
+                newTag.appendChild(document.createTextNode("Post ID: " + postId));
+                newTag.appendChild(document.createElement("br"));
+
+                newTag.appendChild(document.createTextNode("Title: " + post.title));
+                newTag.appendChild(document.createElement("br"));
+
+                newTag.appendChild(document.createTextNode("Description: " + post.description));
+                newTag.appendChild(document.createElement("br"));
+
+                newTag.appendChild(document.createTextNode("Content: " + post.content));
+                newTag.appendChild(document.createElement("br"));
+
+                newTag.appendChild(document.createTextNode("Category: " + post.category));
+                newTag.appendChild(document.createElement("br"));
+
+                var comments = post.commentsSrc['items'];
+
+                if (Object.keys(comments).length > 0) {
+                    var h1Conmments = document.createElement("H2");
+                    h1Conmments.appendChild(document.createTextNode("Comments:"));
+                    newTag.appendChild(h1Conmments);
+
+                    for (let i in comments) {
+                        updateComment(comments[i], newTag);
+                    }
+                }
+
+            }
+
+            function updateComment(comment, newTag) {
+                var newComment = document.createElement("div");
+
+                newComment.setAttribute("id", "commentBox");
+
+                newComment.appendChild(document.createTextNode("Published: " + comment.published));
+                newComment.appendChild(document.createElement("br"));
+
+                newComment.appendChild(document.createTextNode("Author: " + comment.author.displayName));
+                newComment.appendChild(document.createElement("br"));
+
+                newComment.appendChild(document.createTextNode("Comment: " + comment.comment));
+                newComment.appendChild(document.createElement("br"));
+
+                newTag.appendChild(newComment);   
+            }
+
+            const getFormJSON = (form) => {
+                const data = new FormData(form);
+                return Array.from(data.keys()).reduce((result, key) => {
+                    result[key] = data.get(key);
+                    return result;
+                }, {});
+            };
+
+            // Handles POST requests for form comments
+            const handler = (event) => {
+                event.preventDefault();
+
+                // Retrieves the form element that was submitted and transform it into a JSON object
+                var form = getFormJSON(event.target);
+
+                // Find an author JSON object corresponding to the given ID
+                var getAuthor = new XMLHttpRequest();
+        
+                getAuthor.onreadystatechange = function() {
+                    if (this.readyState == 4 && this.status == 200) {
+                        authors = JSON.parse(getAuthor.responseText)['items'];
+
+                        // IDs of all authors
+                        var authorIds = new Set();
+
+                        for (let i in authors) {
+                            let array = authors[i].id.split("/");
+                            id = array[array.length-1];
+
+                            if ("{{author_id}}" == id) {
+                                form['author'] = authors[i];
+                                break;
+                            }
+                        } 
+
+                        console.log(form);
+
+                        var xhr = new XMLHttpRequest();
+
+                        xhr.open("POST", form.postURL);
+                        xhr.setRequestHeader("Content-Type", "application/json")
+                        xhr.setRequestHeader('X-CSRFToken', '{{ csrf_token }}')
+
+                        xhr.send(JSON.stringify(form));
+
+                        update();
+                    }
+                };
+        
+                getAuthor.open("GET", form['host']+"service/authors/", true);
+                getAuthor.send();
             }
 
             window.addEventListener('load', event => {
                 update();
             });
 
+            // TODO: Might not work as intended
             // setInterval(update, 5000);
 
         </script>
