@@ -16,36 +16,30 @@ def get_401_response() -> HttpResponse:
     return response
 
 
-def is_server_authorized(request: HttpRequest) -> bool:
+def is_server_authorized(request: HttpRequest) -> ServerNode:
     '''
     Given a HttpRequest, returns True if the server is authorized. Otherwise, False.
 
     The server is authorized if Authorization header is included with valid credentials.
     '''
-    host = request.get_host()
-    node_q = ServerNode.objects.filter(host=host)
-
-    if not node_q.exists():
-        return False
-
-    node = node_q.get()
 
     auth_header = request.META.get('HTTP_AUTHORIZATION', None)
     if auth_header is None:
-        return False
+        return None
 
     auth_type, auth_info = auth_header.split(' ')
 
     if auth_type.lower() != "basic":
-        return False
+        return None
 
     auth_info = auth_info.encode('utf-8')
     try:
         username, password = base64.b64decode(auth_info).decode('utf-8').split(':')
     except ValueError:
-        return False
+        return None
+    node_q = ServerNode.objects.filter(receiving_username=username, receiving_password=password)
 
-    return (username == node.receiving_username) and (password == node.receiving_password)
+    return node_q.get() if node_q.exists() else None
 
 
 def is_local_server(request: HttpRequest) -> bool:
