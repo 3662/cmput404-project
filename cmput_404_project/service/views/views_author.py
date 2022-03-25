@@ -126,7 +126,7 @@ class AuthorDetailView(View):
 
 def get_401_response():
 
-    response = HttpResponse()
+    response = HttpResponse(status=401)
     response.headers['WWW-Authenticate'] = 'Basic realm=Group 09'
     return response
 
