@@ -72,8 +72,8 @@ def author_friend_view(request):
                 #rec=Like.objects.get(author=request.user, post=post)
                 #rec.delete()
             #else:
-                summary = str(request.user) + " wants to follow " + str(recv.username)
-                follower, inserted = FollowRequest.objects.get_or_create(to_author=recv, from_author=send, summary=summary)
+                #summary = str(request.user) + " wants to follow " + str(recv.username)
+                follower, inserted = FollowRequest.objects.get_or_create(to_author=recv, from_author=send) #, summary=summary)
                 friend.save()
                 follower.save()
         if action_flag == 'R':
@@ -123,7 +123,8 @@ def follower_view(request):
         'authors': authors,
         'f_qs': f_qs,
     }
-    return render(request, 'authors/follower_list.html', context)
+    furl = f'service/author/{request.user.id}/follower/followers_list.html'
+    return render(request, 'authors/followers_list.html', {'user_id': request.user.id})
 
 
 def follower_view1(request):
@@ -166,8 +167,8 @@ def author_profile_view(request):
                 #rec=Like.objects.get(author=request.user, post=post)
                 #rec.delete()
             #else:
-                summary = str(request.user) + " wants to follow " + str(recv.username)
-                follower, inserted = FollowRequest.objects.get_or_create(to_author=recv, from_author=send, summary=summary)
+                #summary = str(request.user) + " wants to follow " + str(recv.username)
+                follower, inserted = FollowRequest.objects.get_or_create(to_author=recv, from_author=send) #, summary=summary)
                 friend.save()
                 follower.save()
         if action_flag == 'R':

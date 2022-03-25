@@ -30,6 +30,30 @@
   </style>
 </head>
 <body>
+    <script>
+        //const hostServerURL = "https://cmput404-project-team9.herokuapp.com/";
+        function sendFollowRequest(recv, sender){
+            var sendFollow = new XMLHttpRequest();
+            console.log("recv  ", recv);
+            console.log("sender  ", sender);
+            const hostServerURL = "https://localhost:8000";
+            var data = {
+               "type": "follow",
+               "summary": sender.id + " wants to follow " + recv.id,
+               "actor": sender,
+               "object": recv
+                };
+            //var btn = document.getElementById("send")
+            //btn.click(function(){
+           // });
+           sendFollow.open("POST", hostServerURl+"/service/authors/"+recv.id+"/inbox", true);
+           sendFollow.setRequestHeader("Content-type", "application/json");
+           sendFollow.send(JSON.stringify(data));
+           console.log(sendFollow.responseText)
+
+
+        }
+    </script>
     <div class="box align-center">
         <p>
             <img class="profile_image" src="{{author.profile_image}}">
@@ -76,7 +100,7 @@
                                          Revoke/Withdraw
                                     </button>
                                 {% else %}
-                                    <button type="submit" name="action_flag" value="I" class="ui button like-btn{{author.id}}">
+                                    <button type="submit" name="action_flag" value="I" class="ui button like-btn{{author.id}}" id="send" onclick="sendFollowRequest({{author.id}},{{author}});">
                                        Send Follow Request
                                     </button>
                                 {% endif %}
