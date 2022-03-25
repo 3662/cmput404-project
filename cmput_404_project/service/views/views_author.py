@@ -1,5 +1,5 @@
 import json 
-import socket
+import base64
 
 from django.shortcuts import get_object_or_404, render
 from django.core.paginator import Paginator, EmptyPage
@@ -29,7 +29,9 @@ class AuthorsDetailView(View):
             - 200: if successful
             - 404: if page does not exist
         '''
-        # authorize_server(request)
+        if not is_server_authorized(request.get_host()):
+            return get_401_response()
+
         return JsonResponse(self._get_authors(request))
 
     def head(self, request, *args, **kwargs):
@@ -96,7 +98,7 @@ class AuthorDetailView(View):
         POST [local]: Updates author_id's profile  
 
         Returns:
-            - 200: if the post is successfully updated
+            - 200: if the profile is successfully updated
             - 400: if the data is invalid
             - 403: if the user is not authenticated
             - 404: if author does not exist 
@@ -122,12 +124,38 @@ class AuthorDetailView(View):
         return HttpResponse('The form is not valid.', status=status_code)     
 
 
-def authorize_server(request):
-    if is_host_local(request):
-        return True
-    
-    request.META.get('HTTP_AUTHORIZATION', '')
+def get_401_response():
 
-def is_host_local(request) -> bool:
-    return request.get_host() == settings.HOSTNAME
+    response = HttpResponse()
+    response.headers['WWW-Authenticate'] = 'Basic realm=Group 09'
+    return response
+
+def is_server_authorized(host) -> bool:
+
+    node_q = ServerNode.objects.filter(host=host)
+    auth_header = request.META.get('HTTP_AUTHORIZATION', None)
+
+    if (not node_q.exists()) or (auth_header is None):
+        return False
+
+    node = node_q.get()
+
+    if node.is_local:
+        return True
+
+    auth_type, auth_info = auth_header.split(' ')
+
+    if auth_type.lower() != "basic":
+        return False
+
+    try:
+        username, password = base64.b64decode(auth_info.encode('utf-8')).split(':')
+    except ValueError:
+        return False
+
+    return (username == node.username) and (password == node.password)
+
+    
+
+
         
