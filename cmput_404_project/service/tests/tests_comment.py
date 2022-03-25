@@ -40,9 +40,9 @@ class CommentsViewTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(data['type'], 'comments')
-        self.assertEqual(len(data['items']), self.NUM_COMMENTS)
+        self.assertEqual(len(data['comments']), self.NUM_COMMENTS)
 
-        comments_data = data['items']
+        comments_data = data['comments']
         for c_data in comments_data:
             comment_id = c_data['id'].split('/')[-1]
             comment = Comment.objects.get(id=comment_id)
