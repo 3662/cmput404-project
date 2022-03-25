@@ -6,11 +6,13 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from social_distribution.models import Author, Post
 from .helper import create_dummy_authors, create_dummy_post, create_dummy_posts
+from service.models import ServerNode
 
 
 class PostViewTestCase(TestCase):
 
     def setUp(self):
+        ServerNode.objects.create(host='testserver', is_local=True) 
         create_dummy_authors(1)
 
     def test_get(self):
@@ -177,6 +179,7 @@ class PostViewTestCase(TestCase):
 class PostsViewTestCase(TestCase):
 
     def setUp(self):
+        ServerNode.objects.create(host='testserver', is_local=True) 
         create_dummy_authors(1)
 
     def test_get(self):

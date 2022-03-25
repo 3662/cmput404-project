@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
 from accounts.forms import AuthorCreationForm, AuthorChangeForm
-from .models import Author
+from .models import Author, Inbox, InboxItem
 
 
 class AuthorAdmin(UserAdmin):
@@ -26,4 +26,6 @@ class AuthorAdmin(UserAdmin):
 
 
 admin.site.register(Author, AuthorAdmin)
+admin.site.register(Inbox)
+admin.site.register(InboxItem)
 #admin.site.register(Like)

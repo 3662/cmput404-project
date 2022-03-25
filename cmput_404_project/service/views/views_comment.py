@@ -4,9 +4,8 @@ from django.shortcuts import get_object_or_404
 from django.core.paginator import EmptyPage
 from django.http import JsonResponse, HttpResponse, Http404
 from django.views import View
-from django.core.exceptions import ValidationError
 
-from posts.forms import CommentForm
+from service.server_authorization import is_server_authorized, get_401_response
 from social_distribution.models import Author, Post, Comment
 
 
@@ -23,8 +22,12 @@ class CommentsView(View):
 
         Returns:
             - 200: if successful
+            - 401: if server is not authorized
             - 404: if author or post does not exist
         '''
+        if not is_server_authorized(request):
+            return get_401_response()
+
         author_id = kwargs.get('author_id', '')
         post_id = kwargs.get('post_id', '')
         return JsonResponse(self._get_comments(request, author_id, post_id))
@@ -35,8 +38,12 @@ class CommentsView(View):
 
         Returns:
             - 200: if successful
+            - 401: if server is not authorized
             - 404: if author or post does not exist
         '''
+        if not is_server_authorized(request):
+            return get_401_response()
+
         author_id = kwargs.get('author_id', '')
         post_id = kwargs.get('post_id', '')
         data_json = json.dumps(self._get_comments(request, author_id, post_id))
@@ -47,13 +54,19 @@ class CommentsView(View):
 
     def post(self, request, *args, **kwargs):
         '''
-        POST [local]: if you post an object of “type”:”comment”, it will add your comment to the post whose id is post_id
+        POST [local, remote]: if you post an object of “type”:”comment”, 
+        it will add your comment to the post whose id is post_id
+
+        It will return the comment object back.
 
         Returns:
             - 201: if the comment is added to the post
             - 400: if the comment data is invalid
             - 404: if the post or author does not exist
         '''
+        if not is_server_authorized(request):
+            return get_401_response()
+
         author_id = kwargs.get('author_id', '')
         post_id = kwargs.get('post_id', '')
         author = get_object_or_404(Author, id=author_id)
@@ -67,15 +80,21 @@ class CommentsView(View):
                 raise ValueError()
             content_type = data['contentType']
             content = data['comment']
-            comment_author_id = data['author']['id'].split('/')[-1]
-            comment_author = get_object_or_404(Author, id=comment_author_id)
+            comment_author_id_url = data['author']['id']
+            comment_author_id = comment_author_id_url.split('/')[-1]
+            comment_author = None
+            if Author.objects.filter(id=comment_author_id).exists():
+                comment_author = Author.objects.get(id=comment_author_id)
+
         except (KeyError, ValueError):
             status_code = 400
             return HttpResponse('The form is invalid', status=status_code)     
         else:
             status_code = 201
-            Comment.objects.create(author=comment_author, post=post, content_type=content_type, content=content)
-            return HttpResponse('Comment has been successfully created.', status=status_code)
+            comment = Comment.objects.create(author=comment_author, author_url=comment_author_id_url, post=post, content_type=content_type, content=content)
+            post.count += 1
+            post.save(update_fields=['count'])
+            return JsonResponse(comment.get_detail_dict(), status=status_code)
 
         
     def _get_comments(self, request, author_id, post_id):

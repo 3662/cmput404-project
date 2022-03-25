@@ -6,6 +6,7 @@ from django.http import JsonResponse, HttpResponse, Http404
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator, EmptyPage
 
+from service.server_authorization import is_server_authorized, is_local_server, get_401_response, get_403_response
 from social_distribution.models import Author, Post, Like, Comment, Inbox, InboxItem, FollowRequest
 
 
@@ -24,11 +25,14 @@ class InboxView(View):
 
         Returns:
             - 200: if successful
-            - 403: if the author is not authenticated
+            - 403: if the author is not authenticated, or host is not local
             - 404: if author or page does not exist
         '''
+        if not is_local_server(request):
+            return get_403_response()
+
         author_id = kwargs.get('author_id', '')
-        return JsonResponse(self._get_post_inbox_items(request, author_id))
+        return JsonResponse(self._get_inbox_items(request, author_id))
 
     def head(self, request, *args, **kwargs):
         '''
@@ -36,11 +40,14 @@ class InboxView(View):
 
         Returns:
             - 200: if successful
-            - 403: if the author is not authenticated
+            - 403: if the author is not authenticated, or host is not local
             - 404: if author or page does not exist
         '''
+        if not is_local_server(request):
+            return get_403_response()
+
         author_id = kwargs.get('author_id', '')
-        data_json = json.dumps(self._get_post_inbox_items(request, author_id))
+        data_json = json.dumps(self._get_inbox_items(request, author_id))
         response = HttpResponse()
         response.headers['Content-Type'] = 'application/json'
         response.headers['Content-Length'] = str(len(bytes(data_json, 'utf-8')))
@@ -55,10 +62,14 @@ class InboxView(View):
             - If the type is “comment” then add that comment to AUTHOR_ID's inbox
         
         Returns:
-            - 200: if successful
+            - 201: if successful
             - 400: if the object is invalid.
+            - 401: if server is not authorized
             - 404: if the author does not exist.
         '''
+        if not is_server_authorized(request):
+            return get_401_response()
+
         author_id = kwargs.get('author_id', '')
         author = get_object_or_404(Author, id=author_id)
 
@@ -122,7 +133,7 @@ class InboxView(View):
             return HttpResponse(e if str(e) != '' else 'The object is invalid', status=status_code)     
 
         else:
-            return HttpResponse("An object is successfully sent to the inbox")
+            return HttpResponse("An object is successfully sent to the inbox", status=201)
 
 
     def delete(self, request, *args, **kwargs):
@@ -131,8 +142,11 @@ class InboxView(View):
 
         Returns:
             - 204: if successfully cleared
+            - 403: if host is not local
             - 404: if the author does not exist
         '''
+        if not is_local_server(request):
+            return get_403_response()
 
         author_id = kwargs.get('author_id', '')
         author = get_object_or_404(Author, id=author_id)
@@ -148,7 +162,7 @@ class InboxView(View):
         return HttpResponse("The inbox is cleared", status=204)
 
 
-    def _get_post_inbox_items(self, request, author_id) -> dict:
+    def _get_inbox_items(self, request, author_id) -> dict:
         '''
         Returns a dict containing a list of posts in the author_id's inbox.
         '''
@@ -169,15 +183,15 @@ class InboxView(View):
             inbox = Inbox.objects.create(author=author)
 
         try:
-            q = InboxItem.objects.all().filter(inbox=inbox, object_type=InboxItem.OBJECT_TYPE_CHOICES[0][0])
-            q = q.order_by('-id')
-            post_items = Paginator(q, size).page(page)
+            q = InboxItem.objects.all().filter(inbox=inbox)
+            q = q.order_by('-date_created')
+            inbox_items = Paginator(q, size).page(page)
         except EmptyPage:
             raise Http404('Page does not exist')
 
         data = {}
-        data['type'] = 'posts'
-        data['items'] = [p.get_detail_dict() for p in post_items]
+        data['type'] = 'inbox'
+        data['items'] = [item.get_detail_dict() for item in inbox_items]
         return data
 
 
@@ -194,13 +208,11 @@ class InboxView(View):
         if context != Like.context:
             raise ValueError('Invalid context: %s' % context)
         like_author_id = data_dict['author']['id'].split('/')[-1]
+        like_author = None  # can be local or remote author
         if Author.objects.filter(id=like_author_id).exists():
             # is a local author
             like_author = Author.objects.get(id=like_author_id)
-        else:
-            # is a remote author
-            like_author = None
-        like_author_url = data_dict['author']['url']
+        like_author_url = data_dict['author']['id']
         object_url = data_dict['object']
 
         # object id must exist in our database
