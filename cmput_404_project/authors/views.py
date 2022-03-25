@@ -123,7 +123,8 @@ def follower_view(request):
         'authors': authors,
         'f_qs': f_qs,
     }
-    return render(request, 'authors/follower_list.html', context)
+    furl = f'service/author/{request.user.id}/follower/followers_list.html'
+    return render(request, 'authors/followers_list.html', {'user_id': request.user.id})
 
 
 def follower_view1(request):
