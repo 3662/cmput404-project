@@ -32,11 +32,29 @@
 <body>
     <script>
         //const hostServerURL = "https://cmput404-project-team9.herokuapp.com/";
-        function sendFollowRequest(recv, sender){
+        function sendFollowRequest(){
+            let sender = {
+                type: 'author',
+                id: '{{friend.get_id_url}}',
+                url: '{{friend.get_profile_url}}',
+                host: '{{friend.host}}',
+                displayName: '{{friend.displayName}}',
+                github: '{{friend.github}}',
+                profileImage: '{{friend.profile_image}}',
+            };
+            let recv = {
+                type: 'author',
+                id: '{{author.get_id_url}}',
+                url: '{{author.get_profile_url}}',
+                host: '{{author.host}}',
+                displayName: '{{author.displayName}}',
+                github: '{{author.github}}',
+                profileImage: '{{author.profile_image}}',
+            };
             var sendFollow = new XMLHttpRequest();
             console.log("recv  ", recv);
             console.log("sender  ", sender);
-            const hostServerURL = "https://localhost:8000";
+            const hostServerURL = sender.host;
             var data = {
                "type": "follow",
                "summary": sender.id + " wants to follow " + recv.id,
@@ -46,8 +64,9 @@
             //var btn = document.getElementById("send")
             //btn.click(function(){
            // });
-           sendFollow.open("POST", hostServerURl+"/service/authors/"+recv.id+"/inbox", true);
+           sendFollow.open("POST", recv.id+"/inbox", true);
            sendFollow.setRequestHeader("Content-type", "application/json");
+           sendFollow.setRequestHeader('X-CSRF-TOKEN', '{{csrfToken}}');
            sendFollow.send(JSON.stringify(data));
            console.log(sendFollow.responseText)
 
@@ -100,7 +119,7 @@
                                          Revoke/Withdraw
                                     </button>
                                 {% else %}
-                                    <button type="submit" name="action_flag" value="I" class="ui button like-btn{{author.id}}" id="send" onclick="sendFollowRequest({{author.id}},{{author}});">
+                                    <button type="submit" name="action_flag" value="I" class="ui button like-btn" id="send" onclick="sendFollowRequest()">
                                        Send Follow Request
                                     </button>
                                 {% endif %}

@@ -198,3 +198,15 @@ def like_post2(request):
             post.save()
             like.save()
     return redirect(f'/authors/{post.author.id}')
+
+def display_inbox(request):
+    if not request.user.is_authenticated:
+        status_code = 403
+        message = 'You have to sign in to view the inbox.'
+        message += '<br><a href="/">Go to homepage</a>'
+        return HttpResponse(message, status=status_code)
+    context = {
+        'author_id': request.user.id,
+        'author': request.user,
+    }
+    return render(request, 'authors/inbox.html', context)
