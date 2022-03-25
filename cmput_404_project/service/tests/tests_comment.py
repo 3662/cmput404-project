@@ -3,6 +3,7 @@ import json
 from django.test import TestCase, Client
 
 from .helper import create_dummy_authors, create_dummy_post, create_dummy_comments
+from service.models import ServerNode
 from social_distribution.models import Author, Post, Comment
 
 class CommentsViewTestCase(TestCase):
@@ -10,6 +11,7 @@ class CommentsViewTestCase(TestCase):
     NUM_COMMENTS = 10
 
     def setUp(self):
+        ServerNode.objects.create(host='testserver', is_local=True) 
         create_dummy_authors(2)
         post_author = Author.objects.get(username='test0')
         comment_author = Author.objects.get(username='test1')

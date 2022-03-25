@@ -5,12 +5,14 @@ from django.test import TestCase, Client
 from django.core.exceptions import ObjectDoesNotExist
 
 from social_distribution.models import Author, Post, Inbox, InboxItem, FollowRequest, Like, Comment
+from service.models import ServerNode
 from .helper import create_dummy_authors, create_dummy_post, create_dummy_posts, create_dummy_comments
 
 
 class InboxViewTestCase(TestCase):
 
     def setUp(self):
+        ServerNode.objects.create(host='testserver', is_local=True) 
         create_dummy_authors(2)
 
     def test_send_posts(self):

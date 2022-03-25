@@ -3,6 +3,7 @@ from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
 
 from social_distribution.models import Author
+from service.models import ServerNode
 from .helper import create_dummy_author_with_followers, create_dummy_authors
 
 
@@ -11,6 +12,7 @@ class FollowersViewTestCase(TestCase):
     NUM_FOLLOWERS = 5
 
     def setUp(self):
+        ServerNode.objects.create(host='testserver', is_local=True) 
         create_dummy_author_with_followers(self.NUM_FOLLOWERS)
 
 
@@ -65,6 +67,9 @@ class FollowersViewTestCase(TestCase):
 class FollowersViewTestCase(TestCase):
 
     NUM_FOLLOWERS = 1
+
+    def setUp(self):
+        ServerNode.objects.create(host='testserver', is_local=True) 
 
     def test_get(self):
         create_dummy_author_with_followers(self.NUM_FOLLOWERS)
