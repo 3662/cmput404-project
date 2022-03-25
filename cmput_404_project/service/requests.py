@@ -4,12 +4,11 @@ from service.models import ServerNode
 
 def get_b64_server_credential(server_host: str):
     '''
-    If server_host is in ServerNode and is not a local server, 
+    If server_host is in ServerNode,
     it returns a string with base64 encoded username and password 
     that can be used to put in "Authorization:" header.
 
-    If server_host is either not in the ServerNode objects or is a local server, 
-    it returns None.
+    If server_host is not in the ServerNode objects, it returns None.
 
     Note: You must set up ServerNode in admin page if you want to make a request to a remote server.
 
@@ -30,7 +29,7 @@ def get_b64_server_credential(server_host: str):
         node = q.get()
     
     # server_host does not exist or is a local server
-    if (node is None) or node.is_local:
+    if node is None:
         return None 
 
     credential = f"{node.sending_username}:{node.sending_password}".encode("utf-8")
