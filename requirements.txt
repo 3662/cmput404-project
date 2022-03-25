@@ -9,6 +9,7 @@ cwcwidth==0.1.5
 dataclasses==0.6
 dj-database-url==0.5.0
 Django==3.2.12
+django-cors-headers==3.10.1
 django-on-heroku==1.1.2
 djangorestframework==3.13.1
 greenlet==1.1.2
