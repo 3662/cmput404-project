@@ -28,7 +28,7 @@ class InboxView(View):
             - 404: if author or page does not exist
         '''
         author_id = kwargs.get('author_id', '')
-        return JsonResponse(self._get_post_inbox_items(request, author_id))
+        return JsonResponse(self._get_inbox_items(request, author_id))
 
     def head(self, request, *args, **kwargs):
         '''
@@ -40,7 +40,7 @@ class InboxView(View):
             - 404: if author or page does not exist
         '''
         author_id = kwargs.get('author_id', '')
-        data_json = json.dumps(self._get_post_inbox_items(request, author_id))
+        data_json = json.dumps(self._get_inbox_items(request, author_id))
         response = HttpResponse()
         response.headers['Content-Type'] = 'application/json'
         response.headers['Content-Length'] = str(len(bytes(data_json, 'utf-8')))
@@ -55,7 +55,7 @@ class InboxView(View):
             - If the type is “comment” then add that comment to AUTHOR_ID's inbox
         
         Returns:
-            - 200: if successful
+            - 201: if successful
             - 400: if the object is invalid.
             - 404: if the author does not exist.
         '''
@@ -122,7 +122,7 @@ class InboxView(View):
             return HttpResponse(e if str(e) != '' else 'The object is invalid', status=status_code)     
 
         else:
-            return HttpResponse("An object is successfully sent to the inbox")
+            return HttpResponse("An object is successfully sent to the inbox", status=201)
 
 
     def delete(self, request, *args, **kwargs):
@@ -148,7 +148,7 @@ class InboxView(View):
         return HttpResponse("The inbox is cleared", status=204)
 
 
-    def _get_post_inbox_items(self, request, author_id) -> dict:
+    def _get_inbox_items(self, request, author_id) -> dict:
         '''
         Returns a dict containing a list of posts in the author_id's inbox.
         '''
@@ -169,15 +169,15 @@ class InboxView(View):
             inbox = Inbox.objects.create(author=author)
 
         try:
-            q = InboxItem.objects.all().filter(inbox=inbox, object_type=InboxItem.OBJECT_TYPE_CHOICES[0][0])
-            q = q.order_by('-id')
-            post_items = Paginator(q, size).page(page)
+            q = InboxItem.objects.all().filter(inbox=inbox)
+            q = q.order_by('-date_created')
+            inbox_items = Paginator(q, size).page(page)
         except EmptyPage:
             raise Http404('Page does not exist')
 
         data = {}
-        data['type'] = 'posts'
-        data['items'] = [p.get_detail_dict() for p in post_items]
+        data['type'] = 'inbox'
+        data['items'] = [item.get_detail_dict() for item in inbox_items]
         return data
 
 
