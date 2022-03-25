@@ -194,12 +194,10 @@ class InboxView(View):
         if context != Like.context:
             raise ValueError('Invalid context: %s' % context)
         like_author_id = data_dict['author']['id'].split('/')[-1]
+        like_author = None  # can be local or remote author
         if Author.objects.filter(id=like_author_id).exists():
             # is a local author
             like_author = Author.objects.get(id=like_author_id)
-        else:
-            # is a remote author
-            like_author = None
         like_author_url = data_dict['author']['id']
         object_url = data_dict['object']
 
