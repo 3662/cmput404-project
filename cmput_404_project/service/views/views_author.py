@@ -127,7 +127,7 @@ class AuthorDetailView(View):
 def get_401_response():
 
     response = HttpResponse(status=401)
-    response.headers['WWW-Authenticate'] = 'Basic realm=Group 09'
+    response.headers['WWW-Authenticate'] = 'Basic realm="Group 09"'
     return response
 
 def is_server_authorized(request) -> bool:
@@ -149,8 +149,9 @@ def is_server_authorized(request) -> bool:
     if auth_type.lower() != "basic":
         return False
 
+    auth_info = auth_info.encode('utf-8')
     try:
-        username, password = base64.b64decode(auth_info.encode('utf-8')).split(':')
+        username, password = base64.b64decode(auth_info).decode('utf-8').split(':')
     except ValueError:
         return False
 
