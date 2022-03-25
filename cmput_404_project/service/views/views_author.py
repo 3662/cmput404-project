@@ -29,7 +29,7 @@ class AuthorsDetailView(View):
             - 200: if successful
             - 404: if page does not exist
         '''
-        if not is_server_authorized(request.get_host()):
+        if not is_server_authorized(request):
             return get_401_response()
 
         return JsonResponse(self._get_authors(request))
@@ -130,8 +130,9 @@ def get_401_response():
     response.headers['WWW-Authenticate'] = 'Basic realm=Group 09'
     return response
 
-def is_server_authorized(host) -> bool:
+def is_server_authorized(request) -> bool:
 
+    host = request.get_host()
     node_q = ServerNode.objects.filter(host=host)
     auth_header = request.META.get('HTTP_AUTHORIZATION', None)
 
