@@ -1,14 +1,12 @@
 import json 
-import base64
 
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404
 from django.core.paginator import Paginator, EmptyPage
-from django.http import Http404, HttpResponseRedirect, JsonResponse, HttpResponse
+from django.http import Http404, JsonResponse, HttpResponse
 from django.views import View
-from django.conf import settings
 
+from service.server_authorization import is_server_authorized, is_local_server, get_401_response, get_403_response
 from social_distribution.models import Author
-from service.models import ServerNode
 from accounts.forms import AuthorChangeForm
 
 
@@ -27,6 +25,7 @@ class AuthorsDetailView(View):
 
         Returns: 
             - 200: if successful
+            - 401: if server is not authorized
             - 404: if page does not exist
         '''
         if not is_server_authorized(request):
@@ -40,8 +39,12 @@ class AuthorsDetailView(View):
 
         Returns: 
             - 200: if successful
+            - 401: if server is not authorized
             - 404: if page does not exist
         '''
+        if not is_server_authorized(request):
+            return get_401_response()
+
         response = HttpResponse()
         response.headers['Content-Type'] = 'application/json'
         response.headers['Content-Length'] = str(len(bytes(json.dumps(self._get_authors(request)), 'utf-8')))
@@ -74,8 +77,12 @@ class AuthorDetailView(View):
 
         Returns: 
             - 200: if successful
+            - 401: if server is not authorized
             - 404: if author does not exist
         '''
+        if not is_server_authorized(request):
+            return get_401_response()
+
         author = get_object_or_404(Author, pk=kwargs.get('author_id', ''))
         return JsonResponse(author.get_detail_dict())
 
@@ -85,8 +92,12 @@ class AuthorDetailView(View):
 
         Returns: 
             - 200: if successful
+            - 401: if server is not authorized
             - 404: if author does not exist
         '''
+        if not is_server_authorized(request):
+            return get_401_response()
+
         author = get_object_or_404(Author, pk=kwargs.get('author_id', ''))
         response = HttpResponse()
         response.headers['Content-Type'] = 'application/json'
@@ -100,9 +111,12 @@ class AuthorDetailView(View):
         Returns:
             - 200: if the profile is successfully updated
             - 400: if the data is invalid
-            - 403: if the user is not authenticated
+            - 403: if the user is not authenticated, or host is not local
             - 404: if author does not exist 
         '''
+        if not is_local_server(request):
+            return get_403_response()
+
         author_id = kwargs.pop('author_id', '')
         author = get_object_or_404(Author, pk=author_id)
         if not request.user.is_authenticated:
@@ -123,43 +137,3 @@ class AuthorDetailView(View):
         status_code = 400
         return HttpResponse('The form is not valid.', status=status_code)     
 
-
-def get_401_response():
-
-    response = HttpResponse(status=401)
-    response.headers['WWW-Authenticate'] = 'Basic realm="Group 09"'
-    return response
-
-def is_server_authorized(request) -> bool:
-
-    host = request.get_host()
-    node_q = ServerNode.objects.filter(host=host)
-
-    if not node_q.exists():
-        return False
-
-    node = node_q.get()
-    if node.is_local:
-        return True
-
-    auth_header = request.META.get('HTTP_AUTHORIZATION', None)
-    if auth_header is None:
-        return False
-
-    auth_type, auth_info = auth_header.split(' ')
-
-    if auth_type.lower() != "basic":
-        return False
-
-    auth_info = auth_info.encode('utf-8')
-    try:
-        username, password = base64.b64decode(auth_info).decode('utf-8').split(':')
-    except ValueError:
-        return False
-
-    return (username == node.username) and (password == node.password)
-
-    
-
-
-        

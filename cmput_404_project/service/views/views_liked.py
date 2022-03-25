@@ -5,6 +5,7 @@ from django.views import View
 from django.http import JsonResponse, HttpResponse
 from django.core.exceptions import ObjectDoesNotExist
 
+from service.server_authorization import is_server_authorized, get_401_response
 from social_distribution.models import Author, Like
 
 class LikedView(View):
@@ -17,8 +18,12 @@ class LikedView(View):
 
         Returns:
             - 200: if successful
+            - 401: if server is not authorized
             - 404: if the author does not exist
         '''
+        if not is_server_authorized(request):
+            return get_401_response()
+
         author_id = kwargs.get('author_id', '')
         return JsonResponse(self._get_public_likes(author_id))
 
@@ -29,8 +34,12 @@ class LikedView(View):
 
         Returns:
             - 200: if successful
+            - 401: if server is not authorized
             - 404: if the author does not exist
         '''
+        if not is_server_authorized(request):
+            return get_401_response()
+
         author_id = kwargs.get('author_id', '')
         data_json = json.dumps(self._get_public_likes(author_id))
         response = HttpResponse()
