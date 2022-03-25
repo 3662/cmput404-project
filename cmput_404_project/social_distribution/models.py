@@ -339,12 +339,14 @@ class InboxItem(models.Model):
     object_id = models.UUIDField(default=None, editable=False, null=True)
     # object url is None if the object is FollowRequest or Like
     object_url = models.URLField(max_length=1000, default=None, editable=False, null=True)
+    date_created = models.DateTimeField(default=timezone.now, editable=False)
 
 
     def get_detail_dict(self) -> dict:
         '''Returns a dict that contains this object's detail.'''
         if self.object_id is not None:
             if self.object_type == 'POST':
+                # TODO if Post, only send comments field, not with commentSrc
                 object = Post.objects.get(id=self.object_id)
             elif self.object_type == 'COMMENT':
                 object = Comment.objects.get(id=self.object_id)
