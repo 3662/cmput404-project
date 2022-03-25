@@ -103,12 +103,12 @@ class InboxViewTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
 
         self.assertTrue(Like.objects.filter(author=sender, 
-                                            author_url=sender.get_profile_url(), 
+                                            author_url=sender.get_id_url(), 
                                             object_type='POST', 
                                             object_url=post.get_id_url()).exists())
         
         like = Like.objects.get(author=sender, 
-                                author_url=sender.get_profile_url(), 
+                                author_url=sender.get_id_url(), 
                                 object_type='POST', 
                                 object_url=post.get_id_url())
 
