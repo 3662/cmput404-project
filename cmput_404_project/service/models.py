@@ -1,3 +1,4 @@
+from tkinter import W
 from django.db import models
 from django.dispatch import receiver 
 from django.db.models.signals import post_save 
@@ -12,6 +13,7 @@ class ServerNode(models.Model):
     host = models.CharField(max_length=500, null=False)
     username = models.CharField(max_length=100, null=False)
     password = models.CharField(max_length=128, null=False)
+    is_local = models.BooleanField(default=False)
 
     def __str__(self):
         return self.host
