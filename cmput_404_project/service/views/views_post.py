@@ -228,7 +228,7 @@ class PostsView(View):
         try:
             q = Post.objects.all().filter(author=author)
             q = q.filter(visibility='PUBLIC')
-            q = q.order_by('-published')
+            q = q.order_by('-modified')
             posts = Paginator(q, size).page(page)
         except EmptyPage:
             raise Http404('Page does not exist')
