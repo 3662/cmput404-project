@@ -19,7 +19,7 @@ class ServerNode(models.Model):
 
 
 @receiver(post_save, sender=ServerNode)
-def create_inbox(sender, instance, created, **kwargs):
+def hash_password(sender, instance, created, **kwargs):
     '''
     Upon ServerNode creation, hash the plain password and save it. 
     '''
