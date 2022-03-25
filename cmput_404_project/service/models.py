@@ -10,8 +10,10 @@ class ServerNode(models.Model):
         verbose_name = 'ServerNode'
 
     host = models.CharField(max_length=500, null=False)
-    username = models.CharField(max_length=100, null=False)
-    password = models.CharField(max_length=128, null=False)
+    receiving_username = models.CharField(max_length=100, null=False, blank=True)
+    receiving_password = models.CharField(max_length=128, null=False, blank=True)
+    sending_username = models.CharField(max_length=100, null=False, blank=True)
+    sending_password = models.CharField(max_length=128, null=False, blank=True)
     is_local = models.BooleanField(default=False)
 
     def __str__(self):
