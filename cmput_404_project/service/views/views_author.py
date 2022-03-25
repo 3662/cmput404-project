@@ -134,15 +134,17 @@ def is_server_authorized(request) -> bool:
 
     host = request.get_host()
     node_q = ServerNode.objects.filter(host=host)
-    auth_header = request.META.get('HTTP_AUTHORIZATION', None)
 
-    if (not node_q.exists()) or (auth_header is None):
+    if not node_q.exists():
         return False
 
     node = node_q.get()
-
     if node.is_local:
         return True
+
+    auth_header = request.META.get('HTTP_AUTHORIZATION', None)
+    if auth_header is None:
+        return False
 
     auth_type, auth_info = auth_header.split(' ')
 
