@@ -79,6 +79,8 @@ class CommentsView(View):
         else:
             status_code = 201
             comment = Comment.objects.create(author=comment_author, author_url=comment_author_id_url, post=post, content_type=content_type, content=content)
+            post.count += 1
+            post.save(update_fields=['count'])
             return JsonResponse(comment.get_detail_dict(), status=status_code)
 
         
