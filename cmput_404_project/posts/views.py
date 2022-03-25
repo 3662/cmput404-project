@@ -7,6 +7,8 @@ import hashlib
 from django.utils.text import slugify
 import time
 import uuid
+import requests
+from requests.auth import HTTPBasicAuth
 
 
 def display_public_posts(request):
@@ -17,10 +19,30 @@ def display_public_posts(request):
 
     comment_form = CommentForm(request.POST)
 
+    team9_auth = HTTPBasicAuth('group_9', 'be69f300764182cd7a9be3bd0e2b4954814f7d253c64d5ae37f4a394c50565e7') 
+
+    # Access posts from other connected nodes
+    foreign_posts = []
+
+    authors_response = requests.get(
+        'https://socialdistribution-t13.herokuapp.com/api/v1/authors',
+        auth=team9_auth
+    )
+    data = authors_response.json()
+    for author in data['items']:
+        id = author['id']
+        post_response = requests.get(
+            f'https://socialdistribution-t13.herokuapp.com/api/v1/authors/{id}/posts/',
+            auth=team9_auth
+        )
+        data = post_response.json()
+        foreign_posts.extend(data['items'])
+
     context = {
         'posts': posts,
         'author': request.user,
         'comment_form': comment_form,
+        'fps': foreign_posts,
     }
 
     return render(request, 'posts/public_posts.html', context)
@@ -84,15 +106,33 @@ def delete_post(request, id):
 def new_post(request):
     if request.method == "POST":
         form = PostForm(request.POST)
-        obj = form.save(commit=False)                
-        obj.author = request.user
-        obj.visibility = form.cleaned_data["visibility"]
 
-        # TODO set proper URls
-        obj.source = ""
-        obj.origin = ""
+        ##from felipes branch
+        data = {
+            'title': form['title'].value(),
+            'description': form['description'].value(),
+            'content_type': form['content_type'].value(),
+            'content': form['content'].value(),
+            'image': form['image'].value(),
+            'categories': form['categories'].value(),
+            'visibility': form['visibility'].value(),
+        }
+        post_url = "http://127.0.0.1:8000/service/authors/{}/posts".format(request.user.id)
+        post_request = requests.post(post_url, data)
 
-        obj.save()
+        # post_id = 'where_do_i_get_the_post_id_before_even_creating_it'
+        # inbox_item = {
+        #     **data,
+        #     "type": "post",
+        #     "id": post_id,
+        #     "source": "http://lastplaceigotthisfrom.com/posts/yyyyy",
+        #     "origin": "http://whereitcamefrom.com/posts/zzzzz",
+        #     "author": request.user.get_detail_dict,
+        #     "comments": post_id+"/comments",
+        #     "published": "2015-03-09T13:07:04+00:00",
+        # }
+        # post_url = "http://127.0.0.1:8000/service/authors/{}/inbox".format(request.user.id)
+        # post_request = requests.post(post_url, data=inbox_item))
 
         return redirect("/")
     else:

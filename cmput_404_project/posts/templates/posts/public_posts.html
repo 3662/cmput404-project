@@ -10,51 +10,97 @@
         <h1>List of Public Posts</h1>
         <div class="posts">
             {% for post in posts %}
-            <div class="post">
-                <p> <b> Published: </b> {{post.published}} </p>
-                <p> <b> Author: </b> {{post.author}} </p>
-                {% if post.image != null and post.image != '' %}
-                    <img src="{{post.image}}" width="300" height="300"> 
-                {% endif %}
-                <p> <b> Title: </b> {{post.title}} </p>
-                <p> <b> Description: </b> {{post.description}} </p>
-                <p> <b> Content: </b> {{post.content}} </p>
-                <p> <b> Categories: </b> {{post.categories}} </p>
-
-                <div class="author">
-                    <form action="{% url 'like_post1' %}" method="POST" class='PostLike' id='{{post.id}}'>
-                       {% csrf_token %}
-                       <input type="hidden" name="post_id" value={{post.id}}>
-                       <button type="submit" class="ui button like-btn{{post.id}}">
-                        {% if author in post.liked.all %}
-                               UnLike
-                        {% else %}
-                               Like
-                        {% endif %}
-                       </button>
+                <div class="post">
+                    <p> <b> Published: </b> {{post.published}} </p>
+                    <p> <b> Author: </b> {{post.author}} </p>
+                    {% if post.image != null and post.image != '' %}
+                        <img src="{{post.image}}" width="300" height="300"> 
+                    {% endif %}
+                    <p> <b> Title: </b> {{post.title}} </p>
+                    <p> <b> Description: </b> {{post.description}} </p>
+                    <p> <b> Content: </b> {{post.content}} </p>
+                    <p> <b> Categories: </b> {{post.categories}} </p>
+    
+                    <div class="author">
+                        <form action="{% url 'like_post1' %}" method="POST" class='PostLike' id='{{post.id}}'>
+                           {% csrf_token %}
+                           <input type="hidden" name="post_id" value={{post.id}}>
+                           <button type="submit" class="ui button like-btn{{post.id}}">
+                            {% if author in post.liked.all %}
+                                   UnLike
+                            {% else %}
+                                   Like
+                            {% endif %}
+                           </button>
+                        </form>
+                    </div>
+                    <div class="comments">
+                        <p><b>Comments...</b></p>
+                        {% for comment in post.comments %}
+                        <div class="comment">
+                            <p><b> {{comment.author}} </b> {{comment.content}} <i> {{comment.date_created}} </i></p>
+                        </div>
+                        {%endfor%}
+                    </div>
+    
+                    <form action="{% url 'add_comment' id=post.id " method="POST" class='CommentForm' id='{{post.id}}'>
+                        <table>
+                            {{ comment_form }}
+                        </table>
+                        {% csrf_token %}
+                        <button> Post Comment</button>
                     </form>
                 </div>
-                <div class="comments">
-                    <p><b>Comments...</b></p>
-                    {% for comment in post.comments %}
-                    <div class="comment">
-                        <p><b> {{comment.author}} </b> {{comment.content}} <i> {{comment.date_created}} </i></p>
-                    </div>
-                    {%endfor%}
-                </div>
-
-                <form action="{% url 'add_comment' id=post.id %}" method="POST" class='CommentForm' id='{{post.id}}'>
-                    <table>
-                        {{ comment_form }}
-                    </table>
-                    {% csrf_token %}
-                    <button> Post Comment</button>
-                </form>
-            </div>
-            <br/>
-            <p> <b> ################################################################################## </b> </p>
-
+                <br/>
+                <p> <b> ################################################################################## </b> </p>
+    
             {% endfor %}
+            {% for post in fps %}
+                <div class="post">
+                    <p> <b> Published: </b> {{post.published}} </p>
+                    <p> <b> Author: </b> <a href="{{post.author.url}}">{{post.author.displayName}}</a></p>
+                    {% if post.image != null and post.image != '' %}
+                        <img src="{{post.image}}" width="300" height="300"> 
+                    {% endif %}
+                    <p> <b> Title: </b> {{post.title}} </p>
+                    <p> <b> Description: </b> {{post.description}} </p>
+                    <p> <b> Content: </b> {{post.content}} </p>
+                    <p> <b> Categories: </b> {{post.categories}} </p>
+    
+                    <div class="author">
+                        <form action="{% url 'like_post1' %}" method="POST" class='PostLike' id='{{post.id}}'>
+                           {% csrf_token %}
+                           <input type="hidden" name="post_id" value={{post.id}}>
+                           <button type="submit" class="ui button like-btn{{post.id}}">
+                            {% if author in post.liked.all %}
+                                   UnLike
+                            {% else %}
+                                   Like
+                            {% endif %}
+                           </button>
+                        </form>
+                    </div>
+                    <div class="comments">
+                        <p><b>Comments...</b></p>
+                        {% for comment in post.comments %}
+                        <div class="comment">
+                            <p><b> {{comment.author}} </b> {{comment.content}} <i> {{comment.date_created}} </i></p>
+                        </div>
+                        {%endfor%}
+                    </div>
+    
+                    <form action="{% url 'add_comment' id=post.id" method="POST" class='CommentForm' id='{{post.id}}'>
+                        <table>
+                            {{ comment_form }}
+                        </table>
+                        {% csrf_token %}
+                        <button> Post Comment</button>
+                    </form>
+                </div>
+                <br/>
+                <p> <b> ################################################################################## </b> </p>
+    
+                {% endfor %}
         </div>
     </body>
 </html>
