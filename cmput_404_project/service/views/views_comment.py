@@ -62,6 +62,7 @@ class CommentsView(View):
         Returns:
             - 201: if the comment is added to the post
             - 400: if the comment data is invalid
+            - 401: if server is not authorized
             - 404: if the post or author does not exist
         '''
         if not is_server_authorized(request):

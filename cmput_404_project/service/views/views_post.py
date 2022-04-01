@@ -7,7 +7,7 @@ from django.views import View
 from posts.forms import PostForm
 from django.core.exceptions import ValidationError
 
-from service.server_authorization import is_server_authorized, is_local_server, get_401_response, get_403_response
+from service.server_authorization import is_server_authorized, is_local_server, get_401_response
 from social_distribution.models import Author, Post
 
 
@@ -67,11 +67,12 @@ class PostView(View):
         Returns: 
             - 200: if the update is successful
             - 400: if the data is invalid
-            - 403: if the user is not authenticated, or host is not local
+            - 401: if server is not authorized
+            - 403: if the user is not authenticated
             - 404: if author or post does not exist 
         '''
         if not is_local_server(request):
-            return get_403_response()
+            return get_401_response()
 
         author_id = kwargs.get('author_id', '')
         post_id = kwargs.get('post_id', '')
@@ -97,11 +98,12 @@ class PostView(View):
 
         Returns: 
             - 204: if the deletion was successful
-            - 403: if the user is not authenticated, or host is not local
+            - 401: if server is not authorized
+            - 403: if the user is not authenticated
             - 404: if author or post does not exist 
         '''
         if not is_local_server(request):
-            return get_403_response()
+            return get_401_response()
 
         author_id = kwargs.get('author_id', '')
         post_id = kwargs.get('post_id', '')
@@ -122,11 +124,12 @@ class PostView(View):
             - 200: if the post is successfully updated
             - 201: if the post is successfully created
             - 400: if the data is invalid
-            - 403: if the user is not authenticated, or host is not local
+            - 401: if server is not authorized
+            - 403: if the user is not authenticated
             - 404: if author does not exist 
         '''
         if not is_local_server(request):
-            return get_403_response()
+            return get_401_response()
 
         status_code = 201
 
@@ -229,11 +232,12 @@ class PostsView(View):
         Returns:
             - 201: if the post is successfully created
             - 400: if the data is invalid
-            - 403: if the user is not authenticated, or host is not local
+            - 401: if server is not authorized
+            - 403: if the user is not authenticated
             - 404: if author does not exist 
         '''
         if not is_local_server(request):
-            return get_403_response()
+            return get_401_response()
 
         status_code = 201
         author_id = kwargs.get('author_id', '')

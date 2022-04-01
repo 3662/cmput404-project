@@ -6,7 +6,7 @@ from django.http import JsonResponse, HttpResponse, Http404
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator, EmptyPage
 
-from service.server_authorization import is_server_authorized, is_local_server, get_401_response, get_403_response
+from service.server_authorization import is_server_authorized, is_local_server, get_401_response
 from social_distribution.models import Author, Post, Like, Comment, Inbox, InboxItem, FollowRequest
 
 
@@ -25,11 +25,12 @@ class InboxView(View):
 
         Returns:
             - 200: if successful
-            - 403: if the author is not authenticated, or host is not local
+            - 401: if server is not authorized
+            - 403: if the author is not authenticated
             - 404: if author or page does not exist
         '''
         if not is_local_server(request):
-            return get_403_response()
+            return get_401_response()
 
         author_id = kwargs.get('author_id', '')
         return JsonResponse(self._get_inbox_items(request, author_id))
@@ -40,11 +41,12 @@ class InboxView(View):
 
         Returns:
             - 200: if successful
+            - 401: if server is not authorized
             - 403: if the author is not authenticated, or host is not local
             - 404: if author or page does not exist
         '''
         if not is_local_server(request):
-            return get_403_response()
+            return get_401_response()
 
         author_id = kwargs.get('author_id', '')
         data_json = json.dumps(self._get_inbox_items(request, author_id))
@@ -142,11 +144,11 @@ class InboxView(View):
 
         Returns:
             - 204: if successfully cleared
-            - 403: if host is not local
+            - 401: if server is not authorized 
             - 404: if the author does not exist
         '''
         if not is_local_server(request):
-            return get_403_response()
+            return get_401_response()
 
         author_id = kwargs.get('author_id', '')
         author = get_object_or_404(Author, id=author_id)

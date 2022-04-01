@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404
 from django.http import JsonResponse, HttpResponse, Http404
 from django.views import View
 
-from service.server_authorization import is_server_authorized, is_local_server, get_401_response, get_403_response
+from service.server_authorization import is_server_authorized, is_local_server, get_401_response
 from social_distribution.models import Author
 
 
@@ -83,13 +83,13 @@ class FollowerView(View):
 
         Returns:
             - 204: if deleted successfully
-            - 403: if host is not local
+            - 401: if server is not authorized 
             - 404: if foreign_author_id is not a follower of author_id, 
                     or if author with author_id does not exist,
                     or if author with foreign_author_id does not exist
         '''
         if not is_local_server(request):
-            return get_403_response()
+            return get_401_response()
 
         author_id = kwargs.get('author_id', '')
         foreign_author_id = kwargs.get('foreign_author_id', '' )
@@ -107,11 +107,12 @@ class FollowerView(View):
 
         Returns:
             - 201: if the follower is successfully added to the author
+            - 401: if server is not authorized 
             - 403: if the author is not authenticated, or host is not local
             - 404: if author with author_id or foreign_author_id does not exist 
         '''
         if not is_local_server(request):
-            return get_403_response()
+            return get_401_response()
 
         status_code = 201
         if not request.user.is_authenticated:

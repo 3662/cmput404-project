@@ -5,7 +5,7 @@ from django.core.paginator import Paginator, EmptyPage
 from django.http import Http404, JsonResponse, HttpResponse
 from django.views import View
 
-from service.server_authorization import is_server_authorized, is_local_server, get_401_response, get_403_response
+from service.server_authorization import is_server_authorized, is_local_server, get_401_response
 from social_distribution.models import Author
 from accounts.forms import AuthorChangeForm
 
@@ -111,11 +111,12 @@ class AuthorDetailView(View):
         Returns:
             - 200: if the profile is successfully updated
             - 400: if the data is invalid
-            - 403: if the user is not authenticated, or host is not local
+            - 401: if server is not authorized
+            - 403: if the user is not authenticated
             - 404: if author does not exist 
         '''
         if not is_local_server(request):
-            return get_403_response()
+            return get_401_response()
 
         author_id = kwargs.pop('author_id', '')
         author = get_object_or_404(Author, pk=author_id)

@@ -7,6 +7,8 @@ from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 from django.core.paginator import Paginator
 
+from service.requests import get_b64_server_credential
+
 from .managers import AuthorManager
 
 
@@ -365,8 +367,11 @@ def request_detail_dict(object_url) -> dict:
     Then, returns a parsed json data.
     '''
     o = urlparse(object_url)
-    # service_url = f'{o.scheme}://{o.netloc}/service{o.path}'
-    res = requests.get(object_url)
+    headers = {}
+    b64_basic_auth = get_b64_server_credential(o.netloc)
+    if b64_basic_auth:
+        headers['Authorization'] = b64_basic_auth
+    res = requests.get(object_url, headers=headers)
     return dict(res.json()) if res.status_code == 200 else {}
 
 
