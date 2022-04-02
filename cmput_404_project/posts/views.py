@@ -15,7 +15,6 @@ def display_public_posts(request):
     for post in posts:
         post.comments = get_post_comments(post)
 
-    like_form = PostLike(request.POST)
     comment_form = CommentForm(request.POST)
 
     context = {
