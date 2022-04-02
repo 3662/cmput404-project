@@ -15,6 +15,7 @@ def display_public_posts(request):
     for post in posts:
         post.comments = get_post_comments(post)
 
+    like_form = PostLike(request.POST)
     comment_form = CommentForm(request.POST)
 
     context = {
@@ -141,10 +142,10 @@ def like_post1(request):
     if request.method == "POST":
         id = request.POST.get('post_id')
         post = Post.objects.get(id=id)
-        like, inserted = Like.objects.get_or_create(author=request.user, post=post)
+        like, inserted = Like.objects.get_or_create(author=request.user, object_url=post.get_id_url())
         if not inserted:
             post.liked.remove(request.user)
-            rec = Like.objects.get(author=request.user, post=post)
+            rec = Like.objects.get(author=request.user, object_url=post.get_id_url())
             rec.delete()
         else:
             post.liked.add(request.user)
