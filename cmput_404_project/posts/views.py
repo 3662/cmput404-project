@@ -50,6 +50,7 @@ def display_public_posts(request):
         'author': request.user,
         'comment_form': comment_form,
         'fps': foreign_posts,
+        'author_id': request.user.id,
     }
 
     return render(request, 'posts/public_posts.html', context)
@@ -114,7 +115,6 @@ def new_post(request):
     if request.method == "POST":
         form = PostForm(request.POST)
 
-        ##from felipes branch
         data = {
             'title': form['title'].value(),
             'description': form['description'].value(),
@@ -125,7 +125,8 @@ def new_post(request):
             'visibility': form['visibility'].value(),
         }
         url = "http://127.0.0.1:8000/service/authors/{}/posts".format(request.user.id)
-        response = requests.post(url, data, auth=('',''))
+        local_auth = HTTPBasicAuth("localserver", "pwdlocal")
+        response = requests.post(url, data=data, auth=local_auth)
         try:
             post = response.json()
         except:
