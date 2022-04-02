@@ -19,6 +19,9 @@
         <script>
             // TODO: change this to a remote server
             const hostServerURL = "http://127.0.0.1:8000/";
+            const userNameLocal = "localserver";
+            const passwordLocal = "pwdlocal";
+
             // const hostServerURL = "https://cmput404-project-team9.herokuapp.com/";
 
             function update() {
@@ -42,7 +45,7 @@
         
                 // xhr.open("GET", "https://projectcmput404sfrodrig.herokuapp.com/service/authors/", true);
                 xhr.open("GET", url+"service/authors", true);
-                
+                xhr.setRequestHeader("Authorization", "Basic " + btoa(userNameLocal+":"+passwordLocal));
                 xhr.send();
             }
 

@@ -8,6 +8,7 @@ from django.utils.text import slugify
 import time
 import uuid
 import requests
+from requests.auth import HTTPBasicAuth
 
 
 def display_public_posts(request):
@@ -90,7 +91,8 @@ def new_post(request):
         # post_url = "https://cmput404-project-team9.herokuapp.com/service/authors/{}/posts".format(request.user.id)
         post_url = "http://127.0.0.1:8000/service/authors/{}/posts".format(request.user.id)
 
-        post_request = requests.post(post_url, data)
+        local_auth = HTTPBasicAuth("localserver", "pwdlocal")
+        post_request = requests.post(post_url, data=data, auth=local_auth)
 
         return redirect("/")
     else:
