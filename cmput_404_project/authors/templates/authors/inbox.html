@@ -1,0 +1,141 @@
+<!-- authors/templates/inbox.html-->
+{% extends 'base.html' %}
+{% block head %}
+<title>Inbox</title>
+<style>
+    #sidebar #inbox-btn {
+        background-color: purple;
+        color: white;
+    }
+    .item {
+        border: 2px solid black;
+        margin: 10px;
+    }
+    .post div {
+        border: 1px dotted grey;
+        margin: 2px; 
+    }
+    .category {
+        background-color: antiquewhite;
+        padding: 2px;
+        border: 1px solid gray;
+    }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.3.6/purify.min.js" integrity="sha512-DJjvM/U3zCRpzrYboJgg23iLHapWcS2rlo7Ni18Cdv+FMs6b3gUF7hQihztj4uVkHHfUwk7dha97jVzRqUJ7hg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+{% load static %}
+<script src="{% static 'frontendUtils.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<h1>My Inbox</h1>
+<div>
+    <button onclick="clearAll()">Clear all (Delete)</button>
+    <button onclick="updatePosts()">Refresh</button>
+    <a href="{% url 'new_post' %}">Create post</a>
+</div>
+<div id="posts"></div>
+<script>
+    function fillUI(item) {
+        let itemsCollectionDiv = document.querySelector('#posts');
+        let itemDiv = document.createElement('div');
+    
+        if (item.type.toLowerCase() === 'like') {
+            itemDiv.innerHTML = DOMPurify.sanitize(`
+                <div class="item like">
+                    <a href="${item.object}">
+                        ${item.summary && (item.author.displayName+' likes your post.')}
+                    </a>
+                </div>
+            `);
+        } else if (item.type.toLowerCase() === 'comment') {
+            itemDiv.innerHTML = DOMPurify.sanitize(`
+                <div class="item comment">
+                    <a href="${item.object}">${item.author.displayName} commented on your post.</a>
+                </div>
+            `);
+        } else if (item.type.toLowerCase() === 'follow') {
+            console.log(item)
+            itemDiv.innerHTML = `
+                <div class="item follow">
+                    <div>
+                        ${item.actor.displayName} requested to follow you.
+                    </div>
+                    <div>
+                        <button id="accept-btn">Accept</button>
+                        <button id="decline-btn">Decline</button>
+                    </div>
+                </div>
+            `;
+            itemDiv.querySelector('#accept-btn').addEventListener('click', () => respondToRequest(item.actor, 'PUT'));
+            itemDiv.querySelector('#decline-btn').addEventListener('click', () => respondToRequest(item.actor, 'DELETE'));
+        } else if (item.type.toLowerCase() === 'post') {
+            itemDiv.innerHTML = `
+                <div class="post item">
+                    <div class="title">${item.title}</div>
+                    <div>published: ${item.published}</div>
+                    <div>
+                        <div>
+                            author:<div><a href="${item.author.url}">${item.author.displayName}</a></div>
+                        </div>
+                    </div>
+                    <div>description: ${item.description}</div>
+                    <div>contentType: ${item.contentType}</div>
+                    <div>${item.content}</div>
+                    <div class="categories">
+                        Categories: ${item.categories.map(c => `<span class="category">${c}</span>`).join(', ')}
+                    </div>
+                    <div>Self link: <a href="${item.id}">${item.id}</a></div>
+                    ${(item.source && item.origin)
+                        ?   `<div>Source link: <a href="${item.source}">${item.source}</a></div>
+                            <div>Origin link:<a href="${item.origin}">${item.origin}</a></div>`
+                        : ""
+                    }
+                    <div>visibility: ${item.visibility}</div>
+                    <div class="comments"></div>
+                </div>
+            `;
+        }
+        itemsCollectionDiv.appendChild(itemDiv);
+    }
+
+    function respondToRequest(actor, method) {
+        let foreignId = actor.id.slice(actor.id.indexOf('authors/') + 'authors/'.length) ;
+        fetch(`{{author.host}}service/authors/{{author.id}}/followers/${foreignId}`, {
+            method: method,
+            headers: new Headers({
+                // 'Content-Type': 'x-www-form-urlencoded',
+                // 'Authorization': 'Basic ' + btoa('username:pwd'),
+                'X-CSRF-TOKEN': '{{csrfToken}}',
+            }),
+        })
+        console.log(`Attempted to '${method}' a friend request`);
+    }
+    function updatePosts() {
+        let url = `${document.location.origin}/service/authors/{{author_id}}/inbox`;
+        // let url = 'https://cmput404-project-team9.herokuapp.com/service/authors/9671056d-4c0e-4a3d-9473-3c9f1133ce28/posts'
+        // 'https://cmput-404-w22-project-group09.herokuapp.com/'
+        console.log('Requesting:', url)
+        document.querySelector('#posts').innerHTML = '';
+        fetch(url, {
+            method: 'GET',
+        })
+        .then(response => response.json())
+        .then((inbox) => {
+            console.log(inbox)
+            for (let item of inbox.items) {
+                fillUI(item);
+            } 
+        });
+    }
+
+    function clearAll() {
+        let url = `${document.location.origin}/service/authors/{{author_id}}/inbox`;
+        fetch(url, { method: 'DELETE' });
+        document.querySelector('#posts').innerHTML = '';
+    }
+    
+    window.addEventListener('load', event => {
+        updatePosts();
+    });
+</script>
+{% endblock %}

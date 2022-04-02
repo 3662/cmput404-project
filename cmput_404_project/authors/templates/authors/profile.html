@@ -1,43 +1,83 @@
 <!-- templates/authors/profile.html -->
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-  <title>Profile of {{author.get_full_name}}</title>
-  <button class="btn"><i class="fa fa-home" ></i> <a href="/">Home</a></button>
-  <style>
-      /* temporary quick styles for testing */
-      body {
-          font-family: Arial;
-      }
-      .box {
-          border: 1px solid grey;
-          padding: 10px;
-          margin: 5px;
-      }
+{% extends 'base.html' %}
+{% block head %}
+<title>Profile of {{author.get_full_name}}</title>
+<style>
+    /* temporary quick styles for testing */
+    body {
+        font-family: Arial;
+    }
+    .box {
+        border: 1px solid grey;
+        padding: 10px;
+        margin: 5px;
+    }
 
-      .profile_image {
-          border: 1px solid grey;
-          width: 100px;
-          height: 100px;
-      }
+    .profile_image {
+        border: 1px solid grey;
+        width: 100px;
+        height: 100px;
+    }
 
-      .align-center {
-          text-align: center;
-          align-content: center;
-      }
-  </style>
-</head>
-<body>
+    .align-center {
+        text-align: center;
+        align-content: center;
+    }
+</style>
+{% endblock %}
+{% block content %}
+{% if not_found %}
+    <div>Profile Not Found</div>
+{% else %}
+    <script>
+        //const hostServerURL = "https://cmput404-project-team9.herokuapp.com/";
+        function sendFollowRequest(){
+            let sender = {
+                type: 'author',
+                id: '{{friend.get_id_url}}',
+                url: '{{friend.get_profile_url}}',
+                host: '{{friend.host}}',
+                displayName: '{{friend.displayName}}',
+                github: '{{friend.github}}',
+                profileImage: '{{friend.profile_image}}',
+            };
+            let recv = {
+                type: 'author',
+                id: '{{author.get_id_url}}',
+                url: '{{author.get_profile_url}}',
+                host: '{{author.host}}',
+                displayName: '{{author.displayName}}',
+                github: '{{author.github}}',
+                profileImage: '{{author.profile_image}}',
+            };
+            var sendFollow = new XMLHttpRequest();
+            console.log("recv  ", recv);
+            console.log("sender  ", sender);
+            const hostServerURL = sender.host;
+            var data = {
+                "type": "follow",
+                "summary": sender.id + " wants to follow " + recv.id,
+                "actor": sender,
+                "object": recv
+                };
+            //var btn = document.getElementById("send")
+            //btn.click(function(){
+            // });
+            sendFollow.open("POST", recv.id+"/inbox", true);
+            sendFollow.setRequestHeader("Content-type", "application/json");
+            sendFollow.setRequestHeader('X-CSRF-TOKEN', '{{csrfToken}}');
+            sendFollow.send(JSON.stringify(data));
+            console.log(sendFollow.responseText)
+
+
+        }
+    </script>
     <div class="box align-center">
         <p>
-            <img class="profile_image" src="{{author.profile_image}}">
+            <img class="profile_image" src="{% if host_is_local %}{{author.profile_image}}{% else %}{{author.profileImage}}{% endif %}">
         </p>
-        <h1>{{author.get_full_name}}</h1>
-        <p><b>Username:</b> {{author}}</p>
-        <p><b>Host:</b> {{author.host}}</p>
-        <p><b>GitHub:</b> {{author.github}}</p>
+        <h1>{% if host_is_local %}{{author.get_full_name}}{% else %}{{author.displayName}}{% endif %}</h1>
+        <p><b>GitHub:</b> <a href="{{author.github}}">{{author.github}}</a></p>
     </div>
     <div class="box">
         {% if is_my_profile %}
@@ -49,14 +89,19 @@
             <p><a href="{% url 'follower_view' %}">My Followers</a></p>
             <p><a href="{% url 'logout' %}">Log Out</a></p>
         {% else %}
+            {% if friend_status == '1' %}
+            TODO: FIX this
+            {% else %}
+            notok
+            {% endif %}
             <!-- <p><a href="#">Send A Request</a> (Not implemented yet)</p> -->
             <div class="author">
                     <form action="{% url 'author_profile_view' %}" method="POST" class='author_friend_view' id='{{author.id}}' >
-                       {% csrf_token %}
-                       <input type="hidden" name="user" value={{author.id}}>
+                        {% csrf_token %}
+                        <input type="hidden" name="user" value={{author.id}}>
                             {% if author.id in f_send %}
                                 <button type="submit" class="ui button like-btn{{author.id}}" disabled="disabled">
-                                   Waiting for response
+                                    Waiting for response
                                 </button>
                                 <button type="submit" name="action_flag" value="R" class="ui button like-btn{{author.id}}")>
                                     Revoke/Withdraw
@@ -64,20 +109,20 @@
                             {% else %}
                                 {% if author.id in f_accept %}
                                     {% if author.id in cross_qs %}
-                                       <button type="submit" class="ui button like-btn{{author.id}}" disabled="disabled">
-                                          Friend
-                                       </button>
+                                        <button type="submit" class="ui button like-btn{{author.id}}" disabled="disabled">
+                                            Friend
+                                        </button>
                                     {% else %}
-                                       <button type="submit" class="ui button like-btn{{author.id}}" disabled="disabled">
-                                          Following
-                                       </button>
+                                        <button type="submit" class="ui button like-btn{{author.id}}" disabled="disabled">
+                                            Following
+                                        </button>
                                     {% endif %}
                                     <button type="submit" name="action_flag" value="F" class="ui button like-btn{{author.id}}")>
-                                         Revoke/Withdraw
+                                            Revoke/Withdraw
                                     </button>
                                 {% else %}
-                                    <button type="submit" name="action_flag" value="I" class="ui button like-btn{{author.id}}">
-                                       Send Follow Request
+                                    <button type="submit" name="action_flag" value="I" class="ui button like-btn" id="send" onclick="sendFollowRequest()">
+                                        Send Follow Request
                                     </button>
                                 {% endif %}
                             {% endif %}
@@ -85,35 +130,9 @@
                 </div>
         {% endif %}
     </div>
-    
     <h1>Posts:</h1>
     <div class="box">
-        {% for post in posts %}
-            <div class="box">
-                <h2>{{post.title}}</h2>
-                <p><b> Published: </b> {{post.published}}</p>
-                {% if post.image != null and post.image != '' %}
-                    <img src="{{post.image}}"> 
-                {% endif %}
-                <p> <b> Description: </b> {{post.description}} </p>
-                <!-- <div class="author"> -->
-                    <form action="{% url 'like_post2' %}" method="POST" class='PostLike' id='{{post.id}}'>
-                       {% csrf_token %}
-                       <input type="hidden" name="post_id" value={{post.id}}>
-                       <button type="submit" class="ui button like-btn{{post.id}}">
-                        {% if sender in post.liked.all %}
-                               UnLike
-                        {% else %}
-                               Like
-                        {% endif %}
-                       </button>
-                    </form>
-                <!-- </div> -->
-                {% if is_my_profile %}
-                    <a href="{% url 'edit_post' id=post.id %}"> Edit Post</a>
-                {% endif %}
-            </div>
-        {% endfor %}
+        <button>Load posts</button> TODO: implement this fetch('{{author.url}}/posts/').then(...)
     </div>
-</body>
-</html>
+{% endif %}
+{% endblock %}

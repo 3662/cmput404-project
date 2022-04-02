@@ -248,8 +248,9 @@ class PostsView(View):
             status_code = 400
             return HttpResponse('The form data is not valid.', status=status_code)
         
-        Post.objects.create(author=author, **form.cleaned_data)
-        return HttpResponse('Post successfully created', status=status_code)
+        post = Post.objects.create(author=author, **form.cleaned_data)
+        body = json.dumps(post.get_detail_dict())
+        return HttpResponse(body, status=status_code)
 
 
     def _get_posts(self, request, author_id) -> dict:

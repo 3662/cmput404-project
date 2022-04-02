@@ -1,313 +1,406 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-        <title>Posts</title>
-        <button class="btn"><i class="fa fa-home" ></i> <a href="/">Home</a></button>
+<!-- posts/templates/public_posts.html-->
+{% extends 'base.html' %}
+{% block head %}
+<title>Posts</title>
+<style>
+    #sidebar #all-posts-btn {
+        background-color: purple;
+        color: white;
+    }
+    div#commentBox {
+        border: 1px solid black;
+    }
+</style>
+{% endblock %}
 
-        <style>
-            div {
-                border: 4px solid black;
-            }
-            div#commentBox {
-                border: 1px solid black;
-            }
-        </style>
-    </head>
-    <body>
-        <h1>List of Public Posts</h1>
-        <p id="posts"></p>
+{% block content %}
+<button class="btn"> <a href="/">Home</a></button>
+<h1>List of Public Posts</h1>
+<div id="posts"></div>
+<div class="">
+    {% for post in posts %}
+        <div class="">
+            <p> <b> Published: </b> {{post.published}} </p>
+            <p> <b> Author: </b> {{post.author}} </p>
+            {% if post.image != null and post.image != '' %}
+                <img src="{{post.image}}" width="300" height="300"> 
+            {% endif %}
+            <p> <b> Title: </b> {{post.title}} </p>
+            <p> <b> Description: </b> {{post.description}} </p>
+            <p> <b> Content: </b> {{post.content}} </p>
+            <p> <b> Categories: </b> {{post.categories}} </p>
 
-        <script>
-            // TODO: change this to a remote server
-            const hostServerURL = "http://127.0.0.1:8000/service/";
-            const userNameLocal = "localserver";
-            const passwordLocal = "pwdlocal";
+            <div class="author">
+                <form action="{% url 'like_post1' %}" method="POST" class='PostLike' id='{{post.id}}'>
+                    {% csrf_token %}
+                    <input type="hidden" name="post_id" value={{post.id}}>
+                    <button type="submit" class="ui button like-btn{{post.id}}">
+                    {% if author in post.liked.all %}
+                            UnLike
+                    {% else %}
+                            Like
+                    {% endif %}
+                    </button>
+                </form>
+            </div>
+            <div class="comments">
+                <p><b>Comments...</b></p>
+                {% for comment in post.comments %}
+                <div class="comment">
+                    <p><b> {{comment.author}} </b> {{comment.content}} <i> {{comment.date_created}} </i></p>
+                </div>
+                {%endfor%}
+            </div>
 
-            // const hostServerURL = "https://cmput404-project-team9.herokuapp.com/";
+            <form action="{% url 'add_comment' id=post.id " method="POST" class='CommentForm' id='{{post.id}}'>
+                <table>
+                    {{ comment_form }}
+                </table>
+                {% csrf_token %}
+                <button> Post Comment</button>
+            </form>
+        </div>
+        <br/>
+        <p> <b> ################################################################################## </b> </p>
 
-            const team13URL = "https://socialdistribution-t13.herokuapp.com/api/v1/";
+    {% endfor %}
+    {% for post in fps %}
+        <div class="">
+            <p> <b> Published: </b> {{post.published}} </p>
+            <p> <b> Author: </b> <a href="/authors/profile?url={{post.author.url}}">{{post.author.displayName}}</a></p>
+            {% if post.image != null and post.image != '' %}
+                <img src="{{post.image}}" width="300" height="300"> 
+            {% endif %}
+            <p> <b> Title: </b> {{post.title}} </p>
+            <p> <b> Description: </b> {{post.description}} </p>
+            <p> <b> Content: </b> {{post.content}} </p>
+            <p> <b> Categories: </b> {{post.categories}} </p>
 
-            const userName13 = "group_9";
-            const password13 = "be69f300764182cd7a9be3bd0e2b4954814f7d253c64d5ae37f4a394c50565e7"
+            <p>TODO: Make likes and comments work for foreign posts</p>
 
-            function update() {
-                document.getElementById("posts").innerHTML = "";
-                // TODO: update posts from other servers
-                updatePostsFromServer(hostServerURL);
+            <div class="author">
+                <form action="{% url 'like_post1' %}" method="POST" class='PostLike' id='{{post.id}}'>
+                    {% csrf_token %}
+                    <input type="hidden" name="post_id" value={{post.id}}>
+                    <button type="submit" class="ui button like-btn{{post.id}}">
+                    {% if author in post.liked.all %}
+                            UnLike
+                    {% else %}
+                            Like
+                    {% endif %}
+                    </button>
+                </form>
+            </div>
+            <div class="comments">
+                <p><b>Comments...</b></p>
+                {% for comment in post.comments %}
+                <div class="comment">
+                    <p><b> {{comment.author}} </b> {{comment.content}} <i> {{comment.date_created}} </i></p>
+                </div>
+                {%endfor%}
+            </div>
 
-                // updatePostsFromServer(team13URL);
-            }
+            <form action="{% url 'add_comment' id=post.id" method="POST" class='CommentForm' id='{{post.id}}'>
+                <table>
+                    {{ comment_form }}
+                </table>
+                {% csrf_token %}
+                <button> Post Comment</button>
+            </form>
+        </div>
+        <br/>
+        <p> <b> ################################################################################## </b> </p>
 
-            // Updates posts and comments from a server given a URL
-            function updatePostsFromServer(url) {
-                document.getElementById("posts").innerHTML = "";
+        {% endfor %}
+</div>
 
-                var getAuthors = new XMLHttpRequest();
-        
-                getAuthors.onreadystatechange = function() {
-                    if (this.readyState == 4 && this.status == 200) {
-                        authors = JSON.parse(getAuthors.responseText)['items'];
 
-                        // IDs of all authors
-                        var authorIds = new Set();
+<script>
+    // TODO: change this to a remote server
+    const hostServerURL = "http://127.0.0.1:8000/service/";
+    const userNameLocal = "localserver";
+    const passwordLocal = "pwdlocal";
 
-                        for (let i in authors) {
-                            let array = authors[i].id.split("/");
-                            authorIds.add(array[array.length-1]);
-                        } 
+    // const hostServerURL = "https://cmput404-project-team9.herokuapp.com/";
 
-                        authorIds.forEach(authorId => {
-                            // Find all public posts from each author
+    const team13URL = "https://socialdistribution-t13.herokuapp.com/api/v1/";
 
-                            var getPosts = new XMLHttpRequest();
+    const userName13 = "group_9";
+    const password13 = "be69f300764182cd7a9be3bd0e2b4954814f7d253c64d5ae37f4a394c50565e7"
 
-                            getPosts.onreadystatechange = function() {
-                                if (this.readyState == 4 && this.status == 200) {
-                                    posts = JSON.parse(getPosts.responseText)['items'];
+    function update() {
+        document.getElementById("posts").innerHTML = "";
+        // TODO: update posts from other servers
+        updatePostsFromServer(hostServerURL);
 
-                                    for (let i in posts) {
-                                        var newTag = document.createElement("div");
+        // updatePostsFromServer(team13URL);
+    }
 
-                                        updatePost(posts[i], newTag);
+    // Updates posts and comments from a server given a URL
+    function updatePostsFromServer(url) {
+        document.getElementById("posts").innerHTML = "";
 
-                                        addTextboxInput(newTag, posts[i], url);
+        var getAuthors = new XMLHttpRequest();
 
-                                        document.getElementById("posts").appendChild(newTag);
-                                    } 
-                                }
-                            }
+        getAuthors.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                authors = JSON.parse(getAuthors.responseText)['items'];
 
-                            getPosts.open("GET", url+"authors/"+authorId+"/posts", true);
-                            getPosts.setRequestHeader("Authorization", "Basic " + btoa(userNameLocal+":"+passwordLocal));
-                            getPosts.send(); 
-                        });
+                // IDs of all authors
+                var authorIds = new Set();
+
+                for (let i in authors) {
+                    let array = authors[i].id.split("/");
+                    authorIds.add(array[array.length-1]);
+                } 
+
+                authorIds.forEach(authorId => {
+                    // Find all public posts from each author
+
+                    var getPosts = new XMLHttpRequest();
+
+                    getPosts.onreadystatechange = function() {
+                        if (this.readyState == 4 && this.status == 200) {
+                            posts = JSON.parse(getPosts.responseText)['items'];
+
+                            for (let i in posts) {
+                                var newTag = document.createElement("div");
+
+                                updatePost(posts[i], newTag);
+
+                                addTextboxInput(newTag, posts[i], url);
+
+                                document.getElementById("posts").appendChild(newTag);
+                            } 
+                        }
                     }
-                };
-        
-                getAuthors.open("GET", url+"authors", true);
-                getAuthors.setRequestHeader("Authorization", "Basic " + btoa(userNameLocal+":"+passwordLocal));
-                getAuthors.send();
+
+                    getPosts.open("GET", url+"authors/"+authorId+"/posts", true);
+                    getPosts.setRequestHeader("Authorization", "Basic " + btoa(userNameLocal+":"+passwordLocal));
+                    getPosts.send(); 
+                });
             }
+        };
 
-            function addTextboxInput(newTag, post, url) {
-                let arrayTemp = post.id.split("/");
-                postId = arrayTemp[arrayTemp.length-1];
+        getAuthors.open("GET", url+"authors", true);
+        getAuthors.setRequestHeader("Authorization", "Basic " + btoa(userNameLocal+":"+passwordLocal));
+        getAuthors.send();
+    }
 
-                arrayTemp = post.author.id.split("/");
-                authorId = arrayTemp[arrayTemp.length-1];
+    function addTextboxInput(newTag, post, url) {
+        let arrayTemp = post.id.split("/");
+        postId = arrayTemp[arrayTemp.length-1];
 
-                var h1 = document.createElement("H2");
-                h1.appendChild(document.createTextNode("New Comment:"));
-                newTag.appendChild(h1);
+        arrayTemp = post.author.id.split("/");
+        authorId = arrayTemp[arrayTemp.length-1];
 
-                var inputForm = document.createElement("FORM");
-                inputForm.id = postId;
-                inputForm.class = postId;
-                inputForm.action = url+"authors/"+authorId+"/posts/"+postId+"/comments";
-                inputForm.method = "post"
+        var h1 = document.createElement("H2");
+        h1.appendChild(document.createTextNode("New Comment:"));
+        newTag.appendChild(h1);
 
-                inputForm.addEventListener("submit", handler)
+        var inputForm = document.createElement("FORM");
+        inputForm.id = postId;
+        inputForm.class = postId;
+        inputForm.action = url+"authors/"+authorId+"/posts/"+postId+"/comments";
+        inputForm.method = "post"
 
-                var type = document.createElement("INPUT");
-                type.type = 'hidden';
-                type.name = "type";
-                type.value = "comment";
-                inputForm.appendChild(type);
+        inputForm.addEventListener("submit", handler)
 
-                var host = document.createElement("INPUT");
-                host.type = 'hidden';
-                host.name = "host";
-                host.value = url;
-                inputForm.appendChild(host);
+        var type = document.createElement("INPUT");
+        type.type = 'hidden';
+        type.name = "type";
+        type.value = "comment";
+        inputForm.appendChild(type);
 
-                var postURL = document.createElement("INPUT");
-                postURL.type = 'hidden';
-                postURL.name = "postURL";
-                postURL.value = url+"authors/"+authorId+"/posts/"+postId+"/comments";;
-                inputForm.appendChild(postURL);
+        var host = document.createElement("INPUT");
+        host.type = 'hidden';
+        host.name = "host";
+        host.value = url;
+        inputForm.appendChild(host);
 
-                inputForm.appendChild(document.createTextNode("Content Type: "))
-                var contentTypeSelect = document.createElement("select");
-                contentTypeSelect.name = "contentType";
-                addSelectOption(contentTypeSelect, "text");
-                addSelectOption(contentTypeSelect, "markdown");
-                addSelectOption(contentTypeSelect, "application");
-                addSelectOption(contentTypeSelect, "png");
-                addSelectOption(contentTypeSelect, "jpeg");
+        var postURL = document.createElement("INPUT");
+        postURL.type = 'hidden';
+        postURL.name = "postURL";
+        postURL.value = url+"authors/"+authorId+"/posts/"+postId+"/comments";;
+        inputForm.appendChild(postURL);
 
-                inputForm.appendChild(contentTypeSelect);
-                inputForm.appendChild(document.createElement("br"));
+        inputForm.appendChild(document.createTextNode("Content Type: "))
+        var contentTypeSelect = document.createElement("select");
+        contentTypeSelect.name = "contentType";
+        addSelectOption(contentTypeSelect, "text");
+        addSelectOption(contentTypeSelect, "markdown");
+        addSelectOption(contentTypeSelect, "application");
+        addSelectOption(contentTypeSelect, "png");
+        addSelectOption(contentTypeSelect, "jpeg");
 
-                inputForm.appendChild(document.createTextNode("Content: "))
-                var comment = document.createElement("INPUT");
-                comment.type = "text";
-                comment.name = "comment";
+        inputForm.appendChild(contentTypeSelect);
+        inputForm.appendChild(document.createElement("br"));
 
-                inputForm.appendChild(comment);
-                inputForm.appendChild(document.createElement("br"));
+        inputForm.appendChild(document.createTextNode("Content: "))
+        var comment = document.createElement("INPUT");
+        comment.type = "text";
+        comment.name = "comment";
 
-                // var commentAuthor = document.createElement("INPUT");
-                // commentAuthor.type = 'hidden';
-                // commentAuthor.name = "author";
-                // commentAuthor.value = url+"authors/"+"{{author_id}}";
-                // inputForm.appendChild(commentAuthor);
+        inputForm.appendChild(comment);
+        inputForm.appendChild(document.createElement("br"));
 
-                var newSubmit = document.createElement("INPUT");
-                newSubmit.type = "submit";
-                newSubmit.value = "Post Comment";
+        // var commentAuthor = document.createElement("INPUT");
+        // commentAuthor.type = 'hidden';
+        // commentAuthor.name = "author";
+        // commentAuthor.value = url+"authors/"+"{{author_id}}";
+        // inputForm.appendChild(commentAuthor);
 
-                inputForm.appendChild(newSubmit);
+        var newSubmit = document.createElement("INPUT");
+        newSubmit.type = "submit";
+        newSubmit.value = "Post Comment";
 
-                newTag.appendChild(inputForm);
+        inputForm.appendChild(newSubmit);
+
+        newTag.appendChild(inputForm);
+    }
+
+    function addSelectOption(contentTypeSelect, textOption) {
+        var option = document.createElement("option");
+        option.text = textOption;
+
+        contentTypeSelect.add(option);
+    }
+
+    function updatePost(post, newTag, url) {
+        let arrayTemp = post.id.split("/");
+        postId = arrayTemp[arrayTemp.length-1];
+
+        arrayTemp = post.author.id.split("/");
+        authorId = arrayTemp[arrayTemp.length-1];
+
+        newTag.appendChild(document.createTextNode("Published: " + post.published));
+        newTag.appendChild(document.createElement("br"));
+
+        var h1Author = document.createElement("H2");
+        h1Author.appendChild(document.createTextNode("Author:"));
+        newTag.appendChild(h1Author);
+
+        var profileLink = document.createElement("a"); 
+        profileLink.appendChild(document.createTextNode(post.author.displayName));
+        profileLink.href = url+"authors/" + authorId;
+        newTag.appendChild(profileLink);
+        newTag.appendChild(document.createElement("br"));
+
+        // TODO: Host images in the server and update the path 
+        // var image = document.createElement('img');
+        // image.src = post.image;
+        // image.width = 150;
+        // image.height = 150;
+        // newTag.appendChild(image);
+        // newTag.appendChild(document.createElement("br"));
+
+        newTag.appendChild(document.createTextNode("Post ID: " + postId));
+        newTag.appendChild(document.createElement("br"));
+
+        newTag.appendChild(document.createTextNode("Title: " + post.title));
+        newTag.appendChild(document.createElement("br"));
+
+        newTag.appendChild(document.createTextNode("Description: " + post.description));
+        newTag.appendChild(document.createElement("br"));
+
+        newTag.appendChild(document.createTextNode("Content: " + post.content));
+        newTag.appendChild(document.createElement("br"));
+
+        newTag.appendChild(document.createTextNode("Category: " + post.category));
+        newTag.appendChild(document.createElement("br"));
+
+        var comments = post.commentsSrc['comments'];
+
+        if (Object.keys(comments).length > 0) {
+            var h1Conmments = document.createElement("H2");
+            h1Conmments.appendChild(document.createTextNode("Comments:"));
+            newTag.appendChild(h1Conmments);
+
+            for (let i in comments) {
+                updateComment(comments[i], newTag);
             }
+        }
 
-            function addSelectOption(contentTypeSelect, textOption) {
-                var option = document.createElement("option");
-                option.text = textOption;
+    }
 
-                contentTypeSelect.add(option);
-            }
+    function updateComment(comment, newTag) {
+        var newComment = document.createElement("div");
 
-            function updatePost(post, newTag, url) {
-                let arrayTemp = post.id.split("/");
-                postId = arrayTemp[arrayTemp.length-1];
+        newComment.setAttribute("id", "commentBox");
 
-                arrayTemp = post.author.id.split("/");
-                authorId = arrayTemp[arrayTemp.length-1];
+        newComment.appendChild(document.createTextNode("Published: " + comment.published));
+        newComment.appendChild(document.createElement("br"));
 
-                newTag.appendChild(document.createTextNode("Published: " + post.published));
-                newTag.appendChild(document.createElement("br"));
+        newComment.appendChild(document.createTextNode("Author: " + comment.author.displayName));
+        newComment.appendChild(document.createElement("br"));
 
-                var h1Author = document.createElement("H2");
-                h1Author.appendChild(document.createTextNode("Author:"));
-                newTag.appendChild(h1Author);
+        newComment.appendChild(document.createTextNode("Comment: " + comment.comment));
+        newComment.appendChild(document.createElement("br"));
 
-                var profileLink = document.createElement("a"); 
-                profileLink.appendChild(document.createTextNode(post.author.displayName));
-                profileLink.href = url+"authors/" + authorId;
-                newTag.appendChild(profileLink);
-                newTag.appendChild(document.createElement("br"));
+        newTag.appendChild(newComment);   
+    }
 
-                // TODO: Host images in the server and update the path 
-                // var image = document.createElement('img');
-                // image.src = post.image;
-                // image.width = 150;
-                // image.height = 150;
-                // newTag.appendChild(image);
-                // newTag.appendChild(document.createElement("br"));
+    const getFormJSON = (form) => {
+        const data = new FormData(form);
+        return Array.from(data.keys()).reduce((result, key) => {
+            result[key] = data.get(key);
+            return result;
+        }, {});
+    };
 
-                newTag.appendChild(document.createTextNode("Post ID: " + postId));
-                newTag.appendChild(document.createElement("br"));
+    // Handles POST requests for form comments
+    const handler = (event) => {
+        event.preventDefault();
 
-                newTag.appendChild(document.createTextNode("Title: " + post.title));
-                newTag.appendChild(document.createElement("br"));
+        // Retrieves the form element that was submitted and transform it into a JSON object
+        var form = getFormJSON(event.target);
 
-                newTag.appendChild(document.createTextNode("Description: " + post.description));
-                newTag.appendChild(document.createElement("br"));
+        // Find an author JSON object corresponding to the given ID
+        var getAuthor = new XMLHttpRequest();
 
-                newTag.appendChild(document.createTextNode("Content: " + post.content));
-                newTag.appendChild(document.createElement("br"));
+        getAuthor.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                authors = JSON.parse(getAuthor.responseText)['items'];
 
-                newTag.appendChild(document.createTextNode("Category: " + post.category));
-                newTag.appendChild(document.createElement("br"));
+                // IDs of all authors
+                var authorIds = new Set();
 
-                var comments = post.commentsSrc['comments'];
+                for (let i in authors) {
+                    let array = authors[i].id.split("/");
+                    id = array[array.length-1];
 
-                if (Object.keys(comments).length > 0) {
-                    var h1Conmments = document.createElement("H2");
-                    h1Conmments.appendChild(document.createTextNode("Comments:"));
-                    newTag.appendChild(h1Conmments);
-
-                    for (let i in comments) {
-                        updateComment(comments[i], newTag);
+                    if ("{{author_id}}" == id) {
+                        form['author'] = authors[i];
+                        break;
                     }
-                }
+                } 
 
-            }
+                console.log(form);
 
-            function updateComment(comment, newTag) {
-                var newComment = document.createElement("div");
+                var xhr = new XMLHttpRequest();
 
-                newComment.setAttribute("id", "commentBox");
+                xhr.open("POST", form.postURL);
+                xhr.setRequestHeader("Content-Type", "application/json");
+                xhr.setRequestHeader("Authorization", "Basic " + btoa(userNameLocal+":"+passwordLocal));
+                xhr.setRequestHeader('X-CSRFToken', '{{ csrf_token }}');
 
-                newComment.appendChild(document.createTextNode("Published: " + comment.published));
-                newComment.appendChild(document.createElement("br"));
+                xhr.send(JSON.stringify(form));
 
-                newComment.appendChild(document.createTextNode("Author: " + comment.author.displayName));
-                newComment.appendChild(document.createElement("br"));
-
-                newComment.appendChild(document.createTextNode("Comment: " + comment.comment));
-                newComment.appendChild(document.createElement("br"));
-
-                newTag.appendChild(newComment);   
-            }
-
-            const getFormJSON = (form) => {
-                const data = new FormData(form);
-                return Array.from(data.keys()).reduce((result, key) => {
-                    result[key] = data.get(key);
-                    return result;
-                }, {});
-            };
-
-            // Handles POST requests for form comments
-            const handler = (event) => {
-                event.preventDefault();
-
-                // Retrieves the form element that was submitted and transform it into a JSON object
-                var form = getFormJSON(event.target);
-
-                // Find an author JSON object corresponding to the given ID
-                var getAuthor = new XMLHttpRequest();
-        
-                getAuthor.onreadystatechange = function() {
-                    if (this.readyState == 4 && this.status == 200) {
-                        authors = JSON.parse(getAuthor.responseText)['items'];
-
-                        // IDs of all authors
-                        var authorIds = new Set();
-
-                        for (let i in authors) {
-                            let array = authors[i].id.split("/");
-                            id = array[array.length-1];
-
-                            if ("{{author_id}}" == id) {
-                                form['author'] = authors[i];
-                                break;
-                            }
-                        } 
-
-                        console.log(form);
-
-                        var xhr = new XMLHttpRequest();
-
-                        xhr.open("POST", form.postURL);
-                        xhr.setRequestHeader("Content-Type", "application/json");
-                        xhr.setRequestHeader("Authorization", "Basic " + btoa(userNameLocal+":"+passwordLocal));
-                        xhr.setRequestHeader('X-CSRFToken', '{{ csrf_token }}');
-
-                        xhr.send(JSON.stringify(form));
-
-                        update();
-                    }
-                };
-        
-                getAuthor.open("GET", form['host']+"authors", true);
-                getAuthor.setRequestHeader("Authorization", "Basic " + btoa(userNameLocal+":"+passwordLocal));
-                getAuthor.send();
-            }
-
-            window.addEventListener('load', event => {
                 update();
-            });
+            }
+        };
 
-            // TODO: Might not work as intended
-            // setInterval(update, 5000);
+        getAuthor.open("GET", form['host']+"authors", true);
+        getAuthor.setRequestHeader("Authorization", "Basic " + btoa(userNameLocal+":"+passwordLocal));
+        getAuthor.send();
+    }
 
-        </script>
+    window.addEventListener('load', event => {
+        // update(); // TODO: Undo this if the 401 is resolved
+    });
 
-    </body>
-</html>
+    // TODO: Might not work as intended
+    // setInterval(update, 5000);
 
+</script>
+{% endblock %}

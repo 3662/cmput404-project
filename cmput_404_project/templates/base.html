@@ -3,12 +3,84 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>{% block title %}Django Auth Tutorial{% endblock %}</title>
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+    }
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+    }
+    #container {
+      display: flex;
+      height: 100%;
+      width: 100%;
+    }
+    #sidebar {    
+      padding: 5px;
+      display: flex;
+      flex-direction: column;
+      width: 200px;
+      border-right: 1px solid gray;
+    }
+    #sidebar a {
+      border: 3px solid purple;
+      padding: 5px 15px;
+      text-decoration: none;
+      color: purple;
+      width: 150px;
+      text-align: center;
+      margin: 5px auto;
+    }
+    #sidebar a:hover {
+      background-color: purple;
+      color: white;
+    }
+    main {
+      width: 100%;
+      overflow-y: scroll;
+      padding: 15px;
+    }
+  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  {% block head %}
+  {% endblock %}
 </head>
 <body>
-  <main>
-    {% block content %}
-    {% endblock %}
-  </main>
+  {% if user.is_authenticated %}
+  <div id="container">
+    <nav id="sidebar">
+      <!-- <div class="sidebar-option"><a href="{% url 'display_author' id=user.id %}">View my profile</a></div>
+      <div class="sidebar-option"><a href="{% url 'new_post' %}">Create a new post</a></div>
+      <div class="sidebar-option"><a href="{% url 'new_private_post' %}">Send a private post</a></div>
+      <div class="sidebar-option"><a href="{% url 'display_own_posts' %}">Edit and delete own posts</a></div>
+      <div class="sidebar-option"><a href="{% url 'display_public_posts' %}">See public posts</a></div>
+      <div class="sidebar-option"><a href="{% url 'display_private_posts' %}">See private posts</a></div>
+      <div class="sidebar-option"><a href="{% url 'display_authors' %}">See all authors</a></div>  
+      <div class="sidebar-option"><a href="{% url 'logout' %}">Log Out</a></div> -->
+      <a id="home-btn" class="highlighted" href="{% url 'home' %}"><i class="fa fa-home" ></i> Home</a>
+      <a id="inbox-btn" href="{% url 'inbox' %}">My Inbox</a>
+      <a id="my-profile-btn" href="{% url 'display_author' id=user.id %}">My profile</a>
+      <a id="all-posts-btn" href="{% url 'display_public_posts' %}">All public posts</a>
+      <a id="all-authors-btn" href="{% url 'display_authors' %}">All authors</a>
+      <a id="logout-btn" href="{% url 'logout' %}">Log Out</a>
+
+      <a>...</a>      
+      
+      <a href="{% url 'new_post' %}">Create a new post</a>
+      <!-- <a href="{% url 'new_private_post' %}">Send a private post</a> -->
+      <!-- <a href="{% url 'display_own_posts' %}">My own posts</a> -->
+      <!-- <a href="{% url 'display_private_posts' %}">See private posts</a> -->
+
+    </nav>
+    <main>
+      {% block content %}
+      {% endblock %}
+    </main>
+  {% else %}
+    <p>You are not logged in</p>
+    <a href="{% url 'login' %}">Log In</a>
+    <a href="{% url 'accounts:signup' %}">Sign up</a>
+  {% endif %}
 </body>
 </html>
