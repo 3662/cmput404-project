@@ -5,27 +5,95 @@
         <meta charset="utf-8">
         <title>Authors</title>
         <button class="btn"><i class="fa fa-home" ></i> <a href="/">Home</a></button>
+
+        <style>
+            div {
+                border: 2px solid black;
+            }
+        </style>
     </head>
     <body>
         <h1>List of Authors</h1>
-        <div class="authors">
-            {% for author in authors %}
+        <div id="authors"></div>
 
-            <div class="author">
-                <h2> <b> Author: </b> <a href="{% url 'display_author' id=author.id %}"> {{author.get_full_name}} </a></h2>
-                {% if author.profile_image != null and author.profile_image != '' %}
-                    <img src="{{author.profile_image}}" width="150" height="150"> 
-                {% endif %}
-                <p> <b> Type: </b> author </p>
-                <p> <b> ID: </b> {{author.id}} </p>
-                <p> <b> Display Name: </b> {{author.first_name}} {{author.last_name}} </p>
-                <p> <b> ULR: </b> {{author.url}} </p>
-                <p> <b> Host: </b> {{author.host}} </p>
-                <p> <b> Github: </b> {{author.github}} </p>
-                <p> <b> ################################################################################## </b> </p>
-            </div>
+        <script>
+            // TODO: change this to a remote server
+            const hostServerURL = "http://127.0.0.1:8000/";
+            const userNameLocal = "localserver";
+            const passwordLocal = "pwdlocal";
 
-            {% endfor %}
-        </div>
+            // const hostServerURL = "https://cmput404-project-team9.herokuapp.com/";
+
+            function update() {
+                updateAuthorsFromServer(hostServerURL);
+            }
+
+            function updateAuthorsFromServer(url) {
+                document.getElementById("authors").innerHTML = "";
+
+                var xhr = new XMLHttpRequest();
+        
+                xhr.onreadystatechange = function() {
+                    if (this.readyState == 4 && this.status == 200) {
+                        authors = JSON.parse(xhr.responseText)['items'];
+
+                        for (let i in authors) {
+                            updateAuthor(authors[i], url);
+                        }  
+                    }
+                };
+        
+                // xhr.open("GET", "https://projectcmput404sfrodrig.herokuapp.com/service/authors/", true);
+                xhr.open("GET", url+"service/authors", true);
+                xhr.setRequestHeader("Authorization", "Basic " + btoa(userNameLocal+":"+passwordLocal));
+                xhr.send();
+            }
+
+            function updateAuthor(author, url) {
+                let array = author.id.split("/");
+                let id = array[array.length-1];
+
+                var newTag = document.createElement("div");
+                
+                var profileLink = document.createElement("a"); 
+                profileLink.appendChild(document.createTextNode(author.displayName));
+                profileLink.href = url+"authors/" + id;
+                newTag.appendChild(profileLink);
+                newTag.appendChild(document.createElement("br"));
+
+                var profileImage = document.createElement('img');
+                profileImage.src = author.profileImage;
+                profileImage.width = 150;
+                profileImage.height = 150;
+                newTag.appendChild(profileImage);
+                newTag.appendChild(document.createElement("br"));
+
+                newTag.appendChild(document.createTextNode("Display Name: " + author.displayName));
+                newTag.appendChild(document.createElement("br"));
+
+                newTag.appendChild(document.createTextNode("ID: " + id));
+                newTag.appendChild(document.createElement("br"));
+
+                newTag.appendChild(document.createTextNode("URL: " + author.url));
+                newTag.appendChild(document.createElement("br"));
+
+                newTag.appendChild(document.createTextNode("Host: " + author.host));
+                newTag.appendChild(document.createElement("br"));
+
+                newTag.appendChild(document.createTextNode("Github: " + author.github));
+                newTag.appendChild(document.createElement("br"));
+
+                document.getElementById("authors").appendChild(newTag);
+            }
+
+            window.addEventListener('load', event => {
+                update();
+            });
+
+            // setInterval(update, 5000);
+
+        </script>
+
     </body>
 </html>
+
