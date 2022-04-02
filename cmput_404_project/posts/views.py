@@ -7,20 +7,50 @@ import hashlib
 from django.utils.text import slugify
 import time
 import uuid
-
+import requests
+from requests.auth import HTTPBasicAuth
+from urllib.parse import urlparse
+from service.requests import get_b64_server_credential
+from service.models import ServerNode
 
 def display_public_posts(request):
     # posts = Post.objects.filter(visibility='PUBLIC').exclude(author=request.user).order_by('-published')
-    posts = Post.objects.filter(visibility='PUBLIC').order_by('-published')
+    posts = Post.objects.filter(visibility='PUBLIC', unlisted=False).order_by('-published')
     for post in posts:
         post.comments = get_post_comments(post)
 
     comment_form = CommentForm(request.POST)
 
+    # Access posts from other connected nodes
+    foreign_posts = []
+    for node in ServerNode.objects.all():
+        if node.is_local:
+            continue
+        url = f'{node.host}/authors/'
+        auth = (node.sending_username, node.sending_password)
+        response = requests.get(url, auth=auth)
+        try:
+            data = response.json()
+            authors = data['items']
+            for author in authors:
+                url = author['url'] + '/posts/'
+                response = requests.get(url, auth=auth)
+                try:
+                    data = response.json()
+                    foreign_posts.extend(data['items'])
+                except Exception as e:
+                    print('Error: URL =', url)
+                    print(e)
+        except Exception as e:
+            print('Error: URL =', url)
+            print(e)
+    # print(foreign_posts)
     context = {
         'posts': posts,
         'author': request.user,
         'comment_form': comment_form,
+        'fps': foreign_posts,
+        'author_id': request.user.id,
     }
 
     return render(request, 'posts/public_posts.html', context)
@@ -84,15 +114,41 @@ def delete_post(request, id):
 def new_post(request):
     if request.method == "POST":
         form = PostForm(request.POST)
-        obj = form.save(commit=False)                
-        obj.author = request.user
-        obj.visibility = form.cleaned_data["visibility"]
 
-        # TODO set proper URls
-        obj.source = ""
-        obj.origin = ""
-
-        obj.save()
+        data = {
+            'title': form['title'].value(),
+            'description': form['description'].value(),
+            'content_type': form['content_type'].value(),
+            'content': form['content'].value(),
+            'image': form['image'].value(),
+            'categories': form['categories'].value(),
+            'visibility': form['visibility'].value(),
+        }
+        url = "http://127.0.0.1:8000/service/authors/{}/posts".format(request.user.id)
+        local_auth = HTTPBasicAuth("localserver", "pwdlocal")
+        response = requests.post(url, data=data, auth=local_auth)
+        try:
+            post = response.json()
+        except:
+            print(f'Error: POST request to {url} expected a JSON response')
+            print(f'Instead got: {response.text}')
+        
+        print(post)
+        #TODO: send this post to appropriate inboxes
+        #-----------------------------
+        # post_id = '...'
+        # inbox_item = {
+        #     **data,
+        #     "type": "post",
+        #     "id": post_id,
+        #     "source": "http://lastplaceigotthisfrom.com/posts/yyyyy",
+        #     "origin": "http://whereitcamefrom.com/posts/zzzzz",
+        #     "author": request.user.get_detail_dict,
+        #     "comments": post_id+"/comments",
+        #     "published": "2015-03-09T13:07:04+00:00",
+        # }
+        # url = "http://127.0.0.1:8000/service/authors/{}/inbox".format(request.user.id)
+        # post_request = requests.post(url, data=inbox_item))
 
         return redirect("/")
     else:

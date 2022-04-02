@@ -1,12 +1,13 @@
 import json
 
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404
 from django.core.paginator import Paginator, EmptyPage
-from django.http import HttpResponseRedirect, JsonResponse, HttpResponse, Http404
+from django.http import JsonResponse, HttpResponse, Http404
 from django.views import View
 from posts.forms import PostForm
 from django.core.exceptions import ValidationError
 
+from service.server_authorization import is_server_authorized, is_local_server, get_401_response
 from social_distribution.models import Author, Post
 
 
@@ -20,8 +21,12 @@ class PostView(View):
         
         Returns: 
             - 200: if successful
+            - 401: if server is not authorized
             - 404: if author or post does not exist
         '''
+        if not is_server_authorized(request):
+            return get_401_response()
+
         author_id = kwargs.get('author_id', '')
         post_id = kwargs.get('post_id', '')
         author = get_object_or_404(Author, pk=author_id)
@@ -36,8 +41,12 @@ class PostView(View):
 
         Returns: 
             - 200: if the request is successful
+            - 401: if server is not authorized
             - 404: if author or post does not exist 
         '''
+        if not is_server_authorized(request):
+            return get_401_response()
+
         author_id = kwargs.get('author_id', '')
         post_id = kwargs.get('post_id', '')
         author = get_object_or_404(Author, pk=author_id)
@@ -58,9 +67,13 @@ class PostView(View):
         Returns: 
             - 200: if the update is successful
             - 400: if the data is invalid
+            - 401: if server is not authorized
             - 403: if the user is not authenticated
             - 404: if author or post does not exist 
         '''
+        if not is_local_server(request):
+            return get_401_response()
+
         author_id = kwargs.get('author_id', '')
         post_id = kwargs.get('post_id', '')
         post = get_object_or_404(Post, pk=post_id, author_id=author_id)
@@ -85,8 +98,13 @@ class PostView(View):
 
         Returns: 
             - 204: if the deletion was successful
+            - 401: if server is not authorized
+            - 403: if the user is not authenticated
             - 404: if author or post does not exist 
         '''
+        if not is_local_server(request):
+            return get_401_response()
+
         author_id = kwargs.get('author_id', '')
         post_id = kwargs.get('post_id', '')
         author = Author.objects.get(id=author_id)
@@ -106,9 +124,13 @@ class PostView(View):
             - 200: if the post is successfully updated
             - 201: if the post is successfully created
             - 400: if the data is invalid
+            - 401: if server is not authorized
             - 403: if the user is not authenticated
             - 404: if author does not exist 
         '''
+        if not is_local_server(request):
+            return get_401_response()
+
         status_code = 201
 
         author_id = kwargs.pop('author_id', '')
@@ -175,8 +197,12 @@ class PostsView(View):
 
         Returns:
             - 200: if successful
+            - 401: if server is not authorized
             - 404: if author or page does not exist
         '''
+        if not is_server_authorized(request):
+            return get_401_response()
+
         author_id = kwargs.get('author_id', '')
         return JsonResponse(self._get_posts(request, author_id))
 
@@ -186,8 +212,12 @@ class PostsView(View):
 
         Returns:
             - 200: if successful
+            - 401: if server is not authorized
             - 404: if author or page does not exist
         '''
+        if not is_server_authorized(request):
+            return get_401_response()
+
         author_id = kwargs.get('author_id', '')
         data_json = json.dumps(self._get_posts(request, author_id))
         response = HttpResponse()
@@ -202,8 +232,13 @@ class PostsView(View):
         Returns:
             - 201: if the post is successfully created
             - 400: if the data is invalid
+            - 401: if server is not authorized
+            - 403: if the user is not authenticated
             - 404: if author does not exist 
         '''
+        if not is_local_server(request):
+            return get_401_response()
+
         status_code = 201
         author_id = kwargs.get('author_id', '')
         author = get_object_or_404(Author, id=author_id)
@@ -213,8 +248,9 @@ class PostsView(View):
             status_code = 400
             return HttpResponse('The form data is not valid.', status=status_code)
         
-        Post.objects.create(author=author, **form.cleaned_data)
-        return HttpResponse('Post successfully created', status=status_code)
+        post = Post.objects.create(author=author, **form.cleaned_data)
+        body = json.dumps(post.get_detail_dict())
+        return HttpResponse(body, status=status_code)
 
 
     def _get_posts(self, request, author_id) -> dict:
@@ -228,7 +264,7 @@ class PostsView(View):
         try:
             q = Post.objects.all().filter(author=author)
             q = q.filter(visibility='PUBLIC')
-            q = q.order_by('-published')
+            q = q.order_by('-modified')
             posts = Paginator(q, size).page(page)
         except EmptyPage:
             raise Http404('Page does not exist')

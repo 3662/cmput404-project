@@ -1,6 +1,7 @@
 from django.test import TestCase, Client
 
 from .helper import create_dummy_authors, create_dummy_post, create_dummy_comments, create_dummy_likes_to_post, create_dummy_likes_to_comment
+from service.models import ServerNode
 from social_distribution.models import Author, Post, Comment, Like
 
 
@@ -8,6 +9,7 @@ class PostLikesViewTestCase(TestCase):
     NUM_LIKE_AUTHORS = 5
 
     def setUp(self):
+        ServerNode.objects.create(host='testserver', is_local=True) 
         create_dummy_authors(self.NUM_LIKE_AUTHORS + 1)
         author = Author.objects.get(username='test0')
         create_dummy_post(author, visibility='PUBLIC')
@@ -64,6 +66,7 @@ class CommentLikesViewTestCase(TestCase):
     NUM_COMMENTS = 1
 
     def setUp(self):
+        ServerNode.objects.create(host='testserver', is_local=True) 
         create_dummy_authors(self.NUM_LIKE_AUTHORS + self.NUM_COMMENT_AUTHOR + 1)
         author = Author.objects.get(username='test0')
         create_dummy_post(author, visibility='PUBLIC')
@@ -127,6 +130,7 @@ class LikedViewTestCase(TestCase):
     NUM_COMMENTS = 1
 
     def setUp(self):
+        ServerNode.objects.create(host='testserver', is_local=True) 
         create_dummy_authors(self.NUM_LIKE_AUTHORS + self.NUM_COMMENT_AUTHOR + 1)
         post_author = Author.objects.get(username='test0')
         create_dummy_post(post_author, visibility='PUBLIC')
