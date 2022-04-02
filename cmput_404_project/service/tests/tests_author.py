@@ -3,6 +3,7 @@ from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
 
 from social_distribution.models import Author
+from service.models import ServerNode
 from .helper import create_dummy_authors
 
 
@@ -11,6 +12,7 @@ class AuthorsDetailViewTestCase(TestCase):
     NUM_AUTHORS = 5
 
     def setUp(self):
+        ServerNode.objects.create(host='testserver', is_local=True) 
         create_dummy_authors(self.NUM_AUTHORS)
 
     def test_get(self):
@@ -47,6 +49,7 @@ class AuthorsDetailViewTestCase(TestCase):
 class AuthorDetailViewTestCase(TestCase):
 
     def setUp(self):
+        ServerNode.objects.create(host='testserver', is_local=True) 
         create_dummy_authors(1)
 
     def test_get(self):

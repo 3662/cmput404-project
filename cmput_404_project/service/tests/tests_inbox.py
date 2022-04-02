@@ -5,12 +5,14 @@ from django.test import TestCase, Client
 from django.core.exceptions import ObjectDoesNotExist
 
 from social_distribution.models import Author, Post, Inbox, InboxItem, FollowRequest, Like, Comment
+from service.models import ServerNode
 from .helper import create_dummy_authors, create_dummy_post, create_dummy_posts, create_dummy_comments
 
 
 class InboxViewTestCase(TestCase):
 
     def setUp(self):
+        ServerNode.objects.create(host='testserver', is_local=True) 
         create_dummy_authors(2)
 
     def test_send_posts(self):
@@ -29,7 +31,7 @@ class InboxViewTestCase(TestCase):
             response = c.post(f'/service/authors/{receiver.id}/inbox', 
                               json.dumps(post.get_detail_dict()), 
                               content_type='application/json')
-            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.status_code, 201)
         
         # assert InboxItems are created
         receiver_inbox = Inbox.objects.get(author=receiver)
@@ -61,7 +63,7 @@ class InboxViewTestCase(TestCase):
         response = c.post(f'/service/authors/{receiver.id}/inbox', 
                             json.dumps(data), 
                             content_type='application/json')
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 201)
         
         self.assertTrue(FollowRequest.objects.filter(from_author=sender, to_author=receiver).exists())
         fr = FollowRequest.objects.get(from_author=sender, to_author=receiver)
@@ -100,15 +102,15 @@ class InboxViewTestCase(TestCase):
         response = c.post(f'/service/authors/{receiver.id}/inbox', 
                             json.dumps(data), 
                             content_type='application/json')
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 201)
 
         self.assertTrue(Like.objects.filter(author=sender, 
-                                            author_url=sender.get_profile_url(), 
+                                            author_url=sender.get_id_url(), 
                                             object_type='POST', 
                                             object_url=post.get_id_url()).exists())
         
         like = Like.objects.get(author=sender, 
-                                author_url=sender.get_profile_url(), 
+                                author_url=sender.get_id_url(), 
                                 object_type='POST', 
                                 object_url=post.get_id_url())
 
@@ -134,7 +136,7 @@ class InboxViewTestCase(TestCase):
         response = c.post(f'/service/authors/{receiver.id}/inbox', 
                             json.dumps(comment.get_detail_dict()), 
                             content_type='application/json')
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 201)
 
         receiver_inbox = Inbox.objects.get(author=receiver)
         self.assertTrue(InboxItem.objects.filter(inbox=receiver_inbox, object_url=comment.get_id_url(), object_id=comment.id).exists())
