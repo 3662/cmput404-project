@@ -265,6 +265,7 @@ class PostsView(View):
         author = get_object_or_404(Author, pk=author_id)
         try:
             q = Post.objects.all().filter(author=author)
+            count = q.count()
             q = q.filter(visibility='PUBLIC')
             q = q.order_by('-modified')
             posts = Paginator(q, size).page(page)
@@ -273,6 +274,7 @@ class PostsView(View):
 
         data = {}
         data['type'] = 'posts'
+        data['count'] = count
         data['items'] = [p.get_detail_dict() for p in posts]
         return data
 
