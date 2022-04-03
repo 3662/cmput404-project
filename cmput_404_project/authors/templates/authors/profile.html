@@ -86,7 +86,7 @@
             <p><a href="{% url 'pending_action_list_view' %}">Pending Requests</a></p>
             <p><a href="{% url 'accounts:manage_profile' %}">Edit my profile</a></p>
             <p><a href="{% url 'friend_view' %}">My Friends</a></p>
-            <p><a href="{% url 'follower_view' author.id %}">My Followers</a></p>
+            <p><a href="{% url 'follower_view' id=author.id %}">My Followers</a></p>
             <p><a href="{% url 'logout' %}">Log Out</a></p>
         {% else %}
             {% if friend_status == '1' %}

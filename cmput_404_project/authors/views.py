@@ -158,6 +158,7 @@ def pending_action_list_view(request):
     qs = Author.objects.all().exclude(username=request.user)
     f_qs = Friends.objects.filter(status='send', receiver=me).exclude(sender=me).values_list('sender', flat=True)
     context = {
+        'recv': me,
         'authors': qs,
         'f_qs': f_qs,
     }
