@@ -175,6 +175,7 @@ class Post(models.Model):
 
         data = {}
         data['type'] = 'comments'
+        data['count'] = self.count
         data['page'] = page
         data['size'] = size
         data['post'] = self.get_id_url()

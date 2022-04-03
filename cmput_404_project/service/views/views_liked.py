@@ -1,4 +1,5 @@
 import json
+from tkinter import W
 
 from django.shortcuts import get_object_or_404
 from django.views import View
@@ -58,6 +59,7 @@ class LikedView(View):
 
         data = {}
         data['type'] = 'liked'
+        data['count'] = likes.count()
         data['items'] = [like.get_detail_dict() 
                          for like in likes 
                          if like.is_object_public()]

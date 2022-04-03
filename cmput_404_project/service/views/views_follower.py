@@ -50,6 +50,7 @@ class FollowersView(View):
         followers = Follower.objects.filter(target_author=author)
         data = {}
         data['type'] = 'followers'
+        data['count'] = followers.count()
         data['items'] = [follower.get_detail_dict() for follower in followers]
         return data
 
