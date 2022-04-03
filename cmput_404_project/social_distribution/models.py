@@ -187,7 +187,7 @@ class FollowRequest(models.Model):
         if self.to_author:
             to_first_name = self.to_author.first_name
         else:
-            to_full_name = request_detail_dict(to_author_url).get('displayName', '')
+            to_full_name = request_detail_dict(self.to_author_url).get('displayName', '')
             to_first_name = '' if to_full_name == '' else to_full_name.strip().split(' ')[0]
 
         return f'{from_first_name} wants to follow {to_first_name}'
