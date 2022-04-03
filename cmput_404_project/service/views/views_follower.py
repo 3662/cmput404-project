@@ -5,7 +5,7 @@ from django.http import JsonResponse, HttpResponse, Http404
 from django.views import View
 
 from service.server_authorization import is_server_authorized, is_local_server, get_401_response
-from social_distribution.models import Author
+from social_distribution.models import Author, Follower
 
 
 class FollowersView(View):
@@ -47,9 +47,10 @@ class FollowersView(View):
         Returns a dict containing followers list
         '''
         author = get_object_or_404(Author, pk=author_id)
+        followers = Follower.objects.filter(target_author=author)
         data = {}
         data['type'] = 'followers'
-        data['items'] = [follower.get_detail_dict() for follower in author.followers.all()]
+        data['items'] = [follower.get_detail_dict() for follower in followers]
         return data
 
 
