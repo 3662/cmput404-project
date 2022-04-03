@@ -103,6 +103,7 @@ def display_author(request, id):
         'friend': request.user,
         'sender': sender,
         'host_is_local': True,
+        'id': id,
     }
     return render(request, 'authors/profile.html', context=context)
 
@@ -180,7 +181,7 @@ def pending_action_view(request):
     return redirect('/authors/pending_action_list_view')
 
 
-def follower_view(request):
+def follower_view(request, a_id):
     authors = Author.objects.all()
     f_qs = Author.objects.filter(username=request.user).values_list('followers', flat=True)
     context = {
@@ -188,7 +189,8 @@ def follower_view(request):
         'f_qs': f_qs,
     }
     furl = f'service/author/{request.user.id}/follower/followers_list.html'
-    return render(request, 'authors/followers_list.html', {'user_id': request.user.id})
+    print("iddddd  ", a_id)
+    return render(request, 'authors/followers_list.html', {'id': a_id})
 
 
 def follower_view1(request):

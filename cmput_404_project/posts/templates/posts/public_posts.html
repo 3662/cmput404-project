@@ -31,7 +31,7 @@
             <p> <b> Categories: </b> {{post.categories}} </p>
 
             <div class="author">
-                <form action="{% url 'like_post1' %}" method="POST" class='PostLike' id='{{post.id}}'>
+                <form action="{% url 'like_post1' %}" method="POST" class='PostLike' id='{{post.id}}' onclick="sendLike({{author.id}},{{post.id}})">
                     {% csrf_token %}
                     <input type="hidden" name="post_id" value={{post.id}}>
                     <button type="submit" class="ui button like-btn{{post.id}}">
@@ -309,6 +309,44 @@
         newTag.appendChild(document.createTextNode("Category: " + post.category));
         newTag.appendChild(document.createElement("br"));
 
+        var likeForm = document.createElement("FORM");
+                likeForm.id = postId;
+                likeForm.class = postId;
+                likeForm.action = "http://localhost:8000/"+"service/authors/"+authorId+"/inbox/";
+                likeForm.method = "post"
+
+                likeForm.addEventListener("submit", handler)
+                var type1 = document.createElement("INPUT");
+                type1.type = 'hidden';
+                type1.name = "type";
+                type1.value = "like";
+                likeForm.appendChild(type1);
+
+                var host1 = document.createElement("INPUT");
+                host1.type = 'hidden';
+                host1.name = "host";
+                host1.value = url;
+                likeForm.appendChild(host1);
+
+                var postURL1 = document.createElement("INPUT");
+                postURL1.type = 'hidden';
+                postURL1.name = "object";
+                postURL1.value = "http://localhost:8000/"+"service/authors/"+authorId+"/posts/"+postId;
+                likeForm.appendChild(postURL1);
+
+                var newBtn = document.createElement("INPUT");
+                newBtn.type = "submit";
+                newBtn.value = "Post Like";
+
+                likeForm.appendChild(newBtn);
+                console.log(likeForm);
+
+                newTag.appendChild(likeForm);
+                //var newbtn = document.createElement("button")
+                //newbtn.appendChild(document.createTextNode('test Like'));
+                //newTag.appendChild(newbtn);
+
+
         var comments = post.commentsSrc['comments'];
 
         if (Object.keys(comments).length > 0) {
@@ -394,6 +432,31 @@
         getAuthor.setRequestHeader("Authorization", "Basic " + btoa(userNameLocal+":"+passwordLocal));
         getAuthor.send();
     }
+    function sendLike(author_id, post_id){
+        var host = "http://127.0.0.1:8000/authors/"
+        var likeSend = new XMLHttpRequest();
+        let author = {
+                type: 'author',
+                id: '{{author.get_id_url}}',
+                url: '{{author.get_profile_url}}',
+                host: '{{author.host}}',
+                displayName: '{{author.displayName}}',
+                github: '{{author.github}}',
+                profileImage: '{{author.profile_image}}',
+        };
+        let likeData = {
+            "@context": "https://www.w3.org/ns/activitystreams",
+            "summary": {{author}}+"Likes your post",
+            "type": "like",
+            "author": author,
+            "object": "http://127.0.0.1:8000/authors/" + author_id +"/posts/" + post_id
+        };
+        likeSend.open("POST", author_id+"/inbox", true);
+        likeSend.setRequestHeader("Content-type", "application/json");
+        likeSend.setRequestHeader('X-CSRF-TOKEN', '{{csrfToken}}');
+        likeSend.send(JSON.stringify(likeData));
+        console.log(likeSend.responseText)
+    }
 
     window.addEventListener('load', event => {
         // update(); // TODO: Undo this if the 401 is resolved
@@ -401,6 +464,7 @@
 
     // TODO: Might not work as intended
     // setInterval(update, 5000);
+
 
 </script>
 {% endblock %}
