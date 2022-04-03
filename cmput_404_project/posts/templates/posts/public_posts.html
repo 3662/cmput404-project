@@ -162,11 +162,16 @@
                 <img src="{{post.image}}" width="300" height="300"> 
             {% endif %}
             <p> Categories: {{post.categories}} </p>
+            <p> Content Type: {{post.contentType}} </p>
             <p class="post_title"> {{post.title}} </p>
             <p class="post_title_2"> Description </p>
             <p> {{post.description}} </p>
             <p class="post_title_2"> Content </p>
-            <img src="{{post.content}}" alt="{{post.content}}"/>
+            {% if post.contentType == 'image/png;base64' or post.contentType == 'image/jpeg;base64' %}
+            <img src="{{post.content}}" alt="Image not found."/>    
+            {% else %}
+                <p> {{post.content}} </p>
+            {% endif %}
 
             <p>TODO: Make likes and comments work for foreign posts</p>
 
@@ -385,6 +390,7 @@
         // newTag.appendChild(document.createElement("br"));
 
         createPElement(newTag, "Categories: " + post.category, "none");
+        createPElement(newTag, "Content Type: " + post.contentType, "none");
 
         // TODO: Host images in the server and update the path 
         // var image = document.createElement('img');
@@ -410,7 +416,7 @@
         createPElement(newTag, "Content", "post_title_2");
 
         // detect if content is a base46 image
-        if (post.content.split("/")[0] == "data:image") {
+        if (post.contentType == "image/jpeg;base64" || post.contentType == "image/png;base64" ) {
             var newImage = document.createElement('img');
             newImage.src = post.content;
             newImage.width = "300";
