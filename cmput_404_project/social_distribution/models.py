@@ -91,14 +91,11 @@ class Post(models.Model):
     published = models.DateTimeField(default=timezone.now, editable=False)
     modified = models.DateTimeField(default=timezone.now)
     visibility = models.CharField(max_length=7, choices=VISIBILITY_CHOICES, default='PUBLIC')
-    # authors = Author.objects.all()
-    # author_choices = []
-    # for person in authors:
-    #     author_choices.append((person.id, person.get_full_name()))
-    # recepient = models.UUIDField(null=True, choices=author_choices, default=None)
     unlisted = models.BooleanField(default=False)
     liked = models.ManyToManyField(Author, blank=True, related_name='likes')
     comments_id = models.UUIDField(default=uuid.uuid4, editable=False)
+    recipient = models.UUIDField(Author, null=True, default=None)
+
 
     type = 'post'
 

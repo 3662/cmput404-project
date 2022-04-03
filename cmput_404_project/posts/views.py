@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from social_distribution.models import Post, Comment, Like
+from social_distribution.models import Author, Post, Comment, Like
 from django.http import HttpResponse
 from .forms import PostForm, PostLike, PrivatePostForm, CommentForm
 from django.utils import timezone
@@ -26,7 +26,7 @@ def display_public_posts(request):
     return render(request, 'posts/public_posts.html', context)
 
 def display_private_posts(request):
-    posts = Post.objects.filter(visibility='PRIVATE').filter(recepient=request.user.id)
+    posts = Post.objects.filter(visibility='PRIVATE').filter(recipient=request.user.id)
     context = {
         'posts': posts,
         'author': request.user,
@@ -108,8 +108,8 @@ def new_private_post(request):
         obj = form.save(commit=False)  
         obj.author = request.user
         obj.visibility = 'PRIVATE'
-        obj.recepient = request.POST.get('recepient')
-        print('NOW')
+        obj.recipient = request.POST.get('recipient')
+        print('NOW', obj.recipient)
 
         # TODO set proper URls
         obj.source = ""
@@ -120,8 +120,13 @@ def new_private_post(request):
         return redirect("/")
     else:
         form = PrivatePostForm()
+        qs = Author.objects.all().exclude(username=request.user)
+        context = {
+            'form': form,
+            'authors': qs
+        }
 
-        return render(request, "posts/new_private_post.html", {'form': form})        
+        return render(request, "posts/new_private_post.html", context)        
 
 
 def add_comment(request, id):
