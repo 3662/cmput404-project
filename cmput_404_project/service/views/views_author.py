@@ -63,6 +63,7 @@ class AuthorsDetailView(View):
 
         data = {}
         data['type'] = 'authors'
+        data['count'] = Author.objects.all().count()
         data['items'] = [author.get_detail_dict() for author in authors]
 
         return data
