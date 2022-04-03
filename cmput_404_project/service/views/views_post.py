@@ -243,7 +243,9 @@ class PostsView(View):
         author_id = kwargs.get('author_id', '')
         author = get_object_or_404(Author, id=author_id)
 
-        form = PostForm(request.POST)
+        # form = PostForm(request.POST)
+        form = PostForm(json.loads(request.body))
+
         if not form.is_valid():
             status_code = 400
             return HttpResponse('The form data is not valid.', status=status_code)

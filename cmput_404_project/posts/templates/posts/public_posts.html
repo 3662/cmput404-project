@@ -16,7 +16,13 @@
 {% block content %}
 <button class="btn"> <a href="/">Home</a></button>
 <h1>List of Public Posts</h1>
+
+<h1>Local Posts</h1>
+
 <div id="posts"></div>
+
+<h1>Foreign Posts</h1>
+
 <div class="">
     {% for post in posts %}
         <div class="">
@@ -117,6 +123,7 @@
 
 <script>
     // TODO: change this to a remote server
+    const hostURL = "http://127.0.0.1:8000/";
     const hostServerURL = "http://127.0.0.1:8000/service/";
     const userNameLocal = "localserver";
     const passwordLocal = "pwdlocal";
@@ -138,6 +145,7 @@
 
     // Updates posts and comments from a server given a URL
     function updatePostsFromServer(url) {
+        console.log("updating: ", url);
         document.getElementById("posts").innerHTML = "";
 
         var getAuthors = new XMLHttpRequest();
@@ -282,7 +290,7 @@
 
         var profileLink = document.createElement("a"); 
         profileLink.appendChild(document.createTextNode(post.author.displayName));
-        profileLink.href = url+"authors/" + authorId;
+        profileLink.href = hostURL+"authors/" + authorId;
         newTag.appendChild(profileLink);
         newTag.appendChild(document.createElement("br"));
 
@@ -396,7 +404,7 @@
     }
 
     window.addEventListener('load', event => {
-        // update(); // TODO: Undo this if the 401 is resolved
+        update(); // TODO: Undo this if the 401 is resolved
     });
 
     // TODO: Might not work as intended
