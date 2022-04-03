@@ -41,13 +41,39 @@ def display_profile(request):
             except:
                 pass
 
+    posts = []
+    for node in ServerNode.objects.all():
+        if node.is_local:
+            continue
+        url = f'{node.host}/authors/'
+        auth = (node.sending_username, node.sending_password)
+        response = requests.get(url, auth=auth)
+        try:
+            data = response.json()
+            authors = data['items']
+            for a in authors:
+                if a['id'] == author['id']:
+                    url = author['url'] + '/posts/'
+                    response = requests.get(url, auth=auth)
+                    try:
+                        data = response.json()
+                        posts.extend(data['items'])
+                    except Exception as e:
+                        print('Error: URL =', url)
+                        print(e)
+        except Exception as e:
+            print('Error: URL =', url)
+            print(e)
+
     context = {
         'not_found': not_found,
         'author': author,
         'is_my_profile': is_my_profile,
         'friend_status': friend_status,
         'host_is_local': host_is_local,
+        'posts': posts,
     }
+
     return render(request, 'authors/profile.html', context=context)
 
 """
