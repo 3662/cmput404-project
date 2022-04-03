@@ -23,6 +23,34 @@
         text-align: center;
         align-content: center;
     }
+
+    .individual_post {
+        text-align: center;
+        border: 5px solid purple;
+        padding-top: 10px;
+        padding-bottom: 10px;
+        margin-top: 50px;
+    }
+    p.post_title {
+        padding-top: 5px;
+        padding-bottom: 5px;
+        font-size: 250%;
+        font-weight: bold;
+    }
+    p.post_title_2 {
+        padding-top: 3px;
+        padding-bottom: 3px;
+        font-size: 120%;
+        font-weight: bold;
+    }
+    a {
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+    p {
+        margin-top: 1px;
+        margin-bottom: 1px;
+    }
 </style>
 {% endblock %}
 {% block content %}
@@ -132,7 +160,41 @@
     </div>
     <h1>Posts:</h1>
     <div class="box">
-        <button>Load posts</button> TODO: implement this fetch('{{author.url}}/posts/').then(...)
+        <!-- <button>Load posts</button> TODO: implement this fetch('{{author.url}}/posts/').then(...) -->
     </div>
+    {% for post in posts %}
+    <div class="individual_post">
+        <p> Published: {{post.published}} </p>
+        <p><a href="/authors/profile?url={{post.author.url}}">{{post.author.displayName}}</a></p>
+        <p> Categories: {{post.categories}} </p>
+        <p> Content Type: {{post.contentType}} </p>
+        <p class="post_title"> {{post.title}} </p>
+        <p class="post_title_2"> Description </p>
+        <p> {{post.description}} </p>
+        <p class="post_title_2"> Content </p>
+        {% if post.contentType == 'image/png;base64' or post.contentType == 'image/jpeg;base64' %}
+            <img src="{{post.content}}" alt="Image not found."/>    
+        {% else %}
+            <p> {{post.content}} </p>
+        {% endif %}
+
+        <p>TODO: Make likes and comments work for foreign posts</p>
+
+        <div class="author">
+            <form action="{% url 'like_post1' %}" method="POST" class='PostLike' id='{{post.id}}'>
+                {% csrf_token %}
+                <input type="hidden" name="post_id" value={{post.id}}>
+                <button type="submit" class="ui button like-btn{{post.id}}">
+                {% if author in post.liked.all %}
+                        UnLike
+                {% else %}
+                        Like
+                {% endif %}
+                </button>
+            </form>
+        </div>
+    </div>
+
+    {% endfor %}
 {% endif %}
 {% endblock %}

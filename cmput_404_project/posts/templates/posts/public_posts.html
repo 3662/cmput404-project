@@ -158,9 +158,9 @@
         <div class="individual_post">
             <p> Published: {{post.published}} </p>
             <p><a href="/authors/profile?url={{post.author.url}}">{{post.author.displayName}}</a></p>
-            {% if post.image != null and post.image != '' %}
+            <!-- {% if post.image != null and post.image != '' %}
                 <img src="{{post.image}}" width="300" height="300"> 
-            {% endif %}
+            {% endif %} -->
             <p> Categories: {{post.categories}} </p>
             <p> Content Type: {{post.contentType}} </p>
             <p class="post_title"> {{post.title}} </p>
@@ -168,7 +168,7 @@
             <p> {{post.description}} </p>
             <p class="post_title_2"> Content </p>
             {% if post.contentType == 'image/png;base64' or post.contentType == 'image/jpeg;base64' %}
-            <img src="{{post.content}}" alt="Image not found."/>    
+                <img src="{{post.content}}" alt="Image not found."/>    
             {% else %}
                 <p> {{post.content}} </p>
             {% endif %}
