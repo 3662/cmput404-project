@@ -404,12 +404,22 @@
 
         createPElement(newTag, "Description", "post_title_2");
 
-        newTag.appendChild(document.createTextNode("Description: " + post.description));
+        newTag.appendChild(document.createTextNode(post.description));
         newTag.appendChild(document.createElement("br"));
 
         createPElement(newTag, "Content", "post_title_2");
 
-        newTag.appendChild(document.createTextNode("Content: " + post.content));
+        // detect if content is a base46 image
+        if (post.content.split("/")[0] == "data:image") {
+            var newImage = document.createElement('img');
+            newImage.src = post.content;
+            newImage.width = "300";
+            newImage.height = "300";
+            newTag.appendChild(newImage);
+        } else {
+            newTag.appendChild(document.createTextNode(post.content));
+        }
+
         newTag.appendChild(document.createElement("br"));
 
         // newTag.appendChild(document.createTextNode("Category: " + post.category));

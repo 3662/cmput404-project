@@ -85,7 +85,7 @@ class Post(models.Model):
     title = models.CharField(max_length=100, default='')
     description = models.TextField(max_length=150, default='')
     content_type = models.CharField(max_length=18, choices=CONTENT_TYPE_CHOICES, default='text/plain')
-    content = models.TextField(max_length=1000, default='')
+    content = models.TextField(max_length=10000, default='')
     categories = models.CharField(max_length=100, default='')
     count = models.IntegerField(default=0)
     published = models.DateTimeField(default=timezone.now, editable=False)
