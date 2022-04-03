@@ -167,12 +167,12 @@
         <p> Published: {{post.published}} </p>
         <p><a href="/authors/profile?url={{post.author.url}}">{{post.author.displayName}}</a></p>
         <p> Categories: {{post.categories}} </p>
-        <p> Content Type: {{post.contentType}} </p>
+        <p> Content Type: {{post.contentType}} {{post.content_type}} </p>
         <p class="post_title"> {{post.title}} </p>
         <p class="post_title_2"> Description </p>
         <p> {{post.description}} </p>
         <p class="post_title_2"> Content </p>
-        {% if post.contentType == 'image/png;base64' or post.contentType == 'image/jpeg;base64' %}
+        {% if post.contentType == 'image/png;base64' or post.contentType == 'image/jpeg;base64' or post.content_type == 'image/png;base64' or post.content_type == 'image/jpeg;base64' %}
             <img src="{{post.content}}" alt="Image not found."/>    
         {% else %}
             <p> {{post.content}} </p>
