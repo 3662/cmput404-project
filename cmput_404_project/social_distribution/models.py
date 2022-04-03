@@ -56,6 +56,19 @@ class Author(AbstractUser):
     def __str__(self):
         return self.username
 
+class Follower(models.Model):
+
+    class Meta:
+        verbose_name = 'Follower'
+
+    # source_author follows target_author
+    # target_author always exist in local server
+    # source_author may exist in remote servers.
+    target_author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='target_author')
+    source_author = models.ForeignKey(Author, on_delete=models.CASCADE, default=None, null=True, blank=True, related_name='source_author')
+    source_author_url = models.URLField(max_length=1000, editable=False, null=False)
+    date_created = models.DateTimeField(default=timezone.now, editable=False)
+
 
 class Post(models.Model):
 
@@ -187,7 +200,7 @@ class FollowRequest(models.Model):
         if self.to_author:
             to_first_name = self.to_author.first_name
         else:
-            to_full_name = request_detail_dict(to_author_url).get('displayName', '')
+            to_full_name = request_detail_dict(self.to_author_url).get('displayName', '')
             to_first_name = '' if to_full_name == '' else to_full_name.strip().split(' ')[0]
 
         return f'{from_first_name} wants to follow {to_first_name}'
