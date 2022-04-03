@@ -17,11 +17,12 @@ from base64 import b64encode
 
 def display_public_posts(request):
     # posts = Post.objects.filter(visibility='PUBLIC').exclude(author=request.user).order_by('-published')
-    posts = Post.objects.filter(visibility='PUBLIC', unlisted=False).order_by('-published')
-    for post in posts:
-        post.comments = get_post_comments(post)
+    # posts = Post.objects.filter(visibility='PUBLIC', unlisted=False).order_by('-published')
+    # for post in posts:
+    #     post.comments = get_post_comments(post)
 
     comment_form = CommentForm(request.POST)
+    new_post_form = PostForm()
 
     # Access posts from other connected nodes
     foreign_posts = []
@@ -48,9 +49,10 @@ def display_public_posts(request):
             print(e)
     # print(foreign_posts)
     context = {
-        'posts': posts,
+        # 'posts': posts,
         'author': request.user,
         'comment_form': comment_form,
+        'new_post_form': new_post_form,
         'fps': foreign_posts,
         'author_id': request.user.id,
     }
@@ -114,36 +116,6 @@ def delete_post(request, id):
     return redirect("/")
 
 def new_post(request):
-    # if request.method == "POST":
-    #     form = PostForm(request.POST)
-
-    #     data = {
-    #         'title': form['title'].value(),
-    #         'description': form['description'].value(),
-    #         'content_type': form['content_type'].value(),
-    #         'content': form['content'].value(),
-    #         'image': form['image'].value(),
-    #         'categories': form['categories'].value(),
-    #         'visibility': form['visibility'].value(),
-    #     }
-    #     url = "http://127.0.0.1:8000/service/authors/{}/posts".format(request.user.id)
-
-    #     # local_auth = HTTPBasicAuth("localserver", "pwdlocal")
-
-    #     # cred = base64.b64encode(b'localserver:pwdlocal')
-    #     # headers = {'Authorization': f'Basic ' + cred}
-
-    #     credentials = f'localserver:pwdlocal'
-    #     encodedCredentials = str(b64encode(credentials.encode("utf-8")), "utf-8")
-
-    #     response = requests.post(url, data=data, headers={"Authorization": f"Basic {encodedCredentials}"})
-
-    #     try:
-    #         post = response.json()
-    #     except:
-    #         print(f'Error: POST request to {url} expected a JSON response')
-    #         print(f'Instead got: {response.text}')
-        
     #     # print(post)
     #     #TODO: send this post to appropriate inboxes
     #     #-----------------------------
@@ -166,28 +138,12 @@ def new_post(request):
     #     form = PostForm()
 
     #     return render(request, "posts/new_post.html", {'form': form})
+
     if request.method == "POST":
-        # form = PostForm(request.POST)
-        # obj = form.save(commit=False)                
-        # obj.author = request.user
-
-        # # TODO set proper URls
-        # obj.source = ""
-        # obj.origin = ""
-
-        # obj.save()
-
         return redirect("/")
     else:
         form = PostForm()
-
         return render(request, "posts/new_post.html", {'form': form, 'author_id': request.user.id})
-
-    # context = {
-    #     'author_id': request.user.id,
-    # }
-
-    # return render(request, "posts/new_post.html", context)
 
 
 def new_private_post(request):

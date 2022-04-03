@@ -13,18 +13,12 @@
     const hostServerURL = "http://127.0.0.1:8000/service/";
     const userNameLocal = "localserver";
     const passwordLocal = "pwdlocal";
-    
-    // const form = document.getElementById(form);
 
     function init() {
         document.getElementById("form").reset();
         document.getElementById("form").addEventListener("submit", handler);
 
         console.log("{{author_id}}")
-    }
-
-    function post(){
-
     }
 
     const getFormJSON = (form) => {
@@ -68,32 +62,12 @@
         xhr.setRequestHeader("Authorization", "Basic " + btoa(userNameLocal+":"+passwordLocal));
         xhr.setRequestHeader('X-CSRFToken', '{{ csrf_token }}')
 
-        // console.log(JSON.stringify(JSONform))
-
         JSONform['category'] = "trash";
-        
-        // var data = "{
-        //     'title': 'Updated Test Post Title',
-        //     'description': 'Updated Test Post description',
-        //     'content_type': 'text/plain',
-        //     'content': 'Updated test post content', 
-        //     'categories': 'updated,test,post,categories',
-        //     'visibility': 'PUBLIC',
-        // }";
-
-        let data = {
-            "title": "title",
-            "description": "Jason Sweet",
-            "content_type": "text/plain",
-            "content": "update",
-            "categories": "updated,test",
-            "visibility": "PUBLIC",
-        };
 
         xhr.send(JSON.stringify(newPost));
-        // xhr.send(JSON.stringify(data));
 
         init();
+        history.back()
     }
 
     window.addEventListener('load', event => {
@@ -103,132 +77,4 @@
 </script>
 
 {% endblock %}
-
-<!-- <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-        <title>Posts</title>
-        <button class="btn"><i class="fa fa-home" ></i> <a href="/">Home</a></button>
-
-        <style>
-            div {
-                border: 4px solid black;
-            }
-            div#commentBox {
-                border: 1px solid black;
-            }
-        </style>
-    </head>
-    <body>
-        <h1>Create a Post</h1>
-        <form id="form">
-            <label for="title">Title:</label><br>
-            <input type="text" name="title"><br>
-            <label for="description">Description:</label><br>
-            <textarea rows = "5" cols = "60" name = "description"></textarea><br>
-            <label for="contentType">Content Type:</label><br>
-            <select name="content_type">
-                <option value="text">text</option>
-                <option value="markdown">markdown</option>
-                <option value="application">application</option>
-                <option value="png">png</option>
-                <option value="jpeg">jpeg</option>
-            </select><br>
-            <label for="content">Content:</label><br>
-            <textarea rows = "5" cols = "60" name = "content"></textarea><br>
-            <label for="image">Image:</label><br>
-            <input type="text" name="image"><br>
-            <label for="visibility">Visibility</label><br>
-            <select name="visibility">
-                <option value="public">public</option>
-                <option value="friends">friends</option>
-                <option value="private">private</option>
-            </select><br>
-            <input type="submit" value="Submit">
-        </form>
-
-        <script>
-            const hostServerURL = "http://127.0.0.1:8000/service/";
-            const userNameLocal = "localserver";
-            const passwordLocal = "pwdlocal";
-            
-            // const form = document.getElementById(form);
-
-            function init() {
-                document.getElementById("form").reset();
-                document.getElementById("form").addEventListener("submit", handler);
-
-                console.log("{{author_id}}")
-            }
-
-            function post(){
-
-            }
-
-            const getFormJSON = (form) => {
-                const data = new FormData(form);
-                return Array.from(data.keys()).reduce((result, key) => {
-                    result[key] = data.get(key);
-                    return result;
-                }, {});
-            };
-
-            // Handles POST requests for form comments
-            const handler = (event) => {
-                event.preventDefault();
-
-                // Retrieves the form element that was submitted and transform it into a JSON object
-                var JSONform = getFormJSON(event.target);
-                
-                console.log(JSONform);
-
-                var postURL = hostServerURL+"authors/"+"{{author_id}}"+"/posts";
-
-                var xhr = new XMLHttpRequest();
-
-                console.log(postURL)
-
-                xhr.open("POST", postURL);
-                xhr.setRequestHeader("Content-Type", "application/json")
-                xhr.setRequestHeader("Authorization", "Basic " + btoa(userNameLocal+":"+passwordLocal));
-                xhr.setRequestHeader('X-CSRFToken', '{{ csrf_token }}')
-
-                // console.log(JSON.stringify(JSONform))
-
-                JSONform['category'] = "trash";
-                
-                // var data = "{
-                //     'title': 'Updated Test Post Title',
-                //     'description': 'Updated Test Post description',
-                //     'content_type': 'text/plain',
-                //     'content': 'Updated test post content', 
-                //     'categories': 'updated,test,post,categories',
-                //     'visibility': 'PUBLIC',
-                // }";
-
-                let data = {
-                    "title": "title",
-                    "description": "Jason Sweet",
-                    "content_type": "text/plain",
-                    "content": "update",
-                    "categories": "updated,test",
-                    "visibility": "PUBLIC",
-                };
-
-                // xhr.send(JSON.stringify(JSONform));
-                xhr.send(JSON.stringify(data));
-
-                init();
-            }
-
-            window.addEventListener('load', event => {
-                init();
-            });
-
-        </script>
-
-    </body>
-</html> -->
 
