@@ -388,8 +388,9 @@ def request_detail_dict(object_url) -> dict:
     Then, returns a parsed json data.
     '''
     o = urlparse(object_url)
+    o.scheme
     headers = {}
-    b64_basic_auth = get_b64_server_credential(o.netloc)
+    b64_basic_auth = get_b64_server_credential(f"{o.scheme}://{o.netloc}")
     if b64_basic_auth:
         headers['Authorization'] = b64_basic_auth
     res = requests.get(object_url, headers=headers)

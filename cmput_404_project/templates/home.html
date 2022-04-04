@@ -19,11 +19,17 @@
   p {
     text-align: center;
   }
+  h1.title {
+      background-color: purple;
+      color: white;
+      text-align: center;
+  }
 </style>
 {% endblock %}
 
 {% block content %}
 {% if user.is_authenticated %}
+<h1 class="title">Social Distribution - Team 9</h1>
   <div class="user_info"> 
     <p> Hi {{ user.first_name }}! </p>
     <br>
@@ -47,6 +53,7 @@
   <p><a href="{% url 'inbox' %}">Inbox</a></p>
   <p><a href="{% url 'logout' %}">Log Out</a></p>
 {% else %}
+  <h1 class="title">Social Distribution - Team 9</h1>
   <p>You are not logged in</p>
   <a href="{% url 'login' %}">Log In</a>
   <a href="{% url 'accounts:signup' %}">Sign up</a>

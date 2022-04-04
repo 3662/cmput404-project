@@ -6,6 +6,7 @@ from django.views.generic import ListView, DetailView
 from service.models import ServerNode
 import requests
 from urllib.parse import urlparse
+from markdown_it import MarkdownIt
 
 
 # Create your views here.
@@ -58,6 +59,10 @@ def display_profile(request):
                     try:
                         data = response.json()
                         posts.extend(data['items'])
+                        for post in data['items']:
+                            if post["contentType"] == "text/markdown":
+                                md = MarkdownIt('commonmark')
+                                post["content"] = md.render(post["content"])
                     except Exception as e:
                         print('Error: URL =', url)
                         print(e)

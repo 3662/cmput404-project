@@ -16,16 +16,16 @@
         padding-top: 5px;
         padding-bottom: 5px;
     }
+    .markdown img {
+        width: 20%;
+        overflow: hidden;
+    }
     h1.title {
         background-color: purple;
         color: white;
         text-align: center;
     }
     div.new_post {
-        /* position: absolute; */
-        /* top: 50%;  */
-        /* left: 50%;  */
-        /* transform: translate(-50%, -50%); */
         margin-left: 10%;
         margin-right: 20%;
     }
@@ -164,7 +164,11 @@
             <p> {{post.description}} </p>
             <p class="post_title_2"> Content </p>
             {% if post.contentType == 'image/png;base64' or post.contentType == 'image/jpeg;base64' %}
-                <img src="{{post.content}}" alt="Image not found."/>    
+                <img src="{{post.content}}" alt="Image not found."/>  
+            {% elif post.contentType == 'text/markdown' %}
+                <div class="markdown">
+                    {{post.content|safe}}
+                </div>
             {% else %}
                 <p> {{post.content}} </p>
             {% endif %}
@@ -187,10 +191,12 @@
             <div class="comments">
                 <!-- <p><b>Comments...</b></p> -->
                 <h2> Comments: </h2>
-                {% for comment in post.comments %}
-                <div class="comment">
-                    <p><b> {{comment.author}} </b> {{comment.content}} <i> {{comment.date_created}} </i></p>
-                </div>
+                {% for comment in post.commentsSrc.comments %}
+                    <div class="commentBox">
+                        <p> Published: {{comment.published}} </p> 
+                        <p> Author: {{comment.author.displayName}} </p> 
+                        <p> Comment: {{comment.comment}} </p> 
+                    </div>
                 {%endfor%}
             </div>
         </div>
@@ -339,7 +345,7 @@
 
         var newSubmit = document.createElement("INPUT");
         newSubmit.type = "submit";
-        newSubmit.value = "Post CommentUU";
+        newSubmit.value = "Post Comment";
 
         inputForm.appendChild(newSubmit);
 
