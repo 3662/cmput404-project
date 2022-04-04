@@ -37,7 +37,7 @@ def is_server_authorized(request: HttpRequest) -> ServerNode:
         username, password = base64.b64decode(auth_info).decode('utf-8').split(':')
     except ValueError:
         return None
-    node_q = ServerNode.objects.filter(receiving_username=username, receiving_password=password, is_local=True)
+    node_q = ServerNode.objects.filter(receiving_username=username, receiving_password=password)
 
     return node_q.get() if node_q.exists() else None
 
