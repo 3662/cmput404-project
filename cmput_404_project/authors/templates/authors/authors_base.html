@@ -52,9 +52,9 @@
 {% for node in nodes %}
     <h2 id="{{node.host}}" class="title">Host: {{node.host}}</h2>
     <div class="host-authors">
-    {% for author in node.authors %}
-        <ul class="author">
-            <li>
+    <ul class="authors">
+        {% for author in node.authors %}
+            <li class="author">
                 {% if node.is_local %}
                 <a href="{{author.url}}">
                 {% else %}
@@ -67,9 +67,9 @@
                     <b>{{author.displayName}}</b>
                 </a>
             </li>
-        </ul>
+        {% endfor %}
+    </ul>
 
-    {% endfor %}
 </div>
 {% endfor %}
 <div id="authors"></div>

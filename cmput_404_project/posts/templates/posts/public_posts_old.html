@@ -3,21 +3,9 @@
 {% block head %}
 <title>Posts</title>
 <style>
-    main {
-        background-color: thistle;
-    }
     #sidebar #all-posts-btn {
         background-color: purple;
         color: white;
-    }
-    .create-post-btn {
-        padding: 10px 100px;
-        font-size: large;
-        margin: 0px 20px;
-        cursor: pointer;
-        color: white;
-        background-color: purple;
-        width: fit-content;
     }
     div.commentBox {
         border: 3px solid purple;
@@ -40,21 +28,13 @@
     div.new_post {
         margin-left: 10%;
         margin-right: 20%;
-        border: 1px solid gray;
-        border-radius: 20px;
-        padding: 20px;
-        box-shadow: 4px 7px 10px 0px grey;
-        background-color: white;
-        margin: 50px auto;
     }
     .individual_post {
         text-align: center;
-        border: 1px solid gray;
-        border-radius: 20px;
-        padding: 20px;
-        box-shadow: 4px 7px 10px 0px grey;
-        background-color: white;
-        margin: 50px auto;
+        border: 5px solid purple;
+        padding-top: 10px;
+        padding-bottom: 10px;
+        margin-top: 50px;
     }
     p.post_title {
         padding-top: 5px;
@@ -91,6 +71,7 @@
 {% endblock %}
 
 {% block content %}
+<button class="btn"> <a href="/">Home</a></button>
 <h1 class="title">Create a Post</h1>
 
 <div class="new_post">
@@ -99,9 +80,7 @@
             {{ new_post_form }}
         </table>
         {% csrf_token %}
-        <p>
-            <button class="create-post-btn" type="create_post">Create post</button>
-        </p>
+        <button type="create_post">Create post</button>
     </form>
 </div>
 
@@ -112,69 +91,10 @@
 <h1 class="title">Foreign Public Posts</h1>
 
 <div>
-    {% for post in posts %}
-        <div class="individual_post">
-            <!-- <p> Published: {{post.published}} </p>
-            <p> <b> Author: </b> {{post.author}} </p>
-            {% if post.image != null and post.image != '' %}
-                <img src="{{post.image}}" width="300" height="300"> 
-            {% endif %}
-            <p> <b> Categories: </b> {{post.categories}} </p>
-            <p class="post_title"> {{post.title}} </p>
-            <p class="post_title_2"> Description </p>
-            <p> <b> Description: </b> {{post.description}} </p>
-            <p class="post_title_2"> Content </p>
-            <p> <b> Content: </b> {{post.content}} </p> -->
-            <p> Published: {{post.published}} </p>
-            <p><a href="/authors/profile?url={{post.author.url}}">{{post.author.displayName}}</a></p>
-            {% if post.share_from %}
-            <p>Shared from<a href="/authors/profile?url={{post.share_from.url}}">{{post.share_from.displayName}}</a></p>
-            {% endif %}
-            <!-- {% if post.image != null and post.image != '' %}
-                <img src="{{post.image}}" width="300" height="300"> 
-            {% endif %} -->
-            <p> Categories: {{post.categories}} </p>
-            <p class="post_title"> {{post.title}} </p>
-            <p class="post_title_2"> Description </p>
-            <p> {{post.description}} </p>
-            <p class="post_title_2"> Content </p>
-            <p> {{post.content}} </p>
-
-            <div class="author">
-                <form action="{% url 'like_post1' %}" method="POST" class='PostLike' id='{{post.id}}'>
-                    {% csrf_token %}
-                    <input type="hidden" name="post_id" value={{post.id}}>
-                    <button type="submit" class="ui button like-btn{{post.id}}">
-                    {% if author in post.liked.all %}
-                            UnLike
-                    {% else %}
-                            Like
-                    {% endif %}
-                    </button>
-                </form>
-            </div>
-            <div class="comments">
-                <h2> Comments: </h2>
-                {% for comment in post.comments %}
-                <div class="commentBox">
-                    <p> Published: {{comment.date_created}} </p>
-                    <p> Author: {{comment.author}} </p>
-                    <p> Comment: {{comment.content}} </p>
-                    <!-- <p><b> {{comment.author}} </b> {{comment.content}} <i> {{comment.date_created}} </i></p> -->
-                </div>
-                {%endfor%}
-            </div>
-        </div>
-        <br/>
-
-    {% endfor %}
     {% for post in fps %}
-        <div class="box individual_post">
+        <div class="individual_post">
             <p> Published: {{post.published}} </p>
             <p><a href="/authors/profile?url={{post.author.url}}">{{post.author.displayName}}</a></p>
-            {% if post.share_from %}
-            <p>Shared from<a href="/authors/profile?url={{post.share_from.url}}">{{post.share_from.displayName}}</a></p>
-            {% endif %}
             <!-- {% if post.image != null and post.image != '' %}
                 <img src="{{post.image}}" width="300" height="300"> 
             {% endif %} -->
@@ -185,7 +105,7 @@
             <p> {{post.description}} </p>
             <p class="post_title_2"> Content </p>
             {% if post.contentType == 'image/png;base64' or post.contentType == 'image/jpeg;base64' %}
-                <img src="{{post.content}}" alt="Image not found."/>  
+                <img src="{{post.content}}" alt="Image not found."/>
             {% elif post.contentType == 'text/markdown' %}
                 <div class="markdown">
                     {{post.content|safe}}
@@ -214,12 +134,21 @@
                 <h2> Comments: </h2>
                 {% for comment in post.commentsSrc.comments %}
                     <div class="commentBox">
-                        <p> Published: {{comment.published}} </p> 
-                        <p> Author: {{comment.author.displayName}} </p> 
-                        <p> Comment: {{comment.comment}} </p> 
+                        <p> Published: {{comment.published}} </p>
+                        <p> Author: {{comment.author.displayName}} </p>
+                        <p> Comment: {{comment.comment}} </p>
                     </div>
                 {%endfor%}
             </div>
+
+            <h2> New Comment: </h2>
+            <form action="{% url 'add_comment' id=post.id" method="POST" class='CommentForm' id='{{post.id}}'>
+                <table>
+                    {{ comment_form }}
+                </table>
+                {% csrf_token %}
+                <button> Post Comment</button>
+            </form>
         </div>
         <br/>
 
@@ -280,39 +209,13 @@
                             for (let i in posts) {
                                 var newTag = document.createElement("div");
 
-                                updatePost(posts[i], newTag, url);
+                                updatePost(posts[i], newTag);
 
                                 addTextboxInput(newTag, posts[i], url);
-
-                                addShareButton(newTag, posts[i], url);
 
                                 newTag.className = "individual_post"
 
                                 document.getElementById("posts").appendChild(newTag);
-
-                                let headers = new Headers({ 'Authorization': 'Basic '+btoa('localserver:pwdlocal') });
-                                let likeurl = posts[i].id + '/likes';
-                                fetch(likeurl, { method: 'GET', headers: headers })
-                                    .then(resp => resp.json())
-                                    .then((likeObjects) => {
-                                        console.log(likeObjects);
-                                        let isLikedByme = false;
-                                        for (likeObject of likeObjects.items) {
-                                            if (likeObject.author.id === '{{author.get_id_url}}') {
-                                                isLikedByme = true;
-                                                break;
-                                            }
-                                        }
-                                        console.log(isLikedByme, '{{author.get_id_url}}')
-                                        
-                                        let likeButton = newTag.querySelector('#likeBtn');
-                                        if (isLikedByme) {
-                                            likeButton.value = 'Already liked';
-                                            likeButton.disabled = 'true';
-                                        } else {
-                                            likeButton.value = 'like';
-                                        }
-                                    });
                             } 
                         }
                     }
@@ -397,26 +300,6 @@
         newTag.appendChild(inputForm);
     }
 
-    function addShareButton(newTag, post, url) {
-        newTag.appendChild(document.createElement("br"));
-        var inputForm = document.createElement("FORM");
-        let arrayTemp = post.id.split("/");
-        postId = arrayTemp[arrayTemp.length-1];
-        inputForm.id = postId;
-        inputForm.className = "share_post";
-        inputForm.action = 'share_post?id=' + postId + '/';
-        inputForm.method = "post"
-
-        var newSubmit = document.createElement("INPUT");
-        newSubmit.type = "submit";
-        newSubmit.id = "sharePost"
-        newSubmit.value = "Share Post Now";
-
-        inputForm.appendChild(newSubmit);
-
-        newTag.appendChild(inputForm);
-    }
-
     function addSelectOption(contentTypeSelect, textOption) {
         var option = document.createElement("option");
         option.text = textOption;
@@ -446,25 +329,13 @@
         newTag.appendChild(profileLink);
         newTag.appendChild(document.createElement("br"));
 
-        if (post.share_from) {
-            newTag.appendChild(document.createElement("br"));
-            createPElement(newTag, "Shared from ");
-            var shareProfileLink = document.createElement("a"); 
-            shareProfileLink.appendChild(document.createTextNode(post.share_from.displayName));
-            shareId = post.share_from.id;
-            shareProfileLink.href = hostURL+"authors/" + shareId;
-            newTag.appendChild(shareProfileLink);
-            newTag.appendChild(document.createElement("br"));
-            newTag.appendChild(document.createElement("br"));
-        }
-
         // newTag.appendChild(document.createTextNode("Category: " + post.category));
         // newTag.appendChild(document.createElement("br"));
 
         createPElement(newTag, "Categories: " + post.category, "none");
         createPElement(newTag, "Content Type: " + post.contentType, "none");
 
-        // TODO: Host images in the server and update the path 
+        // TODO: Host images in the server and update the path
         // var image = document.createElement('img');
         // image.src = post.image;
         // image.width = 150;
@@ -503,107 +374,43 @@
         // newTag.appendChild(document.createTextNode("Category: " + post.category));
         // newTag.appendChild(document.createElement("br"));
 
-        let likeAuthor = {
-            'type': 'author',
-             'id': '{{author.get_id_url}}',
-             'url': '{{author.get_profile_url}}',
-             'host': '{{author.host}}',
-             'displayName': '{{author.get_full_name}}',
-             'github': '{{author.github}}',
-             'profileImage': '{{author.profile_image}}',
-        };
-
         var likeForm = document.createElement("FORM");
-        likeForm.id = postId;
-        likeForm.className = "form_like";
-        likeForm.action = url+"authors/"+authorId+"/inbox";
-        likeForm.method = "post"
+                likeForm.id = postId;
+                likeForm.class = postId;
+                likeForm.action = "http://localhost:8000/"+"service/authors/"+authorId+"/inbox/";
+                likeForm.method = "post"
 
-        likeForm.addEventListener("submit", handlerNewLike)
+                likeForm.addEventListener("submit", handler)
+                var type1 = document.createElement("INPUT");
+                type1.type = 'hidden';
+                type1.name = "type";
+                type1.value = "like";
+                likeForm.appendChild(type1);
 
-        var context = document.createElement("INPUT");
-        context.type = 'hidden';
-        context.name = "@context";
-        context.value = "https://www.w3.org/ns/activitystreams";
-        likeForm.appendChild(context);
+                var host1 = document.createElement("INPUT");
+                host1.type = 'hidden';
+                host1.name = "host";
+                host1.value = url;
+                likeForm.appendChild(host1);
 
-        var summary = document.createElement("INPUT");
-        summary.type = 'hidden';
-        summary.name = "summary";
-        summary.value = "{{author.get_full_name}}"+" Likes your post";
-        likeForm.appendChild(summary);
+                var postURL1 = document.createElement("INPUT");
+                postURL1.type = 'hidden';
+                postURL1.name = "object";
+                postURL1.value = "http://localhost:8000/"+"service/authors/"+authorId+"/posts/"+postId;
+                likeForm.appendChild(postURL1);
 
-        var type1 = document.createElement("INPUT");
-        type1.type = 'hidden';
-        type1.name = "type";
-        type1.value = "like";
-        likeForm.appendChild(type1);
+                var newBtn = document.createElement("INPUT");
+                newBtn.type = "submit";
+                newBtn.value = "Post Like";
 
-        var lAuthor = document.createElement("INPUT");
-        lAuthor.type = 'hidden';
-        lAuthor.name = "author";
-        lAuthor.value = JSON.stringify(likeAuthor);
-        likeForm.appendChild(lAuthor);
+                likeForm.appendChild(newBtn);
+                console.log(likeForm);
 
-        var object = document.createElement("INPUT");
-        object.type = 'hidden';
-        object.name = "object";
-        object.value = url+"authors/"+authorId+"/posts/"+postId;
-        likeForm.appendChild(object);
+                newTag.appendChild(likeForm);
+                //var newbtn = document.createElement("button")
+                //newbtn.appendChild(document.createTextNode('test Like'));
+                //newTag.appendChild(newbtn);
 
-        var postURL1 = document.createElement("INPUT");
-        postURL1.type = 'hidden';
-        postURL1.name = "postURL1";
-        postURL1.value = url+"authors/"+authorId+"/inbox";
-        likeForm.appendChild(postURL1);
-
-        likeForm.appendChild(document.createElement("br"));
-
-        var newSubmit1 = document.createElement("INPUT");
-        newSubmit1.type = "submit";
-        newSubmit1.value = "like";
-        newSubmit1.id = "likeBtn";
-
-        likeForm.appendChild(newSubmit1);
-
-        newTag.appendChild(likeForm);
-
-
-/*
-        var btn = document.createElement("INPUT");
-        btn.type = "submit";
-        btn.value = "Like";
-        btn.id = "likeBtn";
-        btn.onclick = function updateLike(url, authorId, PostId){
-            if (btn.value === "like"){
-                var likeSend = new XMLHttpRequest();
-                let author = {
-                    'type': 'author',
-                     'id': '{{author.get_id_url}}',
-                     'url': '{{author.get_profile_url}}',
-                     'host': '{{author.host}}',
-                     'displayName': '{{author.get_full_name}}',
-                     'github': '{{author.github}}',
-                     'profileImage': '{{author.profile_image}}',
-                };
-                var likeData ={
-                    "@context":"https://www.w3.org/ns/activitystreams",
-                    "summary": "{{author.get_full_name}}"+" Likes your post",
-                    "type": "Like",
-                    "author": author,
-                    "object": url+"authors/"+authorId+"/posts/"+postId,
-                };
-                likeSend.open("POST", url+authorId+"/inbox", true);
-                likeSend.setRequestHeader("Content-type", "application/json");
-                likeSend.setRequestHeader('X-CSRF-TOKEN', '{{csrfToken}}');
-                likeSend.send(JSON.stringify(likeData));
-                console.log(likeSend.responseText);
-
-                btn.value = "liked";
-            }
-        };
-        newTag.appendChild(btn);
-        */
 
         var comments = post.commentsSrc['comments'];
 
@@ -619,7 +426,7 @@
 
     }
 
-    // parameters: newTag, text, className 
+    // parameters: newTag, text, className
     function createPElement(newTag, text, className) {
         var newElement = document.createElement("p");
         newElement.innerText = text;
@@ -699,33 +506,31 @@
         getAuthor.setRequestHeader("Authorization", "Basic " + btoa(userNameLocal+":"+passwordLocal));
         getAuthor.send();
     }
-
-    // Handles POST requests for form like
-    const handlerNewLike = (event) => {
-        event.preventDefault();
-
-        // Retrieves the form element that was submitted and transform it into a JSON object
-        var form1 = getFormJSON(event.target);
-        form1.author = JSON.parse(form1.author);
-
-        // Find an author JSON object corresponding to the given ID
-
-        console.log(form1);
-
-        if (document.getElementById("likeBtn").value === "like"){
-            var xhr = new XMLHttpRequest();
-
-            xhr.open("POST", form1.postURL1);
-            xhr.setRequestHeader("Content-Type", "application/json");
-            xhr.setRequestHeader("Authorization", "Basic " + btoa(userNameLocal+":"+passwordLocal));
-            xhr.setRequestHeader('X-CSRFToken', '{{ csrf_token }}');
-
-            xhr.send(JSON.stringify(form1));
-
-            document.getElementById("likeBtn").value = "liked";
-        }
-    };
-
+    function sendLike(author_id, post_id){
+        var host = "http://127.0.0.1:8000/authors/"
+        var likeSend = new XMLHttpRequest();
+        let author = {
+                type: 'author',
+                id: '{{author.get_id_url}}',
+                url: '{{author.get_profile_url}}',
+                host: '{{author.host}}',
+                displayName: '{{author.displayName}}',
+                github: '{{author.github}}',
+                profileImage: '{{author.profile_image}}',
+        };
+        let likeData = {
+            "@context": "https://www.w3.org/ns/activitystreams",
+            "summary": {{author}}+"Likes your post",
+            "type": "like",
+            "author": author,
+            "object": "http://127.0.0.1:8000/authors/" + author_id +"/posts/" + post_id
+        };
+        likeSend.open("POST", author_id+"/inbox", true);
+        likeSend.setRequestHeader("Content-type", "application/json");
+        likeSend.setRequestHeader('X-CSRF-TOKEN', '{{csrfToken}}');
+        likeSend.send(JSON.stringify(likeData));
+        console.log(likeSend.responseText)
+    }
 
     function initNewPost() {
         document.getElementById("form").reset();
@@ -741,7 +546,7 @@
 
         // Retrieves the form element that was submitted and transform it into a JSON object
         var JSONform = getFormJSON(event.target);
-        
+
         console.log(JSONform);
 
         var newPost = {
