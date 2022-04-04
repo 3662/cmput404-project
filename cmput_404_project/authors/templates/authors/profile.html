@@ -8,9 +8,14 @@
         font-family: Arial;
     }
     .box {
-        border: 1px solid grey;
+        border: 3px solid purple;
         padding: 10px;
         margin: 5px;
+    }
+    h1.title {
+        background-color: purple;
+        color: white;
+        text-align: center;
     }
     div.commentBox {
         border: 3px solid purple;
@@ -113,6 +118,7 @@
 
         }
     </script>
+    <h1 class="title">Profile</h1>
     <div class="box align-center">
         <p>
             <img class="profile_image" src="{% if host_is_local %}{{author.profile_image}}{% else %}{{author.profileImage}}{% endif %}">
@@ -171,10 +177,7 @@
                 </div>
         {% endif %}
     </div>
-    <h1>Posts:</h1>
-    <div class="box">
-        <!-- <button>Load posts</button> TODO: implement this fetch('{{author.url}}/posts/').then(...) -->
-    </div>
+    <h1 class="title">Posts</h1>
     {% for post in posts %}
     <div class="individual_post">
         <p> Published: {{post.published}} </p>

@@ -1,4 +1,11 @@
 <!-- templates/registration/login.html -->
+<style>
+  h1.title {
+    background-color: purple;
+    color: white;
+    text-align: center;
+  }
+</style>
 <!DOCTYPE html>
 <html>
 <head>
@@ -6,6 +13,7 @@
   <title>Login</title>
 </head>
 <body>
+  <h1 class="title">Social Distribution - Team 9</h1>
   <h2>Log In</h2>
   <form method="post">
     {% csrf_token %}

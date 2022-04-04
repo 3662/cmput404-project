@@ -26,10 +26,6 @@
         text-align: center;
     }
     div.new_post {
-        /* position: absolute; */
-        /* top: 50%;  */
-        /* left: 50%;  */
-        /* transform: translate(-50%, -50%); */
         margin-left: 10%;
         margin-right: 20%;
     }
@@ -95,69 +91,6 @@
 <h1 class="title">Foreign Public Posts</h1>
 
 <div>
-    {% for post in posts %}
-        <div class="individual_post">
-            <!-- <p> Published: {{post.published}} </p>
-            <p> <b> Author: </b> {{post.author}} </p>
-            {% if post.image != null and post.image != '' %}
-                <img src="{{post.image}}" width="300" height="300"> 
-            {% endif %}
-            <p> <b> Categories: </b> {{post.categories}} </p>
-            <p class="post_title"> {{post.title}} </p>
-            <p class="post_title_2"> Description </p>
-            <p> <b> Description: </b> {{post.description}} </p>
-            <p class="post_title_2"> Content </p>
-            <p> <b> Content: </b> {{post.content}} </p> -->
-
-            <p> Published: {{post.published}} </p>
-            <p><a href="/authors/profile?url={{post.author.url}}">{{post.author.displayName}}</a></p>
-            <!-- {% if post.image != null and post.image != '' %}
-                <img src="{{post.image}}" width="300" height="300"> 
-            {% endif %} -->
-            <p> Categories: {{post.categories}} </p>
-            <p class="post_title"> {{post.title}} </p>
-            <p class="post_title_2"> Description </p>
-            <p> {{post.description}} </p>
-            <p class="post_title_2"> Content </p>
-            <p> {{post.content}} </p>
-
-            <div class="author">
-                <form action="{% url 'like_post1' %}" method="POST" class='PostLike' id='{{post.id}}'>
-                    {% csrf_token %}
-                    <input type="hidden" name="post_id" value={{post.id}}>
-                    <button type="submit" class="ui button like-btn{{post.id}}">
-                    {% if author in post.liked.all %}
-                            UnLike
-                    {% else %}
-                            Like
-                    {% endif %}
-                    </button>
-                </form>
-            </div>
-            <div class="comments">
-                <h2> Comments: </h2>
-                {% for comment in post.comments %}
-                <div class="commentBox">
-                    <p> Published: {{comment.date_created}} </p>
-                    <p> Author: {{comment.author}} </p>
-                    <p> Comment: {{comment.content}} </p>
-                    <!-- <p><b> {{comment.author}} </b> {{comment.content}} <i> {{comment.date_created}} </i></p> -->
-                </div>
-                {%endfor%}
-            </div>
-
-            <h2> New Comment: </h2>
-            <form action="{% url 'add_comment' id=post.id " method="POST" class='CommentForm' id='{{post.id}}'>
-                <table>
-                    {{ comment_form }}
-                </table>
-                {% csrf_token %}
-                <button> Post Comment</button>
-            </form>
-        </div>
-        <br/>
-
-    {% endfor %}
     {% for post in fps %}
         <div class="individual_post">
             <p> Published: {{post.published}} </p>
