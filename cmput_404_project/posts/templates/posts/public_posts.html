@@ -191,10 +191,12 @@
             <div class="comments">
                 <!-- <p><b>Comments...</b></p> -->
                 <h2> Comments: </h2>
-                {% for comment in post.comments %}
-                <div class="comment">
-                    <p><b> {{comment.author}} </b> {{comment.content}} <i> {{comment.date_created}} </i></p>
-                </div>
+                {% for comment in post.commentsSrc.comments %}
+                    <div class="commentBox">
+                        <p> Published: {{comment.published}} </p> 
+                        <p> Author: {{comment.author.displayName}} </p> 
+                        <p> Comment: {{comment.comment}} </p> 
+                    </div>
                 {%endfor%}
             </div>
 

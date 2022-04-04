@@ -12,6 +12,15 @@
         padding: 10px;
         margin: 5px;
     }
+    div.commentBox {
+        border: 3px solid purple;
+        margin-left: 10%;
+        margin-right: 10%;
+        margin-top:  5px;
+        margin-bottom: 5px;
+        padding-top: 5px;
+        padding-bottom: 5px;
+    }
 
     .profile_image {
         border: 1px solid grey;
@@ -192,6 +201,17 @@
                 {% endif %}
                 </button>
             </form>
+        </div>
+        <div class="comments">
+            <!-- <p><b>Comments...</b></p> -->
+            <h2> Comments: </h2>
+            {% for comment in post.commentsSrc.comments %}
+                <div class="commentBox">
+                    <p> Published: {{comment.published}} </p> 
+                    <p> Author: {{comment.author.displayName}} </p> 
+                    <p> Comment: {{comment.comment}} </p> 
+                </div>
+            {%endfor%}
         </div>
     </div>
 
