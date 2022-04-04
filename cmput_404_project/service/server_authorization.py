@@ -46,28 +46,20 @@ def is_local_server(request: HttpRequest) -> bool:
     '''
     Returns True if the server is a local server. Otherwise, False.
     '''
-    host = request.get_host()
     auth_header = request.META.get('HTTP_AUTHORIZATION', None)
-
-    node_q = ServerNode.objects.filter(host=host, is_local=True)
-
-    if not node_q.exists():
-        return False
-
-    node = node_q.get()
     if auth_header is None:
-        return False
+        return None
 
     auth_type, auth_info = auth_header.split(' ')
 
     if auth_type.lower() != "basic":
-        return False
+        return None
 
     auth_info = auth_info.encode('utf-8')
-
     try:
         username, password = base64.b64decode(auth_info).decode('utf-8').split(':')
     except ValueError:
-        return False
+        return None
+    node_q = ServerNode.objects.filter(receiving_username=username, receiving_password=password, is_local=True)
 
-    return (username == node.receiving_username) and (password == node.receiving_password)
+    return node_q.get() if node_q.exists() else None
