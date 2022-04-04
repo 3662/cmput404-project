@@ -146,7 +146,6 @@ def get_friends_list(request):
     for qs in f_qs:
         if qs.id in authors:
             friends_list.append(qs.id)
-    print(friends_list)
     return friends_list
 
 def new_post(request):
@@ -209,7 +208,6 @@ def new_private_post(request):
         return render(request, "posts/new_private_post.html", context)
 
 def share_post(request, id):
-    print('SHARE CALLED')
     if request.method == "POST":   
         obj = Post.objects.get(id=id)
         if obj.visibility == "PUBLIC":

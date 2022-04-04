@@ -13,7 +13,7 @@ urlpatterns = [
     path('add_comment/', views.add_comment, name='add_comment'),
     path('display_like/', views.display_like, name='display_like'),
     path('like_post1/', views.like_post1, name='like_post1'),
-    path('share_post/<uuid:id>', views.share_post, name='share_post'),
-    path('share_post', views.share_post, name='share_post'),
+    path('share_post/<uuid:id>/', views.share_post, name='share_post'),
+    path('share_post/', views.share_post, name='share_post'),
 
 ]
