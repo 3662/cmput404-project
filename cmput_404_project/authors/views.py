@@ -189,6 +189,7 @@ def pending_action_list_view(request):
     qs = Author.objects.all().exclude(username=request.user)
     f_qs = Friends.objects.filter(status='send', receiver=me).exclude(sender=me).values_list('sender', flat=True)
     context = {
+        'recv': me,
         'authors': qs,
         'f_qs': f_qs,
     }
@@ -212,15 +213,23 @@ def pending_action_view(request):
 
 
 def follower_view(request, id):
-    authors = Author.objects.all()
-    f_qs = Author.objects.filter(username=request.user).values_list('followers', flat=True)
-    context = {
-        'authors': authors,
-        'f_qs': f_qs,
-    }
-    furl = f'service/author/{request.user.id}/follower/followers_list.html'
-    return render(request, 'authors/followers_list.html', {'user_id': id})
-
+    # authors = Author.objects.all()
+    # f_qs = Author.objects.filter(username=request.user).values_list('followers', flat=True)
+    # context = {
+    #     'authors': authors,
+    #     'f_qs': f_qs,
+    # }
+    # furl = f'service/author/{request.user.id}/follower/followers_list.html'
+    
+    if id:
+        user_url =  Author.objects.filter(id=id).get().get_detail_dict()['id']
+    else:
+        user_url = request.GET.get('url')
+    return render(request, 'authors/followers_list.html', {
+        'user_url': user_url,
+        'is_local': id != None,
+        'user_id': id,
+    })
 
 def follower_view1(request):
     author = Author.objects.get(username=request.user)
@@ -233,7 +242,7 @@ def friends_view(request):
     return render(request, 'authors/follower_list.html', {'authors': authors})
 
 
-def friends_view(request):
+def friends_view1(request):
     f_qs_list = []
     authors = Friends.objects.filter(sender=request.user, status='accepted').values_list('receiver', flat=True)
     for qs in authors:
