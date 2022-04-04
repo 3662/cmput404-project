@@ -115,6 +115,7 @@ class Post(models.Model):
     liked = models.ManyToManyField(Author, blank=True, related_name='likes')
     comments_id = models.UUIDField(default=uuid.uuid4, editable=False)
     recipient = models.UUIDField(Author, null=True, default=None)
+    share_from = models.ForeignKey(Author, on_delete=models.SET_NULL, null=True, default=None, related_name='shared')
 
 
     type = 'post'
@@ -160,6 +161,8 @@ class Post(models.Model):
         d['published'] = self.get_iso_published()
         d['visibility'] = self.visibility
         d['unlisted'] = self.unlisted
+        if self.share_from:
+            d['share_from'] = self.share_from.get_detail_dict()
 
         return d
 
