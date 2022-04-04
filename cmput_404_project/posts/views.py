@@ -12,8 +12,7 @@ from requests.auth import HTTPBasicAuth
 from urllib.parse import urlparse
 from service.requests import get_b64_server_credential
 from service.models import ServerNode
-
-from base64 import b64encode
+from markdown_it import MarkdownIt
 
 def display_public_posts(request):
     # posts = Post.objects.filter(visibility='PUBLIC').exclude(author=request.user).order_by('-published')
@@ -41,6 +40,10 @@ def display_public_posts(request):
                 try:
                     data = response.json()
                     foreign_posts.extend(data['items'])
+                    for post in data['items']:
+                        if post["contentType"] == "text/markdown":
+                            md = MarkdownIt('commonmark')
+                            post["content"] = md.render(post["content"])
                 except Exception as e:
                     print('Error: URL =', url)
                     print(e)
