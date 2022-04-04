@@ -126,6 +126,7 @@
             delFollower.setRequestHeader("Authorization", "Basic " + btoa(userNameLocal+":"+passwordLocal));
             delFollower.setRequestHeader('X-CSRF-TOKEN', '{{csrfToken}}');
             delFollower.send();
+            console.log(delFollower.responseText)
         }
     </script>
     <h1 class="title">Profile</h1>
