@@ -247,7 +247,7 @@ def friends_view(request):
 # Access users from other connected nodes
     f_qs = []
     authors =[]
-    for node in ServerNode.objects.filter(is_local=True).all():
+    for node in ServerNode.objects.all():
         if node.is_local:
             url = f'http://127.0.0.1:8000/service/authors/{request.user.id}/followers'
             auth = ('localserver', 'pwdlocal')
