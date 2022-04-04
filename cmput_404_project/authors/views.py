@@ -6,6 +6,7 @@ from django.views.generic import ListView, DetailView
 from service.models import ServerNode
 import requests
 from urllib.parse import urlparse
+from markdown_it import MarkdownIt
 
 
 # Create your views here.
@@ -41,13 +42,43 @@ def display_profile(request):
             except:
                 pass
 
+    posts = []
+    for node in ServerNode.objects.all():
+        if node.is_local:
+            continue
+        url = f'{node.host}/authors/'
+        auth = (node.sending_username, node.sending_password)
+        response = requests.get(url, auth=auth)
+        try:
+            data = response.json()
+            authors = data['items']
+            for a in authors:
+                if a['id'] == author['id']:
+                    url = author['url'] + '/posts/'
+                    response = requests.get(url, auth=auth)
+                    try:
+                        data = response.json()
+                        posts.extend(data['items'])
+                        for post in data['items']:
+                            if post["contentType"] == "text/markdown":
+                                md = MarkdownIt('commonmark')
+                                post["content"] = md.render(post["content"])
+                    except Exception as e:
+                        print('Error: URL =', url)
+                        print(e)
+        except Exception as e:
+            print('Error: URL =', url)
+            print(e)
+
     context = {
         'not_found': not_found,
         'author': author,
         'is_my_profile': is_my_profile,
         'friend_status': friend_status,
         'host_is_local': host_is_local,
+        'posts': posts,
     }
+
     return render(request, 'authors/profile.html', context=context)
 
 """
@@ -88,7 +119,7 @@ Retrieve and display a single author
 """
 def display_author(request, id):
     author = Author.objects.get(id=id)
-    posts = Post.objects.filter(author=author).order_by('-published')
+    posts = Post.objects.filter(author=author, visibility='PUBLIC').order_by('-published')
     sender = Author.objects.get(username=request.user)
     s_qs = Friends.objects.filter(sender=sender, status='send').values_list('receiver', flat=True)
     r_qs = Friends.objects.filter(sender=sender, status='accepted').values_list('receiver', flat=True)

@@ -41,6 +41,10 @@
       overflow-y: scroll;
       padding: 15px;
     }
+    p {
+      text-align: center;
+      font-size: 120%;
+    }
   </style>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   {% block head %}
@@ -78,9 +82,10 @@
       {% endblock %}
     </main>
   {% else %}
+    <h1 class="title">Social Distribution - Team 9</h1>
     <p>You are not logged in</p>
-    <a href="{% url 'login' %}">Log In</a>
-    <a href="{% url 'accounts:signup' %}">Sign up</a>
+    <p><a href="{% url 'login' %}">Log In</a></p>
+    <p><a href="{% url 'accounts:signup' %}">Sign up</a></p>
   {% endif %}
 </body>
 </html>

@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from social_distribution.models import Author, Post, Comment, Like
+from social_distribution.models import Author, Post, Comment, Like, Friends
 from django.http import HttpResponse
 from .forms import PostForm, PostLike, PrivatePostForm, CommentForm
 from django.utils import timezone
@@ -12,14 +12,16 @@ from requests.auth import HTTPBasicAuth
 from urllib.parse import urlparse
 from service.requests import get_b64_server_credential
 from service.models import ServerNode
+from markdown_it import MarkdownIt
 
 def display_public_posts(request):
     # posts = Post.objects.filter(visibility='PUBLIC').exclude(author=request.user).order_by('-published')
-    posts = Post.objects.filter(visibility='PUBLIC', unlisted=False).order_by('-published')
-    for post in posts:
-        post.comments = get_post_comments(post)
+    # posts = Post.objects.filter(visibility='PUBLIC', unlisted=False).order_by('-published')
+    # for post in posts:
+    #     post.comments = get_post_comments(post)
 
     comment_form = CommentForm(request.POST)
+    new_post_form = PostForm()
 
     # Access posts from other connected nodes
     foreign_posts = []
@@ -38,6 +40,10 @@ def display_public_posts(request):
                 try:
                     data = response.json()
                     foreign_posts.extend(data['items'])
+                    for post in data['items']:
+                        if post["contentType"] == "text/markdown":
+                            md = MarkdownIt('commonmark')
+                            post["content"] = md.render(post["content"])
                 except Exception as e:
                     print('Error: URL =', url)
                     print(e)
@@ -46,9 +52,10 @@ def display_public_posts(request):
             print(e)
     # print(foreign_posts)
     context = {
-        'posts': posts,
+        # 'posts': posts,
         'author': request.user,
         'comment_form': comment_form,
+        'new_post_form': new_post_form,
         'fps': foreign_posts,
         'author_id': request.user.id,
     }
@@ -111,67 +118,81 @@ def delete_post(request, id):
 
     return redirect("/")
 
+def create_post(form, author, visibility='PUBLIC', recipient=''):
+    obj = form.save(commit=False)  
+    obj.author = author
+    obj.visibility = visibility
+    if recipient is not '':
+        obj.recipient = recipient
+
+    # TODO set proper URls
+    obj.source = ""
+    obj.origin = ""
+
+    obj.save()
+
+def get_friends_list(request):
+    f_qs_list = []
+    friends_list = []
+    authors = Friends.objects.filter(sender=request.user, status='accepted').values_list('receiver', flat=True)
+    for qs in authors:
+        cross_qs = Friends.objects.filter(sender=qs, receiver=request.user, status='accepted').count()
+        if cross_qs > 0:
+            f_qs_list.append(qs)
+    f_qs = Author.objects.filter(id__in=f_qs_list)
+    for qs in f_qs:
+        if qs.id in authors:
+            friends_list.append(qs.id)
+    print(friends_list)
+    return friends_list
+
 def new_post(request):
     if request.method == "POST":
         form = PostForm(request.POST)
+        form.save(commit=False)
+        if form.cleaned_data["visibility"] == "FRIENDS":
+            friends = get_friends_list(request)
+            for friend in friends:
+                form = PostForm(request.POST)
+                form.save(commit=False)
+                create_post(form, request.user, 'PRIVATE', friend)
 
-        data = {
-            'title': form['title'].value(),
-            'description': form['description'].value(),
-            'content_type': form['content_type'].value(),
-            'content': form['content'].value(),
-            'image': form['image'].value(),
-            'categories': form['categories'].value(),
-            'visibility': form['visibility'].value(),
-        }
-        url = "http://127.0.0.1:8000/service/authors/{}/posts".format(request.user.id)
-        local_auth = HTTPBasicAuth("localserver", "pwdlocal")
-        response = requests.post(url, data=data, auth=local_auth)
-        try:
-            post = response.json()
-        except:
-            print(f'Error: POST request to {url} expected a JSON response')
-            print(f'Instead got: {response.text}')
-        
-        print(post)
-        #TODO: send this post to appropriate inboxes
-        #-----------------------------
-        # post_id = '...'
-        # inbox_item = {
-        #     **data,
-        #     "type": "post",
-        #     "id": post_id,
-        #     "source": "http://lastplaceigotthisfrom.com/posts/yyyyy",
-        #     "origin": "http://whereitcamefrom.com/posts/zzzzz",
-        #     "author": request.user.get_detail_dict,
-        #     "comments": post_id+"/comments",
-        #     "published": "2015-03-09T13:07:04+00:00",
-        # }
-        # url = "http://127.0.0.1:8000/service/authors/{}/inbox".format(request.user.id)
-        # post_request = requests.post(url, data=inbox_item))
+        else:
+            create_post(form, request.user, form.cleaned_data["visibility"])
+    #     # print(post)
+    #     #TODO: send this post to appropriate inboxes
+    #     #-----------------------------
+    #     # post_id = '...'
+    #     # inbox_item = {
+    #     #     **data,
+    #     #     "type": "post",
+    #     #     "id": post_id,
+    #     #     "source": "http://lastplaceigotthisfrom.com/posts/yyyyy",
+    #     #     "origin": "http://whereitcamefrom.com/posts/zzzzz",
+    #     #     "author": request.user.get_detail_dict,
+    #     #     "comments": post_id+"/comments",
+    #     #     "published": "2015-03-09T13:07:04+00:00",
+    #     # }
+    #     # url = "http://127.0.0.1:8000/service/authors/{}/inbox".format(request.user.id)
+    #     # post_request = requests.post(url, data=inbox_item))
 
+    #     return redirect("/")
+    # else:
+    #     form = PostForm()
+
+    #     return render(request, "posts/new_post.html", {'form': form})
+
+    if request.method == "POST":
         return redirect("/")
     else:
         form = PostForm()
+        return render(request, "posts/new_post.html", {'form': form, 'author_id': request.user.id})
 
-        return render(request, "posts/new_post.html", {'form': form})
 
 def new_private_post(request):
     if request.method == "POST":
         form = PrivatePostForm(request.POST)
-        if not form.is_valid():
-            print('ERRORS', form.errors)
-        obj = form.save(commit=False)  
-        obj.author = request.user
-        obj.visibility = 'PRIVATE'
-        obj.recipient = request.POST.get('recipient')
-        print('NOW', obj.recipient)
-
-        # TODO set proper URls
-        obj.source = ""
-        obj.origin = ""
-
-        obj.save()
+        create_post(form, request.user, 'PRIVATE', request.POST.get('recipient'))
 
         return redirect("/")
     else:
