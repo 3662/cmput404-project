@@ -21,6 +21,10 @@
         padding-top: 5px;
         padding-bottom: 5px;
     }
+    .markdown img {
+        width: 20%;
+        overflow: hidden;
+    }
 
     .profile_image {
         border: 1px solid grey;
@@ -183,6 +187,10 @@
         <p class="post_title_2"> Content </p>
         {% if post.contentType == 'image/png;base64' or post.contentType == 'image/jpeg;base64' or post.content_type == 'image/png;base64' or post.content_type == 'image/jpeg;base64' %}
             <img src="{{post.content}}" alt="Image not found."/>    
+        {% elif post.contentType == 'text/markdown' %}
+            <div class="markdown">
+                {{post.content|safe}}
+            </div>
         {% else %}
             <p> {{post.content}} </p>
         {% endif %}
