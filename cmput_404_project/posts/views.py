@@ -209,13 +209,25 @@ def share_post(request, id):
     print('SHARE CALLED')
     if request.method == "POST":   
         obj = Post.objects.get(id=id)
-        share_from = obj.author
-        obj.pk = None
-        #obj.save
-        obj.visibility = "PUBLIC"
-        obj.share_from = share_from
-        obj.author = request.user
-        obj.save()
+        if obj.visibility == "PUBLIC":
+            share_from = obj.author
+            obj.pk = None
+            #obj.save
+            obj.visibility = "PUBLIC"
+            obj.share_from = share_from
+            obj.author = request.user
+            obj.save()
+        else:
+            friends = get_friends_list(request)
+            for friend in friends:
+                obj = Post.objects.get(id=id)
+                share_from = obj.author
+                obj.pk = None
+                obj.visibility = "PRIVATE"
+                obj.share_from = share_from
+                obj.author = request.user
+                obj.recipient = friend
+                obj.save()
 
     return redirect("/")
 

@@ -12,7 +12,7 @@
                 <p> <b> Published: </b> {{post.published}} </p>
                 <p> <b> Author: </b> {{post.author}} </p>
                 {% if post.share_from %}
-                <p>Shared from<a href="/authors/profile?url={{post.share_from.url}}">{{post.share_from.displayName}}</a></p>
+                <p>Shared from {{post.share_from}}</p>
                 {% endif %}
                 {% if post.image != null and post.image != '' %}
                     <img src="{{post.image}}"> 
@@ -32,7 +32,7 @@
                        </button>
                     </form>
                     <form action="{% url 'share_post' id=post.id %}" method="POST" class="SharePost">
-                        <button> Share </button>
+                        <button> Share with friends </button>
                     </form>
                 </div>
                 <p> <b> ////////////////////////////////////////////// </b> </p>
