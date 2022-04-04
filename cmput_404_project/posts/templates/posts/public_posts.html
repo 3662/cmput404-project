@@ -104,9 +104,11 @@
             <p> <b> Description: </b> {{post.description}} </p>
             <p class="post_title_2"> Content </p>
             <p> <b> Content: </b> {{post.content}} </p> -->
-
             <p> Published: {{post.published}} </p>
             <p><a href="/authors/profile?url={{post.author.url}}">{{post.author.displayName}}</a></p>
+            {% if post.share_from %}
+            <p>Shared from<a href="/authors/profile?url={{post.share_from.url}}">{{post.share_from.displayName}}</a></p>
+            {% endif %}
             <!-- {% if post.image != null and post.image != '' %}
                 <img src="{{post.image}}" width="300" height="300"> 
             {% endif %} -->
@@ -141,15 +143,6 @@
                 </div>
                 {%endfor%}
             </div>
-
-            <h2> New Comment: </h2>
-            <form action="{% url 'add_comment' id=post.id " method="POST" class='CommentForm' id='{{post.id}}'>
-                <table>
-                    {{ comment_form }}
-                </table>
-                {% csrf_token %}
-                <button> Post Comment</button>
-            </form>
         </div>
         <br/>
 
@@ -158,6 +151,9 @@
         <div class="individual_post">
             <p> Published: {{post.published}} </p>
             <p><a href="/authors/profile?url={{post.author.url}}">{{post.author.displayName}}</a></p>
+            {% if post.share_from %}
+            <p>Shared from<a href="/authors/profile?url={{post.share_from.url}}">{{post.share_from.displayName}}</a></p>
+            {% endif %}
             <!-- {% if post.image != null and post.image != '' %}
                 <img src="{{post.image}}" width="300" height="300"> 
             {% endif %} -->
@@ -197,15 +193,6 @@
                 </div>
                 {%endfor%}
             </div>
-
-            <h2> New Comment: </h2>
-            <form action="{% url 'add_comment' id=post.id" method="POST" class='CommentForm' id='{{post.id}}'>
-                <table>
-                    {{ comment_form }}
-                </table>
-                {% csrf_token %}
-                <button> Post Comment</button>
-            </form>
         </div>
         <br/>
 
@@ -269,6 +256,8 @@
                                 updatePost(posts[i], newTag);
 
                                 addTextboxInput(newTag, posts[i], url);
+
+                                addShareButton(newTag, posts[i], url);
 
                                 newTag.className = "individual_post"
 
@@ -350,7 +339,27 @@
 
         var newSubmit = document.createElement("INPUT");
         newSubmit.type = "submit";
-        newSubmit.value = "Post Comment";
+        newSubmit.value = "Post CommentUU";
+
+        inputForm.appendChild(newSubmit);
+
+        newTag.appendChild(inputForm);
+    }
+
+    function addShareButton(newTag, post, url) {
+        newTag.appendChild(document.createElement("br"));
+        var inputForm = document.createElement("FORM");
+        let arrayTemp = post.id.split("/");
+        postId = arrayTemp[arrayTemp.length-1];
+        inputForm.id = postId;
+        inputForm.className = "share_post";
+        inputForm.action = 'share_post?id=' + postId;
+        inputForm.method = "post"
+
+        var newSubmit = document.createElement("INPUT");
+        newSubmit.type = "submit";
+        newSubmit.id = "sharePost"
+        newSubmit.value = "Share Post Now";
 
         inputForm.appendChild(newSubmit);
 
@@ -385,6 +394,18 @@
         profileLink.href = hostURL+"authors/" + authorId;
         newTag.appendChild(profileLink);
         newTag.appendChild(document.createElement("br"));
+
+        if (post.share_from) {
+            newTag.appendChild(document.createElement("br"));
+            createPElement(newTag, "Shared from ");
+            var shareProfileLink = document.createElement("a"); 
+            shareProfileLink.appendChild(document.createTextNode(post.share_from.displayName));
+            shareId = post.share_from.id;
+            shareProfileLink.href = hostURL+"authors/" + shareId;
+            newTag.appendChild(shareProfileLink);
+            newTag.appendChild(document.createElement("br"));
+            newTag.appendChild(document.createElement("br"));
+        }
 
         // newTag.appendChild(document.createTextNode("Category: " + post.category));
         // newTag.appendChild(document.createElement("br"));
