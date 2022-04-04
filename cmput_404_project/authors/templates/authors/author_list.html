@@ -8,44 +8,42 @@
     </head>
     <script>
         const host = "127.0.0.1:8000"; //{{author.host}};
+        const userNameLocal = "localserver";
+        const passwordLocal = "pwdlocal";
         var sender = {
-            type: 'author',
-            id: '{{friend.get_id_url}}',
-            url: '{{friend.get_profile_url}}',
-            host: '{{friend.host}}',
-            displayName: '{{friend.displayName}}',
-            github: '{{friend.github}}',
-            profileImage: '{{friend.profile_image}}',
+            'type': 'author',
+            'id': '{{friend.get_id_url}}',
+            'url': '{{friend.get_profile_url}}',
+            'host': '{{friend.host}}',
+            'displayName': '{{friend.get_full_name}}',
+            'github': '{{friend.github}}',
+            'profileImage': '{{friend.profile_image}}',
         };
         var recv = {
-            type: 'author',
-            id: '{{author.get_id_url}}',
-            url: '{{author.get_profile_url}}',
-            host: '{{author.host}}',
-            displayName: '{{author.displayName}}',
-            github: '{{author.github}}',
-            profileImage: '{{author.profile_image}}',
+            'type': 'author',
+            'id': '{{author.get_id_url}}',
+            'url': '{{author.get_profile_url}}',
+            'host': '{{author.host}}',
+            'displayName': '{{author.get_full_name}}',
+            'github': '{{author.github}}',
+            'profileImage': '{{author.profile_image}}',
             };
-        function sendFollow{
+        function sendFollow(){
             //var sBtn = document.getElementById("send")
             var sendFollow = new XMLHttpRequest();
-            console.log("recv  ", recv);
-            console.log("sender  ", sender);
             const hostServerURL = sender.host;
             var data = {
                 "type": "follow",
-                "summary": sender.id + " wants to follow " + recv.id,
+                "summary": sender.displayName + " wants to follow " + recv.displayName,
                 "actor": sender,
                 "object": recv
                 };
-            //var btn = document.getElementById("send")
-            //btn.click(function(){
-            // });
             sendFollow.open("POST", recv.id+"/inbox", true);
+            sendFollow.setRequestHeader("Authorization", "Basic " + btoa(userNameLocal+":"+passwordLocal));
             sendFollow.setRequestHeader("Content-type", "application/json");
             sendFollow.setRequestHeader('X-CSRF-TOKEN', '{{csrfToken}}');
             sendFollow.send(JSON.stringify(data));
-            console.log(sendFollow.responseText)
+            console.log(sendFollow.responseText);
         }
 
         function deleteFollower(){
@@ -54,12 +52,13 @@
             console.log("sender  ", sender);
             const hostServerURL = sender.host;
 
-            delFollower.open("DELETE", recv.id+"/followers/"+sender.id, true);
+            delFollower.open("DELETE", recv.id+"/followers/"+"{{friend.id}}", true);
             //sendFollow.setRequestHeader("Content-type", "application/json");
             // TODO: add authorization header
+            delFollower.setRequestHeader("Authorization", "Basic " + btoa(userNameLocal+":"+passwordLocal));
             delFollower.setRequestHeader('X-CSRF-TOKEN', '{{csrfToken}}');
             delFollower.send();
-            console.log(delFollower.responseText)
+            console.log(delFollower.responseText);
         }
 
     </script>
@@ -102,11 +101,11 @@
                                           Following
                                        </button>
                                     {% endif %}
-                                    <button type="submit" name="action_flag" value="F" class="ui button like-btn{{author.id}}") id="revoke" onclick="deleteFollower()">
+                                    <button type="submit" name="action_flag" value="F" class="ui button like-btn{{author.id}}" id="revoke" onclick="deleteFollower();">
                                          Revoke/Withdraw
                                     </button>
                                 {% else %}
-                                    <button type="submit" name="action_flag" value="I" class="ui button like-btn{{author.id}}" id="send" onclick="sendFollow()">
+                                    <button type="submit" name="action_flag" value="I" class="ui button like-btn{{author.id}}" id="send" onclick="sendFollow();">
                                        Send Follow Request
                                     </button>
                                 {% endif %}

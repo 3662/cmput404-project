@@ -203,7 +203,7 @@ def friends_view(request):
     return render(request, 'authors/follower_list.html', {'authors': authors})
 
 
-def friends_view(request):
+def friends_view1(request):
     f_qs_list = []
     authors = Friends.objects.filter(sender=request.user, status='accepted').values_list('receiver', flat=True)
     for qs in authors:

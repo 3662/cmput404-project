@@ -26,6 +26,8 @@
         <div id="followers"></div>
 
         <script>
+            const userNameLocal = "localserver";
+            const passwordLocal = "pwdlocal";
             function update() {
                 document.getElementById("followers").innerHTML = "";
 
@@ -72,7 +74,7 @@
 
                 // xhr.open("GET", "https://projectcmput404sfrodrig.herokuapp.com/service/authors/", true);
                 xhr.open("GET", "http://127.0.0.1:8000/service/authors/{{user_id}}/followers", true);
-
+                xhr.setRequestHeader("Authorization", "Basic " + btoa(userNameLocal+":"+passwordLocal));
                 xhr.send();
             }
 

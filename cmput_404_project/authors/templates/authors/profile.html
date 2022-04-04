@@ -31,32 +31,35 @@
 {% else %}
     <script>
         //const hostServerURL = "https://cmput404-project-team9.herokuapp.com/";
+        const userNameLocal = "localserver";
+        const passwordLocal = "pwdlocal";
+
+        var sender = {
+            'type': 'author',
+            'id': '{{friend.get_id_url}}',
+            'url': '{{friend.get_profile_url}}',
+            'host': '{{friend.host}}',
+            'displayName': '{{friend.get_full_name}}',
+            'github': '{{friend.github}}',
+            'profileImage': '{{friend.profile_image}}',
+        };
+        var recv = {
+             'type': 'author',
+             'id': '{{author.get_id_url}}',
+             'url': '{{author.get_profile_url}}',
+             'host': '{{author.host}}',
+             'displayName': '{{author.get_full_name}}',
+             'github': '{{author.github}}',
+             'profileImage': '{{author.profile_image}}',
+        };
         function sendFollowRequest(){
-            let sender = {
-                type: 'author',
-                id: '{{friend.get_id_url}}',
-                url: '{{friend.get_profile_url}}',
-                host: '{{friend.host}}',
-                displayName: '{{friend.displayName}}',
-                github: '{{friend.github}}',
-                profileImage: '{{friend.profile_image}}',
-            };
-            let recv = {
-                type: 'author',
-                id: '{{author.get_id_url}}',
-                url: '{{author.get_profile_url}}',
-                host: '{{author.host}}',
-                displayName: '{{author.displayName}}',
-                github: '{{author.github}}',
-                profileImage: '{{author.profile_image}}',
-            };
             var sendFollow = new XMLHttpRequest();
             console.log("recv  ", recv);
             console.log("sender  ", sender);
             const hostServerURL = sender.host;
             var data = {
                 "type": "follow",
-                "summary": sender.id + " wants to follow " + recv.id,
+                "summary": sender.displayName + " wants to follow " + recv.displayName,
                 "actor": sender,
                 "object": recv
                 };
@@ -64,12 +67,19 @@
             //btn.click(function(){
             // });
             sendFollow.open("POST", recv.id+"/inbox", true);
+            sendFollow.setRequestHeader("Authorization", "Basic " + btoa(userNameLocal+":"+passwordLocal));
             sendFollow.setRequestHeader("Content-type", "application/json");
-            sendFollow.setRequestHeader('X-CSRF-TOKEN', '{{csrfToken}}');
+            //sendFollow.setRequestHeader('X-CSRF-TOKEN', '{{csrfToken}}');
             sendFollow.send(JSON.stringify(data));
             console.log(sendFollow.responseText)
+        }
 
-
+        function revokeFollow(){
+            var delFollower = new XMLHttpRequest();
+            delFollower.open("DELETE", recv.id+"/followers/"+"{{friend.id}}", true);
+            delFollower.setRequestHeader("Authorization", "Basic " + btoa(userNameLocal+":"+passwordLocal));
+            delFollower.setRequestHeader('X-CSRF-TOKEN', '{{csrfToken}}');
+            delFollower.send();
         }
     </script>
     <div class="box align-center">
@@ -117,7 +127,7 @@
                                             Following
                                         </button>
                                     {% endif %}
-                                    <button type="submit" name="action_flag" value="F" class="ui button like-btn{{author.id}}")>
+                                    <button type="submit" name="action_flag" value="F" class="ui button like-btn{{author.id}}" onclick="revokeFollow();">
                                             Revoke/Withdraw
                                     </button>
                                 {% else %}
