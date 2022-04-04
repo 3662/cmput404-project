@@ -103,7 +103,7 @@
             method: method,
             headers: new Headers({
                 // 'Content-Type': 'x-www-form-urlencoded',
-                // 'Authorization': 'Basic ' + btoa('username:pwd'),
+                'Authorization': 'Basic ' + btoa('localserver:pwdlocal'),
                 'X-CSRF-TOKEN': '{{csrfToken}}',
             }),
         })
@@ -117,6 +117,9 @@
         document.querySelector('#posts').innerHTML = '';
         fetch(url, {
             method: 'GET',
+            headers: new Headers({
+                'Authorization': 'Basic ' + btoa('localserver:pwdlocal'),
+            })
         })
         .then(response => response.json())
         .then((inbox) => {
@@ -129,7 +132,12 @@
 
     function clearAll() {
         let url = `${document.location.origin}/service/authors/{{author_id}}/inbox`;
-        fetch(url, { method: 'DELETE' });
+        fetch(url, {
+            method: 'DELETE',
+            headers: new Headers({
+                'Authorization': 'Basic ' + btoa('localserver:pwdlocal'),
+            })
+        });
         document.querySelector('#posts').innerHTML = '';
     }
     

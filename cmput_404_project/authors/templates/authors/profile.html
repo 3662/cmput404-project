@@ -147,6 +147,8 @@
             <p><a href="{% url 'follower_view' id=author.id %}">My Followers</a></p>
             <p><a href="{% url 'logout' %}">Log Out</a></p>
         {% else %}
+            <!-- Link to followers of foreign authors -->
+            <p><a href="{% url 'follower_view' %}?url={{author.url}}">View Followers</a></p>    
             {% if friend_status == '1' %}
             TODO: FIX this
             {% else %}
