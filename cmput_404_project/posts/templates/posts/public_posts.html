@@ -3,9 +3,21 @@
 {% block head %}
 <title>Posts</title>
 <style>
+    main {
+        background-color: thistle;
+    }
     #sidebar #all-posts-btn {
         background-color: purple;
         color: white;
+    }
+    .create-post-btn {
+        padding: 10px 100px;
+        font-size: large;
+        margin: 0px 20px;
+        cursor: pointer;
+        color: white;
+        background-color: purple;
+        width: fit-content;
     }
     div.commentBox {
         border: 3px solid purple;
@@ -28,13 +40,21 @@
     div.new_post {
         margin-left: 10%;
         margin-right: 20%;
+        border: 1px solid gray;
+        border-radius: 20px;
+        padding: 20px;
+        box-shadow: 4px 7px 10px 0px grey;
+        background-color: white;
+        margin: 50px auto;
     }
     .individual_post {
         text-align: center;
-        border: 5px solid purple;
-        padding-top: 10px;
-        padding-bottom: 10px;
-        margin-top: 50px;
+        border: 1px solid gray;
+        border-radius: 20px;
+        padding: 20px;
+        box-shadow: 4px 7px 10px 0px grey;
+        background-color: white;
+        margin: 50px auto;
     }
     p.post_title {
         padding-top: 5px;
@@ -71,7 +91,6 @@
 {% endblock %}
 
 {% block content %}
-<button class="btn"> <a href="/">Home</a></button>
 <h1 class="title">Create a Post</h1>
 
 <div class="new_post">
@@ -80,7 +99,9 @@
             {{ new_post_form }}
         </table>
         {% csrf_token %}
-        <button type="create_post">Create post</button>
+        <p>
+            <button class="create-post-btn" type="create_post">Create post</button>
+        </p>
     </form>
 </div>
 
@@ -92,7 +113,7 @@
 
 <div>
     {% for post in fps %}
-        <div class="individual_post">
+        <div class="box individual_post">
             <p> Published: {{post.published}} </p>
             <p><a href="/authors/profile?url={{post.author.url}}">{{post.author.displayName}}</a></p>
             <!-- {% if post.image != null and post.image != '' %}

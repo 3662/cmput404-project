@@ -1,16 +1,62 @@
-{% block title %}Create Post {% endblock %}
+{% extends 'base.html' %}
+{% block head %}
+<title>Create A New Post</title>
+<style>
+    main {
+        background-color: thistle;
+    }
+    .box {
+        border: 1px solid gray;
+        border-radius: 20px;
+        padding: 20px;
+        width: fit-content;
+        box-shadow: 4px 7px 10px 0px grey;
+        margin: auto;
+        background-color: white;
+    }
+    textarea {
+        height: 40px; /* Initial height */
+    }
+    .create-post-btn {
+        padding: 10px 100px;
+        font-size: large;
+        margin: 0px 20px;
+        cursor: pointer;
+        color: white;
+        background-color: purple;
+    }
+    /* .table {
+        margin-left: auto;
+        margin-right: auto;
+    } */
+
+</style>
+{% endblock %}
 {% block content %}
-<h2>Create a Post</h2>
-<form id="form">
-    <table>
-        {{ form }}
-    </table>
-    {% csrf_token %}
-    <button type="create_post">Create post</button>
-</form>
+<div class="box">
+    <h2 style="text-align: center;">Create a Post</h2>
+    <form id="form">
+        <table class="table">
+            {{ form }}
+        </table>
+        <div class="bottom-wrapper">
+            <p style="text-align: center;">
+                <label for="imgloader">Upload image content:</label>
+                <input type="file" id="imgloader" name="img" accept="image/png, image/jpeg">
+            </p>
+            <p><img id="preview"/></p>
+            <p>
+                {% csrf_token %}
+                <button class="create-post-btn" type="create_post">Create post</button>
+
+            </p>
+
+        </div>
+    </form>
+</div>
 
 <script>
-    const hostServerURL = "http://127.0.0.1:8000/service/";
+    const hostServerURL = "/service/";
     const userNameLocal = "localserver";
     const passwordLocal = "pwdlocal";
 
@@ -56,6 +102,7 @@
         var xhr = new XMLHttpRequest();
 
         console.log(postURL)
+        debugger;
 
         xhr.open("POST", postURL);
         xhr.setRequestHeader("Content-Type", "application/json")
@@ -70,8 +117,23 @@
         history.back()
     }
 
+    function createUI() {
+        let contentInput = document.querySelector('textarea[name="content"]');
+        let imgloader = document.querySelector('#imgloader');
+        imgloader.oninput = function() {
+            let file = this.files[0];
+            let reader = new FileReader();
+            reader.onload = () => {
+                document.querySelector('#preview').src = reader.result;
+                contentInput.value = reader.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
     window.addEventListener('load', event => {
         init();
+        createUI();
     });
 
 </script>

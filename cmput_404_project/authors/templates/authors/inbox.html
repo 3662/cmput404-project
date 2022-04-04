@@ -20,21 +20,78 @@
         padding: 2px;
         border: 1px solid gray;
     }
+    #delete-btn {
+        padding: 10px 30px;
+        background: red;
+        color: white;
+        font-size: medium;
+        cursor: pointer;
+    }
+    #refresh-btn {
+        padding: 10px 30px;
+        background: rgb(230, 245, 255);
+        font-size: medium;
+        cursor: pointer;
+    }
+
+    #posts, #stream {
+        min-height: 10px;
+        border: 2px dotted black;
+    }
+
+    #stream {}
+    .stream-item {
+        border: 1px dotted grey;
+        margin: 2px; 
+    }
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.3.6/purify.min.js" integrity="sha512-DJjvM/U3zCRpzrYboJgg23iLHapWcS2rlo7Ni18Cdv+FMs6b3gUF7hQihztj4uVkHHfUwk7dha97jVzRqUJ7hg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-{% load static %}
-<script src="{% static 'frontendUtils.js' %}"></script>
 {% endblock %}
 
 {% block content %}
 <h1>My Inbox</h1>
 <div>
-    <button onclick="clearAll()">Clear all (Delete)</button>
-    <button onclick="updatePosts()">Refresh</button>
-    <a href="{% url 'new_post' %}">Create post</a>
+    <button id="delete-btn" onclick="clearAll()">Clear all (Delete)</button>
+    <button id="refresh-btn" onclick="updatePosts()">Refresh</button>
 </div>
+<h2>Social Media Inbox</h2>
 <div id="posts"></div>
+<h2>GitHub Stream</h2>
+<div id="stream"></div>
 <script>
+    function pullGitHub() {
+        let streamDiv = document.querySelector('#stream');
+        fetch('/service/authors/{{author_id}}', {
+            method: 'GET',
+            headers: new Headers({
+                'Authorization': 'Basic ' + btoa('localserver:pwdlocal'),
+            }),
+        }).then(r => {
+            try { return r.json(); }
+            catch { return {}; }
+        }).then(d => {
+            let githubURL = d.github;
+            let arr = d.github.split('/');
+            let githubUsername = arr[arr.length-1];
+            let url = `https://api.github.com/users/${githubUsername}/events`
+            fetch(url).then(r => {
+                try { return r.json(); }
+                catch { return {}; }
+            }).then(d => {
+                let html = '';
+                for (let obj of d) {
+                    let date = new Date(obj.created_at).toLocaleString();
+                    try {
+                        html += `<div class="stream-item">
+                            [${date}] New ${obj.type} by <a href="${githubURL}">${obj.actor.display_login}</a> on the repository: <a href="${obj.repo.url}">${obj.repo.name}</a>
+                        </div>`;
+                    } catch {}
+                }
+                streamDiv.innerHTML = html;
+            })
+        });
+    }
     function fillUI(item) {
         let itemsCollectionDiv = document.querySelector('#posts');
         let itemDiv = document.createElement('div');
@@ -103,8 +160,7 @@
         fetch(`{{author.host}}service/authors/{{author.id}}/followers/${foreignId}`, {
             method: method,
             headers: new Headers({
-                // 'Content-Type': 'x-www-form-urlencoded',
-                // 'Authorization': 'Basic ' + btoa('username:pwd'),
+                'Authorization': 'Basic ' + btoa('localserver:pwdlocal'),
                 'X-CSRF-TOKEN': '{{csrfToken}}',
             }),
         })
@@ -118,6 +174,9 @@
         document.querySelector('#posts').innerHTML = '';
         fetch(url, {
             method: 'GET',
+            headers: new Headers({
+                'Authorization': 'Basic ' + btoa('localserver:pwdlocal'),
+            }),
         })
         .then(response => response.json())
         .then((inbox) => {
@@ -130,11 +189,17 @@
 
     function clearAll() {
         let url = `${document.location.origin}/service/authors/{{author_id}}/inbox`;
-        fetch(url, { method: 'DELETE' });
+        fetch(url, {
+            method: 'DELETE',
+            headers: new Headers({
+                'Authorization': 'Basic ' + btoa('localserver:pwdlocal'),
+            })
+        });
         document.querySelector('#posts').innerHTML = '';
     }
     
     window.addEventListener('load', event => {
+        pullGitHub();
         updatePosts();
     });
 </script>

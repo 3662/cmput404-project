@@ -3,7 +3,6 @@
 {% block head %}
 <title>Profile of {{author.get_full_name}}</title>
 <style>
-    /* temporary quick styles for testing */
     body {
         font-family: Arial;
     }
@@ -44,10 +43,12 @@
 
     .individual_post {
         text-align: center;
-        border: 5px solid purple;
-        padding-top: 10px;
-        padding-bottom: 10px;
-        margin-top: 50px;
+        border: 1px solid gray;
+        border-radius: 20px;
+        padding: 20px;
+        box-shadow: 4px 7px 10px 0px grey;
+        background-color: white;
+        margin: 50px auto;
     }
     p.post_title {
         padding-top: 5px;

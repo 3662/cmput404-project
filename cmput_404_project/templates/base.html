@@ -16,12 +16,16 @@
       height: 100%;
       width: 100%;
     }
-    #sidebar {    
+    #sidebar {
+      z-index: 100;      
+      box-shadow: 2px 0 5px 0px grey;
+      overflow-y: scroll;
       padding: 5px;
       display: flex;
       flex-direction: column;
-      width: 200px;
+      width: 300px;
       border-right: 1px solid gray;
+      text-align: center;
     }
     #sidebar a {
       border: 3px solid purple;
@@ -62,20 +66,19 @@
       <div class="sidebar-option"><a href="{% url 'display_private_posts' %}">See private posts</a></div>
       <div class="sidebar-option"><a href="{% url 'display_authors' %}">See all authors</a></div>  
       <div class="sidebar-option"><a href="{% url 'logout' %}">Log Out</a></div> -->
+      <h3>Menu</h3>
       <a id="home-btn" class="highlighted" href="{% url 'home' %}"><i class="fa fa-home" ></i> Home</a>
       <a id="inbox-btn" href="{% url 'inbox' %}">My Inbox</a>
-      <a id="my-profile-btn" href="{% url 'display_author' id=user.id %}">My profile</a>
       <a id="all-posts-btn" href="{% url 'display_public_posts' %}">All public posts</a>
-      <a id="all-authors-btn" href="{% url 'display_authors' %}">All authors</a>
       <a id="logout-btn" href="{% url 'logout' %}">Log Out</a>
-
-      <a>...</a>      
-      
+      <h3>Create Post:</h3>
       <a href="{% url 'new_post' %}">Create a new post</a>
-      <!-- <a href="{% url 'new_private_post' %}">Send a private post</a> -->
+      <a href="{% url 'new_private_post' %}">Send a private post</a>
       <!-- <a href="{% url 'display_own_posts' %}">My own posts</a> -->
       <!-- <a href="{% url 'display_private_posts' %}">See private posts</a> -->
-
+      <h3>Authors</h3>
+      <a id="all-authors-btn" href="{% url 'display_authors' %}">See all authors</a>
+      <a id="my-profile-btn" href="{% url 'display_author' id=user.id %}">My profile</a>
     </nav>
     <main>
       {% block content %}
