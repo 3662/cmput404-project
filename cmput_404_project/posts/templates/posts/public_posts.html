@@ -1,60 +1,586 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-        <title>Posts</title>
-        <button class="btn"><i class="fa fa-home" ></i> <a href="/">Home</a></button>
-    </head>
-    <body>
-        <h1>List of Public Posts</h1>
-        <div class="posts">
-            {% for post in posts %}
-            <div class="post">
-                <p> <b> Published: </b> {{post.published}} </p>
-                <p> <b> Author: </b> {{post.author}} </p>
-                {% if post.image != null and post.image != '' %}
-                    <img src="{{post.image}}" width="300" height="300"> 
-                {% endif %}
-                <p> <b> Title: </b> {{post.title}} </p>
-                <p> <b> Description: </b> {{post.description}} </p>
-                <p> <b> Content: </b> {{post.content}} </p>
-                <p> <b> Categories: </b> {{post.categories}} </p>
+<!-- posts/templates/public_posts.html-->
+{% extends 'base.html' %}
+{% block head %}
+<title>Posts</title>
+<style>
+    #sidebar #all-posts-btn {
+        background-color: purple;
+        color: white;
+    }
+    div.commentBox {
+        border: 3px solid purple;
+        margin-left: 10%;
+        margin-right: 10%;
+        margin-top:  5px;
+        margin-bottom: 5px;
+        padding-top: 5px;
+        padding-bottom: 5px;
+    }
+    h1.title {
+        background-color: purple;
+        color: white;
+        text-align: center;
+    }
+    div.new_post {
+        /* position: absolute; */
+        /* top: 50%;  */
+        /* left: 50%;  */
+        /* transform: translate(-50%, -50%); */
+        margin-left: 10%;
+        margin-right: 20%;
+    }
+    .individual_post {
+        text-align: center;
+        border: 5px solid purple;
+        padding-top: 10px;
+        padding-bottom: 10px;
+        margin-top: 50px;
+    }
+    p.post_title {
+        padding-top: 5px;
+        padding-bottom: 5px;
+        font-size: 250%;
+        font-weight: bold;
+    }
+    p.post_title_2 {
+        padding-top: 3px;
+        padding-bottom: 3px;
+        font-size: 120%;
+        font-weight: bold;
+    }
+    a {
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+    p {
+        margin-top: 1px;
+        margin-bottom: 1px;
+    }
+    form {
+        margin-left: 35%;
+        margin-right: 20%;
+    }
+    form.form_comment {
+        margin-left: 20%;
+        margin-right: 20%;
+    }
+    /* div.display_posts {
+        border: 5px solid purple;
+    } */
+</style>
+{% endblock %}
 
-                <div class="author">
-                    <form action="{% url 'like_post1' %}" method="POST" class='PostLike' id='{{post.id}}'>
-                       {% csrf_token %}
-                       <input type="hidden" name="post_id" value={{post.id}}>
-                       <button type="submit" class="ui button like-btn{{post.id}}">
-                        {% if author in post.liked.all %}
-                               UnLike
-                        {% else %}
-                               Like
-                        {% endif %}
-                       </button>
-                    </form>
-                </div>
-                <div class="comments">
-                    <p><b>Comments...</b></p>
-                    {% for comment in post.comments %}
-                    <div class="comment">
-                        <p><b> {{comment.author}} </b> {{comment.content}} <i> {{comment.date_created}} </i></p>
-                    </div>
-                    {%endfor%}
-                </div>
+{% block content %}
+<button class="btn"> <a href="/">Home</a></button>
+<h1 class="title">Create a Post</h1>
 
-                <form action="{% url 'add_comment' id=post.id %}" method="POST" class='CommentForm' id='{{post.id}}'>
-                    <table>
-                        {{ comment_form }}
-                    </table>
+<div class="new_post">
+    <form id="form">
+        <table>
+            {{ new_post_form }}
+        </table>
+        {% csrf_token %}
+        <button type="create_post">Create post</button>
+    </form>
+</div>
+
+<h1 class="title">Local Public Posts</h1>
+
+<div id="posts" class="display_posts"></div>
+
+<h1 class="title">Foreign Public Posts</h1>
+
+<div>
+    {% for post in posts %}
+        <div class="individual_post">
+            <!-- <p> Published: {{post.published}} </p>
+            <p> <b> Author: </b> {{post.author}} </p>
+            {% if post.image != null and post.image != '' %}
+                <img src="{{post.image}}" width="300" height="300"> 
+            {% endif %}
+            <p> <b> Categories: </b> {{post.categories}} </p>
+            <p class="post_title"> {{post.title}} </p>
+            <p class="post_title_2"> Description </p>
+            <p> <b> Description: </b> {{post.description}} </p>
+            <p class="post_title_2"> Content </p>
+            <p> <b> Content: </b> {{post.content}} </p> -->
+
+            <p> Published: {{post.published}} </p>
+            <p><a href="/authors/profile?url={{post.author.url}}">{{post.author.displayName}}</a></p>
+            <!-- {% if post.image != null and post.image != '' %}
+                <img src="{{post.image}}" width="300" height="300"> 
+            {% endif %} -->
+            <p> Categories: {{post.categories}} </p>
+            <p class="post_title"> {{post.title}} </p>
+            <p class="post_title_2"> Description </p>
+            <p> {{post.description}} </p>
+            <p class="post_title_2"> Content </p>
+            <p> {{post.content}} </p>
+
+            <div class="author">
+                <form action="{% url 'like_post1' %}" method="POST" class='PostLike' id='{{post.id}}'>
                     {% csrf_token %}
-                    <button> Post Comment</button>
+                    <input type="hidden" name="post_id" value={{post.id}}>
+                    <button type="submit" class="ui button like-btn{{post.id}}">
+                    {% if author in post.liked.all %}
+                            UnLike
+                    {% else %}
+                            Like
+                    {% endif %}
+                    </button>
                 </form>
             </div>
-            <br/>
-            <p> <b> ################################################################################## </b> </p>
+            <div class="comments">
+                <h2> Comments: </h2>
+                {% for comment in post.comments %}
+                <div class="commentBox">
+                    <p> Published: {{comment.date_created}} </p>
+                    <p> Author: {{comment.author}} </p>
+                    <p> Comment: {{comment.content}} </p>
+                    <!-- <p><b> {{comment.author}} </b> {{comment.content}} <i> {{comment.date_created}} </i></p> -->
+                </div>
+                {%endfor%}
+            </div>
 
-            {% endfor %}
+            <h2> New Comment: </h2>
+            <form action="{% url 'add_comment' id=post.id " method="POST" class='CommentForm' id='{{post.id}}'>
+                <table>
+                    {{ comment_form }}
+                </table>
+                {% csrf_token %}
+                <button> Post Comment</button>
+            </form>
         </div>
-    </body>
-</html>
+        <br/>
+
+    {% endfor %}
+    {% for post in fps %}
+        <div class="individual_post">
+            <p> Published: {{post.published}} </p>
+            <p><a href="/authors/profile?url={{post.author.url}}">{{post.author.displayName}}</a></p>
+            <!-- {% if post.image != null and post.image != '' %}
+                <img src="{{post.image}}" width="300" height="300"> 
+            {% endif %} -->
+            <p> Categories: {{post.categories}} </p>
+            <p> Content Type: {{post.contentType}} </p>
+            <p class="post_title"> {{post.title}} </p>
+            <p class="post_title_2"> Description </p>
+            <p> {{post.description}} </p>
+            <p class="post_title_2"> Content </p>
+            {% if post.contentType == 'image/png;base64' or post.contentType == 'image/jpeg;base64' %}
+                <img src="{{post.content}}" alt="Image not found."/>    
+            {% else %}
+                <p> {{post.content}} </p>
+            {% endif %}
+
+            <p>TODO: Make likes and comments work for foreign posts</p>
+
+            <div class="author">
+                <form action="{% url 'like_post1' %}" method="POST" class='PostLike' id='{{post.id}}'>
+                    {% csrf_token %}
+                    <input type="hidden" name="post_id" value={{post.id}}>
+                    <button type="submit" class="ui button like-btn{{post.id}}">
+                    {% if author in post.liked.all %}
+                            UnLike
+                    {% else %}
+                            Like
+                    {% endif %}
+                    </button>
+                </form>
+            </div>
+            <div class="comments">
+                <!-- <p><b>Comments...</b></p> -->
+                <h2> Comments: </h2>
+                {% for comment in post.comments %}
+                <div class="comment">
+                    <p><b> {{comment.author}} </b> {{comment.content}} <i> {{comment.date_created}} </i></p>
+                </div>
+                {%endfor%}
+            </div>
+
+            <h2> New Comment: </h2>
+            <form action="{% url 'add_comment' id=post.id" method="POST" class='CommentForm' id='{{post.id}}'>
+                <table>
+                    {{ comment_form }}
+                </table>
+                {% csrf_token %}
+                <button> Post Comment</button>
+            </form>
+        </div>
+        <br/>
+
+        {% endfor %}
+</div>
+
+
+<script>
+    // TODO: change this to a remote server
+    const hostURL = "http://127.0.0.1:8000/";
+    const hostServerURL = "http://127.0.0.1:8000/service/";
+    const userNameLocal = "localserver";
+    const passwordLocal = "pwdlocal";
+
+    // const hostServerURL = "https://cmput404-project-team9.herokuapp.com/";
+
+    const team13URL = "https://socialdistribution-t13.herokuapp.com/api/v1/";
+
+    const userName13 = "group_9";
+    const password13 = "be69f300764182cd7a9be3bd0e2b4954814f7d253c64d5ae37f4a394c50565e7"
+
+    function update() {
+        document.getElementById("posts").innerHTML = "";
+        // TODO: update posts from other servers
+        updatePostsFromServer(hostServerURL);
+
+        // updatePostsFromServer(team13URL);
+    }
+
+    // Updates posts and comments from a server given a URL
+    function updatePostsFromServer(url) {
+        console.log("updating: ", url);
+        document.getElementById("posts").innerHTML = "";
+
+        var getAuthors = new XMLHttpRequest();
+
+        getAuthors.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                authors = JSON.parse(getAuthors.responseText)['items'];
+
+                // IDs of all authors
+                var authorIds = new Set();
+
+                for (let i in authors) {
+                    let array = authors[i].id.split("/");
+                    authorIds.add(array[array.length-1]);
+                } 
+
+                authorIds.forEach(authorId => {
+                    // Find all public posts from each author
+
+                    var getPosts = new XMLHttpRequest();
+
+                    getPosts.onreadystatechange = function() {
+                        if (this.readyState == 4 && this.status == 200) {
+                            posts = JSON.parse(getPosts.responseText)['items'];
+
+                            for (let i in posts) {
+                                var newTag = document.createElement("div");
+
+                                updatePost(posts[i], newTag);
+
+                                addTextboxInput(newTag, posts[i], url);
+
+                                newTag.className = "individual_post"
+
+                                document.getElementById("posts").appendChild(newTag);
+                            } 
+                        }
+                    }
+
+                    getPosts.open("GET", url+"authors/"+authorId+"/posts", true);
+                    getPosts.setRequestHeader("Authorization", "Basic " + btoa(userNameLocal+":"+passwordLocal));
+                    getPosts.send(); 
+                });
+            }
+        };
+
+        getAuthors.open("GET", url+"authors", true);
+        getAuthors.setRequestHeader("Authorization", "Basic " + btoa(userNameLocal+":"+passwordLocal));
+        getAuthors.send();
+    }
+
+    function addTextboxInput(newTag, post, url) {
+        let arrayTemp = post.id.split("/");
+        postId = arrayTemp[arrayTemp.length-1];
+
+        arrayTemp = post.author.id.split("/");
+        authorId = arrayTemp[arrayTemp.length-1];
+
+        var h1 = document.createElement("H2");
+        h1.appendChild(document.createTextNode("New Comment:"));
+        newTag.appendChild(h1);
+
+        var inputForm = document.createElement("FORM");
+        inputForm.id = postId;
+        inputForm.className = "form_comment";
+        inputForm.action = url+"authors/"+authorId+"/posts/"+postId+"/comments";
+        inputForm.method = "post"
+
+        inputForm.addEventListener("submit", handlerNewComment)
+
+        var type = document.createElement("INPUT");
+        type.type = 'hidden';
+        type.name = "type";
+        type.value = "comment";
+        inputForm.appendChild(type);
+
+        var host = document.createElement("INPUT");
+        host.type = 'hidden';
+        host.name = "host";
+        host.value = url;
+        inputForm.appendChild(host);
+
+        var postURL = document.createElement("INPUT");
+        postURL.type = 'hidden';
+        postURL.name = "postURL";
+        postURL.value = url+"authors/"+authorId+"/posts/"+postId+"/comments";;
+        inputForm.appendChild(postURL);
+
+        inputForm.appendChild(document.createTextNode("Content Type: "))
+        var contentTypeSelect = document.createElement("select");
+        contentTypeSelect.name = "contentType";
+        addSelectOption(contentTypeSelect, "text");
+        addSelectOption(contentTypeSelect, "markdown");
+        addSelectOption(contentTypeSelect, "application");
+        addSelectOption(contentTypeSelect, "png");
+        addSelectOption(contentTypeSelect, "jpeg");
+
+        inputForm.appendChild(contentTypeSelect);
+        inputForm.appendChild(document.createElement("br"));
+
+        inputForm.appendChild(document.createTextNode("Content: "))
+        var comment = document.createElement("textarea");
+        comment.type = "text";
+        comment.name = "comment";
+        comment.cols = "40";
+        comment.rows = "10";
+
+        inputForm.appendChild(comment);
+        inputForm.appendChild(document.createElement("br"));
+
+        var newSubmit = document.createElement("INPUT");
+        newSubmit.type = "submit";
+        newSubmit.value = "Post Comment";
+
+        inputForm.appendChild(newSubmit);
+
+        newTag.appendChild(inputForm);
+    }
+
+    function addSelectOption(contentTypeSelect, textOption) {
+        var option = document.createElement("option");
+        option.text = textOption;
+
+        contentTypeSelect.add(option);
+    }
+
+    function updatePost(post, newTag, url) {
+        let arrayTemp = post.id.split("/");
+        postId = arrayTemp[arrayTemp.length-1];
+
+        arrayTemp = post.author.id.split("/");
+        authorId = arrayTemp[arrayTemp.length-1];
+
+        // newTag.appendChild(document.createTextNode("Published: " + post.published));
+        // newTag.appendChild(document.createElement("br"));
+
+        createPElement(newTag, "Published: " + post.published, "none");
+
+        // var h1Author = document.createElement("H2");
+        // h1Author.appendChild(document.createTextNode("Author:"));
+        // newTag.appendChild(h1Author);
+
+        var profileLink = document.createElement("a"); 
+        profileLink.appendChild(document.createTextNode(post.author.displayName));
+        profileLink.href = hostURL+"authors/" + authorId;
+        newTag.appendChild(profileLink);
+        newTag.appendChild(document.createElement("br"));
+
+        // newTag.appendChild(document.createTextNode("Category: " + post.category));
+        // newTag.appendChild(document.createElement("br"));
+
+        createPElement(newTag, "Categories: " + post.category, "none");
+        createPElement(newTag, "Content Type: " + post.contentType, "none");
+
+        // TODO: Host images in the server and update the path 
+        // var image = document.createElement('img');
+        // image.src = post.image;
+        // image.width = 150;
+        // image.height = 150;
+        // newTag.appendChild(image);
+        // newTag.appendChild(document.createElement("br"));
+
+        newTag.appendChild(document.createTextNode("Post ID: " + postId));
+        newTag.appendChild(document.createElement("br"));
+
+        // newTag.appendChild(document.createTextNode("Title: " + post.title));
+        // newTag.appendChild(document.createElement("br"));
+
+        createPElement(newTag, post.title, "post_title");
+
+        createPElement(newTag, "Description", "post_title_2");
+
+        newTag.appendChild(document.createTextNode(post.description));
+        newTag.appendChild(document.createElement("br"));
+
+        createPElement(newTag, "Content", "post_title_2");
+
+        // detect if content is a base46 image
+        if (post.contentType == "image/jpeg;base64" || post.contentType == "image/png;base64" ) {
+            var newImage = document.createElement('img');
+            newImage.src = post.content;
+            newImage.width = "300";
+            newImage.height = "300";
+            newTag.appendChild(newImage);
+        } else {
+            newTag.appendChild(document.createTextNode(post.content));
+        }
+
+        newTag.appendChild(document.createElement("br"));
+
+        // newTag.appendChild(document.createTextNode("Category: " + post.category));
+        // newTag.appendChild(document.createElement("br"));
+
+        var comments = post.commentsSrc['comments'];
+
+        if (Object.keys(comments).length > 0) {
+            var h1Conmments = document.createElement("H2");
+            h1Conmments.appendChild(document.createTextNode("Comments:"));
+            newTag.appendChild(h1Conmments);
+
+            for (let i in comments) {
+                updateComment(comments[i], newTag);
+            }
+        }
+
+    }
+
+    // parameters: newTag, text, className 
+    function createPElement(newTag, text, className) {
+        var newElement = document.createElement("p");
+        newElement.innerText = text;
+        newElement.className = className;
+
+        newTag.appendChild(newElement);
+    }
+
+    function updateComment(comment, newTag) {
+        var newComment = document.createElement("div");
+
+        newComment.setAttribute("class", "commentBox");
+
+        newComment.appendChild(document.createTextNode("Published: " + comment.published));
+        newComment.appendChild(document.createElement("br"));
+
+        newComment.appendChild(document.createTextNode("Author: " + comment.author.displayName));
+        newComment.appendChild(document.createElement("br"));
+
+        newComment.appendChild(document.createTextNode("Comment: " + comment.comment));
+        newComment.appendChild(document.createElement("br"));
+
+        newTag.appendChild(newComment);   
+    }
+
+    const getFormJSON = (form) => {
+        const data = new FormData(form);
+        return Array.from(data.keys()).reduce((result, key) => {
+            result[key] = data.get(key);
+            return result;
+        }, {});
+    };
+
+    // Handles POST requests for form comments
+    const handlerNewComment = (event) => {
+        event.preventDefault();
+
+        // Retrieves the form element that was submitted and transform it into a JSON object
+        var form = getFormJSON(event.target);
+
+        // Find an author JSON object corresponding to the given ID
+        var getAuthor = new XMLHttpRequest();
+
+        getAuthor.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                authors = JSON.parse(getAuthor.responseText)['items'];
+
+                // IDs of all authors
+                var authorIds = new Set();
+
+                for (let i in authors) {
+                    let array = authors[i].id.split("/");
+                    id = array[array.length-1];
+
+                    if ("{{author_id}}" == id) {
+                        form['author'] = authors[i];
+                        break;
+                    }
+                } 
+
+                console.log(form);
+
+                var xhr = new XMLHttpRequest();
+
+                xhr.open("POST", form.postURL);
+                xhr.setRequestHeader("Content-Type", "application/json");
+                xhr.setRequestHeader("Authorization", "Basic " + btoa(userNameLocal+":"+passwordLocal));
+                xhr.setRequestHeader('X-CSRFToken', '{{ csrf_token }}');
+
+                xhr.send(JSON.stringify(form));
+
+                update();
+            }
+        };
+
+        getAuthor.open("GET", form['host']+"authors", true);
+        getAuthor.setRequestHeader("Authorization", "Basic " + btoa(userNameLocal+":"+passwordLocal));
+        getAuthor.send();
+    }
+
+    function initNewPost() {
+        document.getElementById("form").reset();
+        document.getElementById("form").addEventListener("submit", handlerNewPost);
+
+        console.log("{{author_id}}")
+    }
+
+    // Handles POST requests for form comments
+    const handlerNewPost = (event) => {
+        console.log("POSTing");
+        event.preventDefault();
+
+        // Retrieves the form element that was submitted and transform it into a JSON object
+        var JSONform = getFormJSON(event.target);
+        
+        console.log(JSONform);
+
+        var newPost = {
+            'title': JSONform.title,
+            'description': JSONform.description,
+            'content_type': JSONform.content_type,
+            'content': JSONform.content,
+            'image': JSONform.image,
+            'categories': JSONform.categories,
+            'visibility': JSONform.visibility,
+        }
+
+        console.log(newPost);
+
+        var postURL = hostServerURL+"authors/"+"{{author_id}}"+"/posts";
+
+        var xhr = new XMLHttpRequest();
+
+        console.log(postURL)
+
+        xhr.open("POST", postURL);
+        xhr.setRequestHeader("Content-Type", "application/json")
+        xhr.setRequestHeader("Authorization", "Basic " + btoa(userNameLocal+":"+passwordLocal));
+        xhr.setRequestHeader('X-CSRFToken', '{{ csrf_token }}')
+
+        JSONform['category'] = "trash";
+
+        xhr.send(JSON.stringify(newPost));
+
+        initNewPost();
+        update();
+    }
+
+    window.addEventListener('load', event => {
+        initNewPost();
+        update(); // TODO: Undo this if the 401 is resolved
+    });
+
+    // TODO: Might not work as intended
+    // setInterval(update, 5000);
+
+</script>
+{% endblock %}

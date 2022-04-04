@@ -82,7 +82,7 @@ class InboxView(View):
             inbox = Inbox.objects.create(author=author)
 
         valid_object_types = ['post', 'follow', 'like', 'comment']
-        data = json.loads(request.body)
+        data = json.loads(request.body.decode('utf-8'))
         try:
             t = data['type'].strip().lower()
             if t not in valid_object_types:

@@ -1,11 +1,80 @@
 {% block title %}Create Post {% endblock %}
 {% block content %}
 <h2>Create a Post</h2>
-<form method="post">
+<form id="form">
     <table>
         {{ form }}
     </table>
     {% csrf_token %}
     <button type="create_post">Create post</button>
 </form>
+
+<script>
+    const hostServerURL = "http://127.0.0.1:8000/service/";
+    const userNameLocal = "localserver";
+    const passwordLocal = "pwdlocal";
+
+    function init() {
+        document.getElementById("form").reset();
+        document.getElementById("form").addEventListener("submit", handler);
+
+        console.log("{{author_id}}")
+    }
+
+    const getFormJSON = (form) => {
+        const data = new FormData(form);
+        return Array.from(data.keys()).reduce((result, key) => {
+            result[key] = data.get(key);
+            return result;
+        }, {});
+    };
+
+    // Handles POST requests for form comments
+    const handler = (event) => {
+        console.log("POSTing");
+        event.preventDefault();
+
+        // Retrieves the form element that was submitted and transform it into a JSON object
+        var JSONform = getFormJSON(event.target);
+        
+        console.log(JSONform);
+
+        var newPost = {
+            'title': JSONform.title,
+            'description': JSONform.description,
+            'content_type': JSONform.content_type,
+            'content': JSONform.content,
+            'image': JSONform.image,
+            'categories': JSONform.categories,
+            'visibility': JSONform.visibility,
+        }
+
+        console.log(newPost);
+
+        var postURL = hostServerURL+"authors/"+"{{author_id}}"+"/posts";
+
+        var xhr = new XMLHttpRequest();
+
+        console.log(postURL)
+
+        xhr.open("POST", postURL);
+        xhr.setRequestHeader("Content-Type", "application/json")
+        xhr.setRequestHeader("Authorization", "Basic " + btoa(userNameLocal+":"+passwordLocal));
+        xhr.setRequestHeader('X-CSRFToken', '{{ csrf_token }}')
+
+        JSONform['category'] = "trash";
+
+        xhr.send(JSON.stringify(newPost));
+
+        init();
+        history.back()
+    }
+
+    window.addEventListener('load', event => {
+        init();
+    });
+
+</script>
+
 {% endblock %}
+
