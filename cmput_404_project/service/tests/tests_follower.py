@@ -3,6 +3,7 @@ from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
 
 from social_distribution.models import Author
+from service.models import ServerNode
 from .helper import create_dummy_author_with_followers, create_dummy_authors
 
 
@@ -11,6 +12,7 @@ class FollowersViewTestCase(TestCase):
     NUM_FOLLOWERS = 5
 
     def setUp(self):
+        ServerNode.objects.create(host='testserver', is_local=True) 
         create_dummy_author_with_followers(self.NUM_FOLLOWERS)
 
 
@@ -66,6 +68,9 @@ class FollowersViewTestCase(TestCase):
 
     NUM_FOLLOWERS = 1
 
+    def setUp(self):
+        ServerNode.objects.create(host='testserver', is_local=True) 
+
     def test_get(self):
         create_dummy_author_with_followers(self.NUM_FOLLOWERS)
 
@@ -74,15 +79,15 @@ class FollowersViewTestCase(TestCase):
         follower = Author.objects.get(username='test0')
 
         # test with valid author and follower ids
-        response = c.get(f'/service/authors/{author.id}/followers/{follower.id}/')
+        response = c.get(f'/service/authors/{author.id}/followers/{follower.id}')
         self.assertEqual(response.status_code, 200)
 
         # test with valid author id and invalid follower id
-        response = c.get(f'/service/authors/{author.id}/followers/invalid_follower_id/')
+        response = c.get(f'/service/authors/{author.id}/followers/invalid_follower_id')
         self.assertEqual(response.status_code, 404)
 
         # test with invalid author and follower ids
-        response = c.get(f'/service/authors/invalid_author_id/followers/invalid_follower_id/')
+        response = c.get(f'/service/authors/invalid_author_id/followers/invalid_follower_id')
         self.assertEqual(response.status_code, 404)
 
 
@@ -94,7 +99,7 @@ class FollowersViewTestCase(TestCase):
         follower = Author.objects.get(username='test0')
 
         # test with valid author and follower ids
-        response = c.head(f'/service/authors/{author.id}/followers/{follower.id}/')
+        response = c.head(f'/service/authors/{author.id}/followers/{follower.id}')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content, b'')
 
@@ -107,7 +112,7 @@ class FollowersViewTestCase(TestCase):
         follower = Author.objects.get(username='test0')
 
         # test with valid author and follower ids
-        response = c.delete(f'/service/authors/{author.id}/followers/{follower.id}/')
+        response = c.delete(f'/service/authors/{author.id}/followers/{follower.id}')
         self.assertEqual(response.status_code, 204)
         self.assertTrue(not author.followers.filter(id=follower.id).exists())
 
@@ -120,12 +125,12 @@ class FollowersViewTestCase(TestCase):
         foreign_author = Author.objects.get(username='test1')
 
         # test unauthenticated author
-        response = c.put(f'/service/authors/{author.id}/followers/{foreign_author.id}/')
+        response = c.put(f'/service/authors/{author.id}/followers/{foreign_author.id}')
         self.assertEqual(response.status_code, 403)
 
         c.login(username=author.username, password='temporary')
         # test with valid author and foreign_author ids
-        response = c.put(f'/service/authors/{author.id}/followers/{foreign_author.id}/')
+        response = c.put(f'/service/authors/{author.id}/followers/{foreign_author.id}')
         self.assertEqual(response.status_code, 201)
 
         # test with invalid author and foreign_author ids

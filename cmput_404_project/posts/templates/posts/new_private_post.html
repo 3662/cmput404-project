@@ -1,12 +1,50 @@
-{% block title %}Create Private Post {% endblock %}
+{% extends 'base.html' %}
+{% block head %}
+<title>Create A Private Post</title>
+<style>
+    main {
+        background-color: thistle;
+    }
+    .box {
+        border: 1px solid gray;
+        border-radius: 20px;
+        padding: 20px;
+        width: fit-content;
+        box-shadow: 4px 7px 10px 0px grey;
+        margin: auto;
+        background-color: white;
+    }
+    textarea {
+        height: 40px; /* Initial height */
+    }
+    .create-post-btn {
+        padding: 10px 100px;
+        font-size: large;
+        margin: 0px 20px;
+        cursor: pointer;
+        color: white;
+        background-color: purple;
+    }
+</style>
+{% endblock %}
 {% block content %}
-<h2>Create a Private Post</h2>
-<form method="post">
-    
-    <table>
-        {{ form }}
-    </table>
-    {% csrf_token %}
-    <button type="create_post">Send private post</button>
-</form>
+
+<div class="box">
+    <h2 style="text-align: center;">Create a Post</h2>
+    <form method="post">
+        <table>
+            {{ form }}
+        </table>
+        <label for="recipient">Send To:</label>
+        <select id="recipient" name="recipient">
+            {% for author in authors %}
+            <option value="{{ author.id }}">{{ author.get_full_name }}</option>
+            {%endfor%}
+        </select>
+        <p>
+            {% csrf_token %}
+            <button class="create-post-btn" type="create_post">Send private post</button>
+        </p>
+    </form>
+</div>
 {% endblock %}

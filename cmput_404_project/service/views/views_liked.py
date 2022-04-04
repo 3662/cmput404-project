@@ -5,7 +5,8 @@ from django.views import View
 from django.http import JsonResponse, HttpResponse
 from django.core.exceptions import ObjectDoesNotExist
 
-from social_distribution.models import Author, Inbox, InboxItem
+from service.server_authorization import is_server_authorized, get_401_response
+from social_distribution.models import Author, Like
 
 class LikedView(View):
 
@@ -17,8 +18,12 @@ class LikedView(View):
 
         Returns:
             - 200: if successful
+            - 401: if server is not authorized
             - 404: if the author does not exist
         '''
+        if not is_server_authorized(request):
+            return get_401_response()
+
         author_id = kwargs.get('author_id', '')
         return JsonResponse(self._get_public_likes(author_id))
 
@@ -29,8 +34,12 @@ class LikedView(View):
 
         Returns:
             - 200: if successful
+            - 401: if server is not authorized
             - 404: if the author does not exist
         '''
+        if not is_server_authorized(request):
+            return get_401_response()
+
         author_id = kwargs.get('author_id', '')
         data_json = json.dumps(self._get_public_likes(author_id))
         response = HttpResponse()
@@ -45,19 +54,13 @@ class LikedView(View):
         '''
 
         author = get_object_or_404(Author, id=author_id)
-
-        try:
-            inbox = Inbox.objects.get(author=author)
-        except ObjectDoesNotExist:
-            # create an inbox for this author if it doesn't exist
-            inbox = Inbox.objects.create(author=author)
-
-        items = InboxItem.filter(inbox=inbox) 
+        likes = Like.objects.filter(author=author, author_url=author.get_id_url()) 
 
         data = {}
         data['type'] = 'liked'
-        data['items'] = [item.get_detail_dict() 
-                         for item in items 
-                         if item.is_object_public()]
+        data['count'] = likes.count()
+        data['items'] = [like.get_detail_dict() 
+                         for like in likes 
+                         if like.is_object_public()]
 
         return data

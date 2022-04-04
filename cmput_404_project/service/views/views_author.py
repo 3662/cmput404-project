@@ -1,10 +1,11 @@
 import json 
 
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404
 from django.core.paginator import Paginator, EmptyPage
-from django.http import Http404, HttpResponseRedirect, JsonResponse, HttpResponse
+from django.http import Http404, JsonResponse, HttpResponse
 from django.views import View
 
+from service.server_authorization import is_server_authorized, is_local_server, get_401_response
 from social_distribution.models import Author
 from accounts.forms import AuthorChangeForm
 
@@ -24,8 +25,12 @@ class AuthorsDetailView(View):
 
         Returns: 
             - 200: if successful
+            - 401: if server is not authorized
             - 404: if page does not exist
         '''
+        if not is_server_authorized(request):
+            return get_401_response()
+
         return JsonResponse(self._get_authors(request))
 
     def head(self, request, *args, **kwargs):
@@ -34,8 +39,12 @@ class AuthorsDetailView(View):
 
         Returns: 
             - 200: if successful
+            - 401: if server is not authorized
             - 404: if page does not exist
         '''
+        if not is_server_authorized(request):
+            return get_401_response()
+
         response = HttpResponse()
         response.headers['Content-Type'] = 'application/json'
         response.headers['Content-Length'] = str(len(bytes(json.dumps(self._get_authors(request)), 'utf-8')))
@@ -54,6 +63,7 @@ class AuthorsDetailView(View):
 
         data = {}
         data['type'] = 'authors'
+        data['count'] = Author.objects.all().count()
         data['items'] = [author.get_detail_dict() for author in authors]
 
         return data
@@ -68,8 +78,12 @@ class AuthorDetailView(View):
 
         Returns: 
             - 200: if successful
+            - 401: if server is not authorized
             - 404: if author does not exist
         '''
+        if not is_server_authorized(request):
+            return get_401_response()
+
         author = get_object_or_404(Author, pk=kwargs.get('author_id', ''))
         return JsonResponse(author.get_detail_dict())
 
@@ -79,8 +93,12 @@ class AuthorDetailView(View):
 
         Returns: 
             - 200: if successful
+            - 401: if server is not authorized
             - 404: if author does not exist
         '''
+        if not is_server_authorized(request):
+            return get_401_response()
+
         author = get_object_or_404(Author, pk=kwargs.get('author_id', ''))
         response = HttpResponse()
         response.headers['Content-Type'] = 'application/json'
@@ -92,11 +110,15 @@ class AuthorDetailView(View):
         POST [local]: Updates author_id's profile  
 
         Returns:
-            - 200: if the post is successfully updated
+            - 200: if the profile is successfully updated
             - 400: if the data is invalid
+            - 401: if server is not authorized
             - 403: if the user is not authenticated
             - 404: if author does not exist 
         '''
+        if not is_local_server(request):
+            return get_401_response()
+
         author_id = kwargs.pop('author_id', '')
         author = get_object_or_404(Author, pk=author_id)
         if not request.user.is_authenticated:

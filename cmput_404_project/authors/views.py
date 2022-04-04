@@ -3,6 +3,11 @@ from social_distribution.models import Author, Friends, FollowRequest, Post, Lik
 from django.http import HttpResponse
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView, DetailView
+from service.models import ServerNode
+import requests
+from urllib.parse import urlparse
+from markdown_it import MarkdownIt
+
 
 # Create your views here.
 
@@ -11,13 +16,102 @@ from django.views.generic import ListView, DetailView
 #     return render(request, 'authors/authors_base.html')
 
 
+def display_profile(request):
+    not_found = True
+    author = is_my_profile = host_is_local = friend_status = None
+
+    url = request.GET.get('url')
+    if url:
+        host = urlparse(url).netloc
+        node = None
+        for n in ServerNode.objects.all():
+            print(n.host, url)
+            if url.startswith(n.host):
+                node = n
+                break
+        if node:
+            auth = (node.sending_username, node.sending_password)
+            response = requests.get(url, auth=auth)
+            try:
+                author = response.json()
+                not_found = False
+                myself = Author.objects.filter(id=request.user.id).get()
+                is_my_profile = myself.id == url
+                friend_status = '1' # TODO: Check the status of friendship
+                host_is_local =  host == node.host
+            except:
+                pass
+
+    posts = []
+    for node in ServerNode.objects.all():
+        if node.is_local:
+            continue
+        url = f'{node.host}/authors/'
+        auth = (node.sending_username, node.sending_password)
+        response = requests.get(url, auth=auth)
+        try:
+            data = response.json()
+            authors = data['items']
+            for a in authors:
+                if a['id'] == author['id']:
+                    url = author['url'] + '/posts/'
+                    response = requests.get(url, auth=auth)
+                    try:
+                        data = response.json()
+                        posts.extend(data['items'])
+                        for post in data['items']:
+                            if post["contentType"] == "text/markdown":
+                                md = MarkdownIt('commonmark')
+                                post["content"] = md.render(post["content"])
+                    except Exception as e:
+                        print('Error: URL =', url)
+                        print(e)
+        except Exception as e:
+            print('Error: URL =', url)
+            print(e)
+
+    context = {
+        'not_found': not_found,
+        'author': author,
+        'is_my_profile': is_my_profile,
+        'friend_status': friend_status,
+        'host_is_local': host_is_local,
+        'posts': posts,
+    }
+
+    return render(request, 'authors/profile.html', context=context)
+
 """
 Retrieve and display all authors saved as Author model instances in the database
 """
-def display_authors(request):
-    authors = Author.objects.all()
+def display_authors(request):    
+    print('entered author_list_view')
+    nodes = []
+    for node in ServerNode.objects.all():
+        print('host username:password =', node.host, node.sending_username, node.sending_password)
 
-    return render(request, 'authors/authors_base.html', {'authors': authors})
+        if node.is_local:
+            authors = [author.get_detail_dict() for author in Author.objects.all()]
+        else:
+            url = f'{node.host}/authors/'
+            auth = (node.sending_username, node.sending_password)
+            response = requests.get(url, auth=auth)
+            try:
+                data = response.json()
+                authors = data['items']
+            except Exception as e:
+                print(f'Failed to get authors from {url}')
+                print(f'Error: {e}')
+                print(f'response.text = {response.text}')
+                continue
+        # print(authors)
+        nodes.append({
+            'is_local': node.is_local,
+            'host': node.host,
+            'authors': authors,
+        })
+    
+    return render(request, 'authors/authors_base.html', {'nodes': nodes})
 
 
 """
@@ -25,7 +119,7 @@ Retrieve and display a single author
 """
 def display_author(request, id):
     author = Author.objects.get(id=id)
-    posts = Post.objects.filter(author=author).order_by('-published')
+    posts = Post.objects.filter(author=author, visibility='PUBLIC').order_by('-published')
     sender = Author.objects.get(username=request.user)
     s_qs = Friends.objects.filter(sender=sender, status='send').values_list('receiver', flat=True)
     r_qs = Friends.objects.filter(sender=sender, status='accepted').values_list('receiver', flat=True)
@@ -39,6 +133,7 @@ def display_author(request, id):
         'cross_qs': cross_qs,
         'friend': request.user,
         'sender': sender,
+        'host_is_local': True,
     }
     return render(request, 'authors/profile.html', context=context)
 
@@ -72,8 +167,8 @@ def author_friend_view(request):
                 #rec=Like.objects.get(author=request.user, post=post)
                 #rec.delete()
             #else:
-                summary = str(request.user) + " wants to follow " + str(recv.username)
-                follower, inserted = FollowRequest.objects.get_or_create(to_author=recv, from_author=send, summary=summary)
+                #summary = str(request.user) + " wants to follow " + str(recv.username)
+                follower, inserted = FollowRequest.objects.get_or_create(to_author=recv, from_author=send) #, summary=summary)
                 friend.save()
                 follower.save()
         if action_flag == 'R':
@@ -94,6 +189,7 @@ def pending_action_list_view(request):
     qs = Author.objects.all().exclude(username=request.user)
     f_qs = Friends.objects.filter(status='send', receiver=me).exclude(sender=me).values_list('sender', flat=True)
     context = {
+        'recv': me,
         'authors': qs,
         'f_qs': f_qs,
     }
@@ -116,15 +212,24 @@ def pending_action_view(request):
     return redirect('/authors/pending_action_list_view')
 
 
-def follower_view(request):
-    authors = Author.objects.all()
-    f_qs = Author.objects.filter(username=request.user).values_list('followers', flat=True)
-    context = {
-        'authors': authors,
-        'f_qs': f_qs,
-    }
-    return render(request, 'authors/follower_list.html', context)
-
+def follower_view(request, id=None):
+    # authors = Author.objects.all()
+    # f_qs = Author.objects.filter(username=request.user).values_list('followers', flat=True)
+    # context = {
+    #     'authors': authors,
+    #     'f_qs': f_qs,
+    # }
+    # furl = f'service/author/{request.user.id}/follower/followers_list.html'
+    
+    if id:
+        user_url =  Author.objects.filter(id=id).get().get_detail_dict()['id']
+    else:
+        user_url = request.GET.get('url')
+    return render(request, 'authors/followers_list.html', {
+        'user_url': user_url,
+        'is_local': id != None,
+        'user_id': id,
+    })
 
 def follower_view1(request):
     author = Author.objects.get(username=request.user)
@@ -132,23 +237,70 @@ def follower_view1(request):
     return render(request, 'authors/follower_list1.html', {'f_qs': f_qs})
 
 
-def friends_view(request):
+def friends_view1(request):
     authors = Author.objects.all()
     return render(request, 'authors/follower_list.html', {'authors': authors})
 
 
 def friends_view(request):
-    f_qs_list = []
-    authors = Friends.objects.filter(sender=request.user, status='accepted').values_list('receiver', flat=True)
-    for qs in authors:
-        cross_qs = Friends.objects.filter(sender=qs, receiver=request.user, status='accepted').count()
-        if cross_qs > 0:
-            f_qs_list.append(qs)
-    f_qs = Author.objects.filter(id__in=f_qs_list)
+######################
+# Access users from other connected nodes
+    f_qs = []
+    authors =[]
+    for node in ServerNode.objects.all():
+        if node.is_local:
+            url = f'http://127.0.0.1:8000/service/authors/{request.user.id}/followers'
+            auth = ('localserver', 'pwdlocal')
+            response = requests.get(url, auth=auth)
+        else:
+            url = f'{node.host}/service/authors/{request.user.id}/followers'
+            auth = (node.sending_username, node.sending_password)
+            response = requests.get(url, auth=auth)
+        try:
+            data = response.json()
+            authors = data['items']
+            for gauthor in authors:
+                mauthId=gauthor['id']
+                if node.is_local:
+                    url1 = f'{mauthId}/followers/{request.user.id}'
+                    auth = ('localserver', 'pwdlocal')
+                else:
+                    url1 = f'{node.host}/service/authors/{mauthId}/followers/{request.user.id}'
+                    auth = (node.sending_username, node.sending_password)
+                response1 = requests.get(url1, auth=auth)
+                try:
+                    #data1 = response1.json()
+                    if (response1.status_code == 200):
+                        if gauthor not in f_qs:
+                            f_qs.append(gauthor)
+                except Exception as e:
+                    print('Error: URL =', url)
+                    print(e)
+        except Exception as e:
+            print('Error: URL =', url)
+            print(e)
+
+
+    f_qs1 = list(set(f_qs))
     context = {
-        'authors': authors,
-        'f_qs': f_qs,
+        'authors': f_qs1,
+        'f_qs': authors,
     }
+########################
+
+
+#
+#    f_qs_list = []
+#    authors = Friends.objects.filter(sender=request.user, status='accepted').values_list('receiver', flat=True)
+#    for qs in authors:
+#        cross_qs = Friends.objects.filter(sender=qs, receiver=request.user, status='accepted').count()
+#        if cross_qs > 0:
+#            f_qs_list.append(qs)
+#    f_qs = Author.objects.filter(id__in=f_qs_list)
+#    context = {
+#        'authors': authors,
+#        'f_qs': f_qs,
+    #}
     return render(request, 'authors/friends_list.html', context)
 
 
@@ -166,8 +318,8 @@ def author_profile_view(request):
                 #rec=Like.objects.get(author=request.user, post=post)
                 #rec.delete()
             #else:
-                summary = str(request.user) + " wants to follow " + str(recv.username)
-                follower, inserted = FollowRequest.objects.get_or_create(to_author=recv, from_author=send, summary=summary)
+                #summary = str(request.user) + " wants to follow " + str(recv.username)
+                follower, inserted = FollowRequest.objects.get_or_create(to_author=recv, from_author=send) #, summary=summary)
                 friend.save()
                 follower.save()
         if action_flag == 'R':
@@ -197,3 +349,15 @@ def like_post2(request):
             post.save()
             like.save()
     return redirect(f'/authors/{post.author.id}')
+
+def display_inbox(request):
+    if not request.user.is_authenticated:
+        status_code = 403
+        message = 'You have to sign in to view the inbox.'
+        message += '<br><a href="/">Go to homepage</a>'
+        return HttpResponse(message, status=status_code)
+    context = {
+        'author_id': request.user.id,
+        'author': request.user,
+    }
+    return render(request, 'authors/inbox.html', context)

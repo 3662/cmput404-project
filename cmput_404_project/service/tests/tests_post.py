@@ -6,11 +6,13 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from social_distribution.models import Author, Post
 from .helper import create_dummy_authors, create_dummy_post, create_dummy_posts
+from service.models import ServerNode
 
 
 class PostViewTestCase(TestCase):
 
     def setUp(self):
+        ServerNode.objects.create(host='testserver', is_local=True) 
         create_dummy_authors(1)
 
     def test_get(self):
@@ -28,11 +30,11 @@ class PostViewTestCase(TestCase):
         post = Post.objects.get(title='Test Post')
 
         # test with invalid post id
-        response = c.get(f'/service/authors/{author.id}/posts/invalid_post_id/')
+        response = c.get(f'/service/authors/{author.id}/posts/invalid_post_id')
         self.assertEqual(response.status_code, 404)
 
         # test with valid post id
-        response = c.get(f'/service/authors/{author.id}/posts/{post.id}/')
+        response = c.get(f'/service/authors/{author.id}/posts/{post.id}')
         self.assertEqual(response.status_code, 200)
 
         self.assertDictEqual(response.json(), post.get_detail_dict())
@@ -45,8 +47,8 @@ class PostViewTestCase(TestCase):
         create_dummy_post(author, visibility=visibility, content_type='text/plain')
         post = Post.objects.get(title='Test Post')
 
-        # test with invalid post id
-        response = c.head(f'/service/authors/{author.id}/posts/{post.id}/')
+        # test with valid post id
+        response = c.head(f'/service/authors/{author.id}/posts/{post.id}')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content, b'')
 
@@ -60,7 +62,7 @@ class PostViewTestCase(TestCase):
         post = Post.objects.get(title='Test Post')
 
         # test without being signed in
-        response = c.post(f'/service/authors/{author.id}/posts/{post.id}/')
+        response = c.post(f'/service/authors/{author.id}/posts/{post.id}')
         self.assertEqual(response.status_code, 403)
 
         c.login(username=author.username, password='temporary')
@@ -77,7 +79,7 @@ class PostViewTestCase(TestCase):
             'categories': 'updated,test,post,categories',
             'visibility': 'PUBLIC',
         }
-        response = c.post(f'/service/authors/{author.id}/posts/{post.id}/', data)
+        response = c.post(f'/service/authors/{author.id}/posts/{post.id}', data)
         self.assertEqual(response.status_code, 200)
 
         post = Post.objects.get(id=post.id)     # get updated post
@@ -87,7 +89,7 @@ class PostViewTestCase(TestCase):
         self.assertTrue(before_modified < post.modified)
 
         # test updated fields 
-        response = c.get(f'/service/authors/{author.id}/posts/{post.id}/')
+        response = c.get(f'/service/authors/{author.id}/posts/{post.id}')
         self.assertEqual(response.status_code, 200)
         self.assertDictEqual(response.json(), post.get_detail_dict())
 
@@ -99,7 +101,7 @@ class PostViewTestCase(TestCase):
             'content': 'Updated test post content', 
             # missing data
         }
-        response = c.post(f'/service/authors/{author.id}/posts/{post.id}/', data)
+        response = c.post(f'/service/authors/{author.id}/posts/{post.id}', data)
         self.assertEqual(response.status_code, 400)
 
 
@@ -111,7 +113,7 @@ class PostViewTestCase(TestCase):
         create_dummy_post(author, visibility=visibility, content_type='text/plain')
         post = Post.objects.get(title='Test Post')
 
-        response = c.delete(f'/service/authors/{author.id}/posts/{post.id}/')
+        response = c.delete(f'/service/authors/{author.id}/posts/{post.id}')
         self.assertEqual(response.status_code, 204)
 
         # make sure the post is deleted from database
@@ -134,12 +136,12 @@ class PostViewTestCase(TestCase):
             'categories': 'test,post,categories',
             'visibility': 'PUBLIC',
         }
-        response = c.put(f'/service/authors/{author.id}/posts/{post_id}/', json.dumps(data))
+        response = c.put(f'/service/authors/{author.id}/posts/{post_id}', json.dumps(data))
         self.assertEqual(response.status_code, 201)
         self.assertTrue(Post.objects.filter(id=post_id, author=author).exists())
 
         # test whether the data is saved in db
-        response = c.get(f'/service/authors/{author.id}/posts/{post_id}/')
+        response = c.get(f'/service/authors/{author.id}/posts/{post_id}')
         self.assertEqual(response.status_code, 200)
         post = Post.objects.get(id=post_id, author=author)
         self.assertDictEqual(response.json(), post.get_detail_dict())
@@ -153,22 +155,22 @@ class PostViewTestCase(TestCase):
             'visibility': 'PUBLIC',
         }
         # test with non-json data
-        response = c.put(f'/service/authors/{author.id}/posts/{post_id}/', data)
+        response = c.put(f'/service/authors/{author.id}/posts/{post_id}', data)
         self.assertEqual(response.status_code, 400)
         # test update without being authenticated
-        response = c.put(f'/service/authors/{author.id}/posts/{post_id}/', json.dumps(data))
+        response = c.put(f'/service/authors/{author.id}/posts/{post_id}', json.dumps(data))
         self.assertEqual(response.status_code, 403)
         # test with valid json data and authenticated user
         c.login(username=author.username, password='temporary')
-        response = c.put(f'/service/authors/{author.id}/posts/{post_id}/', json.dumps(data))
+        response = c.put(f'/service/authors/{author.id}/posts/{post_id}', json.dumps(data))
         self.assertEqual(response.status_code, 200)
         # test with invalid data
         data.pop('title')
-        response = c.put(f'/service/authors/{author.id}/posts/{post_id}/', data)
+        response = c.put(f'/service/authors/{author.id}/posts/{post_id}', data)
         self.assertEqual(response.status_code, 400)
 
         # test whether the data is saved in db
-        response = c.get(f'/service/authors/{author.id}/posts/{post_id}/')
+        response = c.get(f'/service/authors/{author.id}/posts/{post_id}')
         self.assertEqual(response.status_code, 200)
         post = Post.objects.get(id=post_id, author=author)
         self.assertDictEqual(response.json(), post.get_detail_dict())
@@ -177,6 +179,7 @@ class PostViewTestCase(TestCase):
 class PostsViewTestCase(TestCase):
 
     def setUp(self):
+        ServerNode.objects.create(host='testserver', is_local=True) 
         create_dummy_authors(1)
 
     def test_get(self):
@@ -231,18 +234,18 @@ class PostsViewTestCase(TestCase):
             'visibility': 'PUBLIC',
         }
         # test with valid data
-        response = c.post(f'/service/authors/{author.id}/posts/', data)
+        response = c.post(f'/service/authors/{author.id}/posts', data)
         self.assertEqual(response.status_code, 201)
 
         # test fields of newly created post
         post = Post.objects.get(title='Test Post', author=author)
-        response = c.get(f'/service/authors/{author.id}/posts/{post.id}/')
+        response = c.get(f'/service/authors/{author.id}/posts/{post.id}')
         self.assertEqual(response.status_code, 200)
         self.assertDictEqual(response.json(), post.get_detail_dict())
 
         # test with invalid data
         data['title'] = 'a' * 200
-        response = c.post(f'/service/authors/{author.id}/posts/', data)
+        response = c.post(f'/service/authors/{author.id}/posts', data)
         self.assertEqual(response.status_code, 400)
 
 

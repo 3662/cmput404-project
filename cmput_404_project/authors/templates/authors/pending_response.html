@@ -1,12 +1,42 @@
-<!DOCTYPE html>
-<html>
+{% extends 'base.html' %}
+{% block head %}
     <head>
         <meta charset="utf-8">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
         <title>Authors</title>
-        <button class="btn"><i class="fa fa-home" ></i> <a href="/">Home</a></button>
     </head>
-    <body>
+{% endblock %}
+{% block content %}
+    <script>
+        const userNameLocal = "localserver";
+        const passwordLocal = "pwdlocal";
+        function acceptFollow(source_id, source_url){
+            var putFollower = new XMLHttpRequest();
+
+            var target = {
+                'type': 'author',
+                'id': '{{recv.get_id_url}}',
+                'url': '{{recv.get_profile_url}}',
+                'host': '{{recv.host}}',
+                'displayName': '{{recv.get_full_name}}',
+                'github': '{{recv.github}}',
+                'profileImage': '{{recv.profile_image}}',
+            };
+
+            var data = {
+                'target_author': target,
+                'id': source_id,
+                'source_author_url': source_url,
+            };
+            //console.log(data);
+            putFollower.open("PUT", target.id +"/followers/"+source_id, true);
+            putFollower.setRequestHeader("Content-type", "application/json");
+            putFollower.setRequestHeader("Authorization", "Basic " + btoa(userNameLocal+":"+passwordLocal));
+            putFollower.setRequestHeader('X-CSRF-TOKEN', '{{csrfToken}}');
+            putFollower.send(JSON.stringify(data));
+            //console.log(putFollower.responseText);
+        }
+    </script>
         <h1>List of Pending Responses</h1>
         <div class="authors">
             {% for author in authors %}
@@ -16,7 +46,7 @@
                 <p> <b> Type: </b> author </p>
                 <p> <b> ID: </b> {{author.id}} </p>
                 <p> <b> Display Name: </b> {{author.first_name}} {{author.last_name}} </p>
-                <p> <b> ULR: </b> {{author.url}} </p>
+                <p> <b> ULR: </b> {{author.get_id_url}} </p>
                 <p> <b> Host: </b> {{author.host}} </p>
                 <p> <b> Github: </b> {{author.github}} </p>
                 <p> <b> Profile Image: </b> {{author.profile_image}} </p>
@@ -24,17 +54,19 @@
                     <form action="{% url 'pending_action_view' %}" method="POST" class='pending_action_view' id='{{author.id}}' >
                        {% csrf_token %}
                        <input type="hidden" name="user" value={{author.id}}>
-                       <button type="submit" name="accept" value="A")>
+                       <button type="submit" name="accept" value="A" onclick="acceptFollow('{{author.id}}', '{{author.get_id_url}}');" >
                              Accept
                        </button>
                        <button type="submit" name="accept" value="R">
                              Reject
                        </button>
+
                     </form>
+
                 </div>
             </div>
              {% endif %}
             {% endfor %}
         </div>
-    </body>
-</html>
+
+{% endblock %}

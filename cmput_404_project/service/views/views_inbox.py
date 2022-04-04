@@ -1,12 +1,12 @@
 import json
 
-from dateutil import parser
 from django.shortcuts import get_object_or_404
 from django.views import View
 from django.http import JsonResponse, HttpResponse, Http404
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator, EmptyPage
 
+from service.server_authorization import is_server_authorized, is_local_server, get_401_response
 from social_distribution.models import Author, Post, Like, Comment, Inbox, InboxItem, FollowRequest
 
 
@@ -25,10 +25,15 @@ class InboxView(View):
 
         Returns:
             - 200: if successful
+            - 401: if server is not authorized
+            - 403: if the author is not authenticated
             - 404: if author or page does not exist
         '''
+        if not is_local_server(request):
+            return get_401_response()
+
         author_id = kwargs.get('author_id', '')
-        return JsonResponse(self._get_post_inbox_items(request, author_id))
+        return JsonResponse(self._get_inbox_items(request, author_id))
 
     def head(self, request, *args, **kwargs):
         '''
@@ -36,10 +41,15 @@ class InboxView(View):
 
         Returns:
             - 200: if successful
+            - 401: if server is not authorized
+            - 403: if the author is not authenticated, or host is not local
             - 404: if author or page does not exist
         '''
+        if not is_local_server(request):
+            return get_401_response()
+
         author_id = kwargs.get('author_id', '')
-        data_json = json.dumps(self._get_post_inbox_items(request, author_id))
+        data_json = json.dumps(self._get_inbox_items(request, author_id))
         response = HttpResponse()
         response.headers['Content-Type'] = 'application/json'
         response.headers['Content-Length'] = str(len(bytes(data_json, 'utf-8')))
@@ -54,10 +64,14 @@ class InboxView(View):
             - If the type is “comment” then add that comment to AUTHOR_ID's inbox
         
         Returns:
-            - 200: if successful
+            - 201: if successful
             - 400: if the object is invalid.
+            - 401: if server is not authorized
             - 404: if the author does not exist.
         '''
+        if not is_server_authorized(request):
+            return get_401_response()
+
         author_id = kwargs.get('author_id', '')
         author = get_object_or_404(Author, id=author_id)
 
@@ -68,7 +82,7 @@ class InboxView(View):
             inbox = Inbox.objects.create(author=author)
 
         valid_object_types = ['post', 'follow', 'like', 'comment']
-        data = json.loads(request.body)
+        data = json.loads(request.body.decode('utf-8'))
         try:
             t = data['type'].strip().lower()
             if t not in valid_object_types:
@@ -76,33 +90,52 @@ class InboxView(View):
             
             if t == 'post':
                 object_type = 0
-                object = self._create_post_if_not_exist(data)
+                post_id = data['id'].split('/')[-1]
+                if Post.objects.filter(id=post_id).exists():
+                    post = Post.objects.get(id=post_id)
+                    object_id = post.id
+                    object_url = post.get_id_url()
+                else:
+                    object_id = None
+                    object_url = data['id'] 
 
             elif t == 'comment':
                 object_type = 1
-                object = self._create_comment_if_not_exist(data)
+                comment_id = data['id'].split('/')[-1]
+                if Comment.objects.filter(id=comment_id).exists():
+                    comment = Comment.objects.get(id=comment_id)
+                    object_id = comment.id
+                    object_url = comment.get_id_url()
+                else:
+                    object_id = None
+                    object_url = data['id'] 
 
             elif t == 'follow':
                 object_type = 2
                 object = self._create_follow_request(data, author)
+                object_id = object.id
+                object_url = None
 
             else:
                 object_type = 3
                 object = self._create_like(data)
+                object_id = object.id
+                object_url = None
 
-            if not InboxItem.objects.filter(object_id=object.id).exists():
+            if not InboxItem.objects.filter(object_id=object_id).exists():
                 # Only create if the object is not already in the inbox
                 # If the object exists in the inbox, it has been already updated at this point.
                 InboxItem.objects.create(inbox=inbox, 
                                         object_type=InboxItem.OBJECT_TYPE_CHOICES[object_type][0], 
-                                        object_id=object.id)
+                                        object_id=object_id,
+                                        object_url=object_url)
 
         except (KeyError, ValueError) as e:
             status_code = 400
             return HttpResponse(e if str(e) != '' else 'The object is invalid', status=status_code)     
 
         else:
-            return HttpResponse("An object is successfully sent to the inbox")
+            return HttpResponse("An object is successfully sent to the inbox", status=201)
 
 
     def delete(self, request, *args, **kwargs):
@@ -111,8 +144,11 @@ class InboxView(View):
 
         Returns:
             - 204: if successfully cleared
+            - 401: if server is not authorized 
             - 404: if the author does not exist
         '''
+        if not is_local_server(request):
+            return get_401_response()
 
         author_id = kwargs.get('author_id', '')
         author = get_object_or_404(Author, id=author_id)
@@ -128,10 +164,14 @@ class InboxView(View):
         return HttpResponse("The inbox is cleared", status=204)
 
 
-    def _get_post_inbox_items(self, request, author_id) -> dict:
+    def _get_inbox_items(self, request, author_id) -> dict:
         '''
         Returns a dict containing a list of posts in the author_id's inbox.
         '''
+        if not request.user.is_authenticated:
+            status_code = 403
+            message = "You do not have permission to access this author's inbox."
+            return HttpResponse(message, status=status_code)     
 
         page = int(request.GET.get('page', self.DEFAULT_PAGE))
         size = int(request.GET.get('size', self.DEFAULT_SIZE))
@@ -145,15 +185,15 @@ class InboxView(View):
             inbox = Inbox.objects.create(author=author)
 
         try:
-            q = InboxItem.objects.all().filter(inbox=inbox, object_type=InboxItem.OBJECT_TYPE_CHOICES[0][0])
-            q = q.order_by('-published')
-            post_items = Paginator(q, size).page(page)
+            q = InboxItem.objects.all().filter(inbox=inbox)
+            q = q.order_by('-date_created')
+            inbox_items = Paginator(q, size).page(page)
         except EmptyPage:
             raise Http404('Page does not exist')
 
         data = {}
-        data['type'] = 'posts'
-        data['items'] = [p.get_detail_dict() for p in post_items]
+        data['type'] = 'inbox'
+        data['items'] = [item.get_detail_dict() for item in inbox_items]
         return data
 
 
@@ -170,12 +210,14 @@ class InboxView(View):
         if context != Like.context:
             raise ValueError('Invalid context: %s' % context)
         like_author_id = data_dict['author']['id'].split('/')[-1]
+        like_author = None  # can be local or remote author
         if Author.objects.filter(id=like_author_id).exists():
+            # is a local author
             like_author = Author.objects.get(id=like_author_id)
-        else:
-            like_author = None
-        like_author_url = data_dict['author']['url']
+        like_author_url = data_dict['author']['id']
         object_url = data_dict['object']
+
+        # object id must exist in our database
         object_id = object_url.split('/')[-1]
 
         if Post.objects.filter(id=object_id).exists():
@@ -191,38 +233,6 @@ class InboxView(View):
                                    object_url=object_url)
 
 
-    def _create_comment_if_not_exist(self, data_dict) -> Comment:
-        '''
-        Creates a Comment if it does not exist.
-        If it does exist, update its content and content type.
-        The comment author will also be created if it does not exist.
-        '''
-
-        comment_author = self._create_author_if_not_exist(data_dict['author'])
-        comment_id = data_dict['id'].split('/')[-1]
-        content = data_dict['comment']
-        published = parser.parse(data_dict['published'])
-        content_type = data_dict['contentType']
-        if content_type not in map(lambda p:p[0], Comment.CONTENT_TYPE_CHOICES):
-            raise ValueError('Invalid content type: %s' % content_type)
-
-        try:
-            comment = Comment.objects.get(id=comment_id, author=comment_author)
-            # update fields of the comment if exists
-            comment.content = content
-            comment.content_type = content_type
-            comment.save(update_fields=['content', 'content_type'])
-
-        except ObjectDoesNotExist:
-            comment = Comment.objects.create(id=comment_id,
-                                             author=comment_author,
-                                             content=content,
-                                             date_created=published,
-                                             content_type=content_type)
-                                        
-        return comment
-
-    
     def _create_follow_request(self, data_dict, author:Author) -> FollowRequest:
         '''
         Creates a FollowRequest between the two authors in data_dict.
@@ -231,122 +241,25 @@ class InboxView(View):
             - FollowRequest between the two authors already exists, or
             - author in the request and author in the data_dict are not equal.
         '''
+        # from_author can be from remote server
+        from_author_id = data_dict['actor']['id'].split('/')[-1]
+        if Author.objects.filter(id=from_author_id).exists():
+            from_author = Author.objects.get(id=from_author_id)
+        else:
+            from_author = None
+        from_author_url = data_dict['actor']['url']
 
-        from_author = self._create_author_if_not_exist(data_dict['actor'])
         to_author_id = data_dict['object']['id'].split('/')[-1]
         to_author = get_object_or_404(Author, id=to_author_id)
         if author != to_author:
             # assert target author is the author in the request
-            raise ValueError('Target author and to_author in follow object are not equal')
+            raise ValueError('Target author and to_author in follow object must be equal')
 
-        if FollowRequest.objects.filter(from_author=from_author, to_author=author).exists():
+        if FollowRequest.objects.filter(from_author_url=from_author_url, to_author=author).exists():
             # raise an exception if follow request between the two author already exists
             raise ValueError('Follow request is already sent') 
 
-        return FollowRequest.objects.create(from_author=from_author, to_author=author)
-
-
-    
-    def _create_post_if_not_exist(self, post_dict) -> Post:
-        '''
-        If a Post with an id in post_dict does not exist, create one. 
-        If the Post already exists, then update the fields with the given information.
-        If a post author with an author id in post_dict does not exist, create on.
-        If the Author already exists, then update the fields with the given information.
-        '''
-        
-        post_author = self._create_author_if_not_exist(post_dict['author'])
-        title = post_dict['title']
-        post_id = post_dict['id'].split('/')[-1]
-        source = post_dict['source']
-        origin = post_dict['origin']
-        description = post_dict['description']
-        content_type = post_dict['contentType']
-        if content_type not in map(lambda p:p[0], Post.CONTENT_TYPE_CHOICES):
-            raise ValueError('Invalid content type: %s' % content_type)
-        content = post_dict['content']
-        categories = ','.join(post_dict['categories'])
-        comments_id = post_dict['comments'].split('/')[-1]
-        published = parser.parse(post_dict['published'])
-        visibility = post_dict['visibility']
-        if visibility not in map(lambda p:p[0], Post.VISIBILITY_CHOICES):
-            raise ValueError('Invalid visibility: %s' % visibility)
-
-        unlisted = post_dict['unlisted']
-
-        try:
-            post = Post.objects.get(id=post_id)
-            # update fields of the post if exists
-            post.title = title
-            post.source = source
-            post.origin = origin 
-            post.description = description
-            post.content_type = content_type 
-            post.content = content
-            post.categories = categories
-            post.published = published
-            post.visibility = visibility 
-            post.unlisted = unlisted
-            post.save(update_fields=['title', 'source', 'origin', 'description', 'content_type', 'content', 'categories', 'published', 'visibility', 'unlisted'])
-
-        except ObjectDoesNotExist:
-            post = Post.objects.create(author=post_author,
-                                       id=post_id,
-                                       title=title,
-                                       source=source,
-                                       origin=origin,
-                                       description=description,
-                                       content_type=content_type,
-                                       content=content,
-                                       categories=categories,
-                                       comments_id=comments_id,
-                                       published=published,
-                                       visibility=visibility,
-                                       unlisted=unlisted)
-        
-        return post
-
-
-    def _create_author_if_not_exist(self, author_dict) -> Author:
-        '''
-        If an Author with an author id in author_dict does not exist, 
-        create one but without user information.
-        If the Author already exists, then update the fields with the given information.
-        '''
-        author_id = author_dict['id'].split('/')[-1]
-        author_display_name = author_dict['displayName']
-        author_first_name, author_last_name = author_display_name.strip().split(' ')
-        author_host = author_dict['host']
-        author_github = author_dict['github']
-        author_profile_image = author_dict['profileImage']
-
-        try: 
-            author = Author.objects.get(id=author_id)
-            # update the fields of the author if exists
-            author.first_name = author.first_name
-            author.last_name = author.last_name
-            author.host = author_host
-            author.github = author_github
-            author.profile_image = author_profile_image
-
-            author.save(update_fields=['first_name', 'last_name', 'host', 'github', 'profile_image'])
-
-        except ObjectDoesNotExist:
-            author = Author.objects.create_without_user(id=author_id, 
-                                                        first_name=author_first_name,
-                                                        last_name=author_last_name,
-                                                        host=author_host,
-                                                        github=author_github,
-                                                        profile_image=author_profile_image)
-
-        return author
-
-
-
-
-        
-
-
-
-
-
+        return FollowRequest.objects.create(from_author=from_author,
+                                            from_author_url=from_author_url,
+                                            to_author=author,
+                                            to_author_url=author.get_id_url())

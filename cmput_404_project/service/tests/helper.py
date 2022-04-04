@@ -16,15 +16,17 @@ def create_dummy_authors(n):
 def create_dummy_post(author, visibility='PUBLIC', content_type='text/plain'):
     '''Creates a dummy post for the given author'''
 
-    if visibility not in ['PUBLIC', 'FRIENDS']:
+    if visibility not in map(lambda p:p[0], Post.VISIBILITY_CHOICES):
         raise ValueError('Invalid visibility')
     
-    if content_type not in ['text/plain', 'text/markdown', 'application/base64', 'image/png;base64', 'image/jpeg;base64']:
+    if content_type not in map(lambda p:p[0], Post.CONTENT_TYPE_CHOICES):
         raise ValueError('Invalid content type')
 
     Post.objects.create(author=author, 
                         visibility=visibility,
                         title='Test Post',
+                        source='',
+                        origin='',
                         description='Test post description',
                         content_type=content_type,
                         content='Test post content',
@@ -34,16 +36,18 @@ def create_dummy_post(author, visibility='PUBLIC', content_type='text/plain'):
 def create_dummy_posts(n, author, visibility='PUBLIC', content_type='text/plain'):
     '''Creates n dummy posts for the given author'''
 
-    if visibility not in ['PUBLIC', 'FRIENDS']:
+    if visibility not in map(lambda p:p[0], Post.VISIBILITY_CHOICES):
         raise ValueError('Invalid visibility')
 
-    if content_type not in ['text/plain', 'text/markdown', 'application/base64', 'image/png;base64', 'image/jpeg;base64']:
+    if content_type not in map(lambda p:p[0], Post.CONTENT_TYPE_CHOICES):
         raise ValueError('Invalid content type')
 
     for i in range(n):
         Post.objects.create(author=author, 
                             visibility=visibility,
                             title=f'Test Post{i}',
+                            source='',
+                            origin='',
                             description=f'Test post{i} description',
                             content_type=content_type,
                             content=f'Test post{i} content',

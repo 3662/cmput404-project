@@ -3,6 +3,7 @@ import json
 from django.test import TestCase, Client
 
 from .helper import create_dummy_authors, create_dummy_post, create_dummy_comments
+from service.models import ServerNode
 from social_distribution.models import Author, Post, Comment
 
 class CommentsViewTestCase(TestCase):
@@ -10,6 +11,7 @@ class CommentsViewTestCase(TestCase):
     NUM_COMMENTS = 10
 
     def setUp(self):
+        ServerNode.objects.create(host='testserver', is_local=True) 
         create_dummy_authors(2)
         post_author = Author.objects.get(username='test0')
         comment_author = Author.objects.get(username='test1')
@@ -40,9 +42,9 @@ class CommentsViewTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(data['type'], 'comments')
-        self.assertEqual(len(data['items']), self.NUM_COMMENTS)
+        self.assertEqual(len(data['comments']), self.NUM_COMMENTS)
 
-        comments_data = data['items']
+        comments_data = data['comments']
         for c_data in comments_data:
             comment_id = c_data['id'].split('/')[-1]
             comment = Comment.objects.get(id=comment_id)
