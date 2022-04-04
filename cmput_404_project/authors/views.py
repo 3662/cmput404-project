@@ -212,7 +212,7 @@ def pending_action_view(request):
     return redirect('/authors/pending_action_list_view')
 
 
-def follower_view(request, id):
+def follower_view(request, id=None):
     # authors = Author.objects.all()
     # f_qs = Author.objects.filter(username=request.user).values_list('followers', flat=True)
     # context = {

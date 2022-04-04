@@ -30,6 +30,10 @@
         margin-right: auto;
     } */
 
+    #preview {
+        object-fit: contain;
+    }
+
 </style>
 {% endblock %}
 {% block content %}
@@ -44,7 +48,7 @@
                 <label for="imgloader">Upload image content:</label>
                 <input type="file" id="imgloader" name="img" accept="image/png, image/jpeg">
             </p>
-            <p><img id="preview"/></p>
+            <!-- <p><img id="preview"/></p> -->
             <p>
                 {% csrf_token %}
                 <button class="create-post-btn" type="create_post">Create post</button>
@@ -102,7 +106,6 @@
         var xhr = new XMLHttpRequest();
 
         console.log(postURL)
-        debugger;
 
         xhr.open("POST", postURL);
         xhr.setRequestHeader("Content-Type", "application/json")
@@ -122,10 +125,18 @@
         let imgloader = document.querySelector('#imgloader');
         imgloader.oninput = function() {
             let file = this.files[0];
+            let imgTag = document.querySelector('#preview');
+            // let dataUrl = URL.createObjectURL(file);
+            // imgTag.height = imgTag.width = 400;
+            // imgTag.src = dataUrl;
+            // contentInput.value = dataUrl;
             let reader = new FileReader();
             reader.onload = () => {
-                document.querySelector('#preview').src = reader.result;
-                contentInput.value = reader.result;
+                // let imgTag = document.querySelector('#preview');
+                // imgTag.height = imgTag.width = 400;
+                let result = reader.result;
+                // imgTag.src = result;
+                contentInput.value = result;
             };
             reader.readAsDataURL(file);
         }

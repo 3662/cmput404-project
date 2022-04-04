@@ -237,6 +237,30 @@
                                 newTag.className = "individual_post"
 
                                 document.getElementById("posts").appendChild(newTag);
+
+                                let headers = new Headers({ 'Authorization': 'Basic '+btoa('localserver:pwdlocal') });
+                                let likeurl = posts[i].id + '/likes';
+                                fetch(likeurl, { method: 'GET', headers: headers })
+                                    .then(resp => resp.json())
+                                    .then((likeObjects) => {
+                                        console.log(likeObjects);
+                                        let isLikedByme = false;
+                                        for (likeObject of likeObjects.items) {
+                                            if (likeObject.author.id === '{{author.get_id_url}}') {
+                                                isLikedByme = true;
+                                                break;
+                                            }
+                                        }
+                                        console.log(isLikedByme, '{{author.get_id_url}}')
+                                        
+                                        let likeButton = newTag.querySelector('#likeBtn');
+                                        if (isLikedByme) {
+                                            likeButton.value = 'Already liked';
+                                            likeButton.disabled = 'true';
+                                        } else {
+                                            likeButton.value = 'like';
+                                        }
+                                    });
                             } 
                         }
                     }

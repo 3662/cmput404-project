@@ -26,12 +26,14 @@
         color: white;
         font-size: medium;
         cursor: pointer;
+        margin-right: 20px;
     }
     #refresh-btn {
         padding: 10px 30px;
         background: rgb(230, 245, 255);
         font-size: medium;
         cursor: pointer;
+        margin-left: 20px;
     }
 
     #posts, #stream {
@@ -42,7 +44,11 @@
     #stream {}
     .stream-item {
         border: 1px dotted grey;
-        margin: 2px; 
+        margin: 30px 15px;
+        padding: 15px; 
+    }
+    main h1 {
+        text-align: center;
     }
 
 </style>
@@ -51,15 +57,19 @@
 
 {% block content %}
 <h1>My Inbox</h1>
-<div>
-    <button id="delete-btn" onclick="clearAll()">Clear all (Delete)</button>
-    <button id="refresh-btn" onclick="updatePosts()">Refresh</button>
+<div style="text-align: center;">
+    <button id="delete-btn" onclick="clearAll()">Clear All</button>
+    <button id="refresh-btn" onclick="refreshInbox()">Refresh</button>
 </div>
 <h2>Social Media Inbox</h2>
 <div id="posts"></div>
 <h2>GitHub Stream</h2>
 <div id="stream"></div>
 <script>
+    function refreshInbox() {
+        updatePosts()
+        pullGitHub();
+    }
     function pullGitHub() {
         let streamDiv = document.querySelector('#stream');
         fetch('/service/authors/{{author_id}}', {
@@ -84,7 +94,7 @@
                     let date = new Date(obj.created_at).toLocaleString();
                     try {
                         html += `<div class="stream-item">
-                            [${date}] New ${obj.type} by <a href="${githubURL}">${obj.actor.display_login}</a> on the repository: <a href="${obj.repo.url}">${obj.repo.name}</a>
+                            <pre>[${date}]</pre> New ${obj.type} by <a href="${githubURL}">${obj.actor.display_login}</a> on the repository: <a href="${obj.repo.url}">${obj.repo.name}</a>
                         </div>`;
                     } catch {}
                 }
@@ -112,19 +122,26 @@
             `);
         } else if (item.type.toLowerCase() === 'follow') {
             console.log(item)
+            // if (localStorage.getItem(item.actor.id + '') === 'true') {
+            //     return;
+            // }
             itemDiv.innerHTML = `
                 <div class="item follow">
                     <div>
-                        ${item.actor.displayName} requested to follow you.
+                        <a href="/authors/pending_action_list_view/">${item.actor.displayName} requested to follow you.</a>
                     </div>
-                    <div>
+                    
+                    <!-- <div>
                         <button id="accept-btn">Accept</button>
                         <button id="decline-btn">Decline</button>
-                    </div>
+                    </div> -->
                 </div>
             `;
-            itemDiv.querySelector('#accept-btn').addEventListener('click', () => respondToRequest(item.actor, 'PUT'));
-            itemDiv.querySelector('#decline-btn').addEventListener('click', () => respondToRequest(item.actor, 'DELETE'));
+            // itemDiv.querySelector('#accept-btn').addEventListener('click', () => {
+            //     respondToRequest(item.actor, 'PUT');            
+            //     localStorage.setItem(item.actor.id + '', 'true')
+            // });
+            // itemDiv.querySelector('#decline-btn').addEventListener('click', () => respondToRequest(item.actor, 'DELETE'));
         } else if (item.type.toLowerCase() === 'post') {
             itemDiv.innerHTML = `
                 <div class="post item">
@@ -148,21 +165,58 @@
                         : ""
                     }
                     <div>visibility: ${item.visibility}</div>
-                    <div class="comments"></div>
+                    <button onclick="seeCommenters('${item.comments}', '${item.id}')">See Comments</button>
+                    <div class="comments" id="comments-${item.id}"></div>
+                    <button onclick="seeLikers('${item.id}/posts', '${item.id}')">See Likers</button>
+                    <div class="likers" id="likers-${item.id}"></div>
                 </div>
             `;
         }
         itemsCollectionDiv.appendChild(itemDiv);
     }
 
+    function seeLikers() {
+
+    }
+
+    function seeCommenters(url, id) {
+        // example url = http://127.0.0.1:5454/authors/9de17f29c12e8f97bcbbd34cc908f1baba40658e/posts/de305d54-75b4-431b-adb2-eb6b9e546013/comments
+        fetch('/service/proxy?url=' + url, {
+            method: 'GET',
+            headers: new Headers({ 'Authorization': 'Basic ' + btoa('localserver:pwdlocal'), }),
+        }).then(r => r.json()).then((data) => {
+            let html = '';
+            for (let c of data) {
+                html += `
+                <div style="border: 1px dotted black;">
+                    <p>
+                    <img height="20px" width="20px" src="${c.author.profileImage}"/> <u>${c.author.displayName}:</u> ${c.comment}
+                    </p>
+                    <!-- <p><button onclick="">Like</button></p> -->
+                    <p>${c.published}</p>
+                </div>
+                `;
+            }
+            document.getElementById('comments-'+id).innerHTML = html;
+        })
+
+    }
+
     function respondToRequest(actor, method) {
         let foreignId = actor.id.slice(actor.id.indexOf('authors/') + 'authors/'.length) ;
+        let body = '';
+        if (method === 'PUT') {
+            body = JSON.stringify({
+                id: '{{author.get_id_url}}',
+            });
+        }
         fetch(`{{author.host}}service/authors/{{author.id}}/followers/${foreignId}`, {
             method: method,
             headers: new Headers({
                 'Authorization': 'Basic ' + btoa('localserver:pwdlocal'),
                 'X-CSRF-TOKEN': '{{csrfToken}}',
             }),
+            body,
         })
         console.log(`Attempted to '${method}' a friend request`);
     }

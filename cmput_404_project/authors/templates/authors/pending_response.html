@@ -1,11 +1,12 @@
-<!DOCTYPE html>
-<html>
+{% extends 'base.html' %}
+{% block head %}
     <head>
         <meta charset="utf-8">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
         <title>Authors</title>
-        <button class="btn"><i class="fa fa-home" ></i> <a href="/">Home</a></button>
     </head>
+{% endblock %}
+{% block content %}
     <script>
         const userNameLocal = "localserver";
         const passwordLocal = "pwdlocal";
@@ -36,7 +37,6 @@
             //console.log(putFollower.responseText);
         }
     </script>
-    <body>
         <h1>List of Pending Responses</h1>
         <div class="authors">
             {% for author in authors %}
@@ -68,5 +68,5 @@
              {% endif %}
             {% endfor %}
         </div>
-    </body>
-</html>
+
+{% endblock %}
