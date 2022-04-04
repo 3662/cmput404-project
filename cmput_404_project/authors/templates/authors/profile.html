@@ -8,9 +8,27 @@
         font-family: Arial;
     }
     .box {
-        border: 1px solid grey;
+        border: 3px solid purple;
         padding: 10px;
         margin: 5px;
+    }
+    h1.title {
+        background-color: purple;
+        color: white;
+        text-align: center;
+    }
+    div.commentBox {
+        border: 3px solid purple;
+        margin-left: 10%;
+        margin-right: 10%;
+        margin-top:  5px;
+        margin-bottom: 5px;
+        padding-top: 5px;
+        padding-bottom: 5px;
+    }
+    .markdown img {
+        width: 20%;
+        overflow: hidden;
     }
 
     .profile_image {
@@ -22,6 +40,34 @@
     .align-center {
         text-align: center;
         align-content: center;
+    }
+
+    .individual_post {
+        text-align: center;
+        border: 5px solid purple;
+        padding-top: 10px;
+        padding-bottom: 10px;
+        margin-top: 50px;
+    }
+    p.post_title {
+        padding-top: 5px;
+        padding-bottom: 5px;
+        font-size: 250%;
+        font-weight: bold;
+    }
+    p.post_title_2 {
+        padding-top: 3px;
+        padding-bottom: 3px;
+        font-size: 120%;
+        font-weight: bold;
+    }
+    a {
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+    p {
+        margin-top: 1px;
+        margin-bottom: 1px;
     }
 </style>
 {% endblock %}
@@ -72,6 +118,7 @@
 
         }
     </script>
+    <h1 class="title">Profile</h1>
     <div class="box align-center">
         <p>
             <img class="profile_image" src="{% if host_is_local %}{{author.profile_image}}{% else %}{{author.profileImage}}{% endif %}">
@@ -86,7 +133,7 @@
             <p><a href="{% url 'pending_action_list_view' %}">Pending Requests</a></p>
             <p><a href="{% url 'accounts:manage_profile' %}">Edit my profile</a></p>
             <p><a href="{% url 'friend_view' %}">My Friends</a></p>
-            <p><a href="{% url 'follower_view' %}">My Followers</a></p>
+            <p><a href="{% url 'follower_view' author.id %}">My Followers</a></p>
             <p><a href="{% url 'logout' %}">Log Out</a></p>
         {% else %}
             {% if friend_status == '1' %}
@@ -130,9 +177,55 @@
                 </div>
         {% endif %}
     </div>
-    <h1>Posts:</h1>
-    <div class="box">
-        <button>Load posts</button> TODO: implement this fetch('{{author.url}}/posts/').then(...)
+    <h1 class="title">Posts</h1>
+    {% for post in posts %}
+    <div class="individual_post">
+        <p> Published: {{post.published}} </p>
+        <p><a href="/authors/profile?url={{post.author.url}}">{{post.author.displayName}}</a></p>
+        <p> Categories: {{post.categories}} </p>
+        <p> Content Type: {{post.contentType}} {{post.content_type}} </p>
+        <p class="post_title"> {{post.title}} </p>
+        <p class="post_title_2"> Description </p>
+        <p> {{post.description}} </p>
+        <p class="post_title_2"> Content </p>
+        {% if post.contentType == 'image/png;base64' or post.contentType == 'image/jpeg;base64' or post.content_type == 'image/png;base64' or post.content_type == 'image/jpeg;base64' %}
+            <img src="{{post.content}}" alt="Image not found."/>    
+        {% elif post.contentType == 'text/markdown' %}
+            <div class="markdown">
+                {{post.content|safe}}
+            </div>
+        {% else %}
+            <p> {{post.content}} </p>
+        {% endif %}
+
+        <p>TODO: Make likes and comments work for foreign posts</p>
+
+        <div class="author">
+            <form action="{% url 'like_post1' %}" method="POST" class='PostLike' id='{{post.id}}'>
+                {% csrf_token %}
+                <input type="hidden" name="post_id" value={{post.id}}>
+                <button type="submit" class="ui button like-btn{{post.id}}">
+                {% if author in post.liked.all %}
+                        UnLike
+                {% else %}
+                        Like
+                {% endif %}
+                </button>
+            </form>
+        </div>
+        <div class="comments">
+            <!-- <p><b>Comments...</b></p> -->
+            <h2> Comments: </h2>
+            {% for comment in post.commentsSrc.comments %}
+                <div class="commentBox">
+                    <p> Published: {{comment.published}} </p> 
+                    <p> Author: {{comment.author.displayName}} </p> 
+                    <p> Comment: {{comment.comment}} </p> 
+                </div>
+            {%endfor%}
+        </div>
     </div>
+
+    {% endfor %}
 {% endif %}
 {% endblock %}

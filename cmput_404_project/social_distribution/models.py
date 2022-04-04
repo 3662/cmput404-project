@@ -105,20 +105,17 @@ class Post(models.Model):
     title = models.CharField(max_length=100, default='')
     description = models.TextField(max_length=150, default='')
     content_type = models.CharField(max_length=18, choices=CONTENT_TYPE_CHOICES, default='text/plain')
-    content = models.TextField(max_length=1000, default='')
+    content = models.TextField(max_length=10000, default='')
     categories = models.CharField(max_length=100, default='')
     count = models.IntegerField(default=0)
     published = models.DateTimeField(default=timezone.now, editable=False)
     modified = models.DateTimeField(default=timezone.now)
     visibility = models.CharField(max_length=7, choices=VISIBILITY_CHOICES, default='PUBLIC')
-    # authors = Author.objects.all()
-    # author_choices = []
-    # for person in authors:
-    #     author_choices.append((person.id, person.get_full_name()))
-    # recepient = models.UUIDField(null=True, choices=author_choices, default=None)
     unlisted = models.BooleanField(default=False)
     liked = models.ManyToManyField(Author, blank=True, related_name='likes')
     comments_id = models.UUIDField(default=uuid.uuid4, editable=False)
+    recipient = models.UUIDField(Author, null=True, default=None)
+
 
     type = 'post'
 
@@ -175,6 +172,7 @@ class Post(models.Model):
 
         data = {}
         data['type'] = 'comments'
+        data['count'] = self.count
         data['page'] = page
         data['size'] = size
         data['post'] = self.get_id_url()
