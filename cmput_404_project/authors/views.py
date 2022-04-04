@@ -249,7 +249,7 @@ def friends_view(request):
     authors =[]
     for node in ServerNode.objects.all():
         if node.is_local:
-            url = f'http://127.0.0.1:8000/service/authors/{request.user.id}/followers'
+            url = f'https://cmput-404-w22-project-group09.herokuapp.com/service/authors/{request.user.id}/followers'
             auth = ('localserver', 'pwdlocal')
             response = requests.get(url, auth=auth)
         else:
