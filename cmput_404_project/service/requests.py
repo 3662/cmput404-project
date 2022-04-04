@@ -23,7 +23,7 @@ def get_b64_server_credential(server_host: str):
             headers['Authorization'] = b64_authorization
 
     '''
-    q = ServerNode.objects.filter(host=server_host)
+    q = ServerNode.objects.filter(host__contains=server_host)
     node = None
     if q.exists():
         node = q.get()
