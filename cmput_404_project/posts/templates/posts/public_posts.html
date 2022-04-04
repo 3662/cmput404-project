@@ -222,7 +222,7 @@
 
                     getPosts.open("GET", url+"authors/"+authorId+"/posts", true);
                     getPosts.setRequestHeader("Authorization", "Basic " + btoa(userNameLocal+":"+passwordLocal));
-                    getPosts.send(); 
+                    getPosts.send();
                 });
             }
         };
