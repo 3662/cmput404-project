@@ -237,23 +237,70 @@ def follower_view1(request):
     return render(request, 'authors/follower_list1.html', {'f_qs': f_qs})
 
 
-def friends_view(request):
+def friends_view1(request):
     authors = Author.objects.all()
     return render(request, 'authors/follower_list.html', {'authors': authors})
 
 
-def friends_view1(request):
-    f_qs_list = []
-    authors = Friends.objects.filter(sender=request.user, status='accepted').values_list('receiver', flat=True)
-    for qs in authors:
-        cross_qs = Friends.objects.filter(sender=qs, receiver=request.user, status='accepted').count()
-        if cross_qs > 0:
-            f_qs_list.append(qs)
-    f_qs = Author.objects.filter(id__in=f_qs_list)
+def friends_view(request):
+######################
+# Access users from other connected nodes
+    f_qs = []
+    authors =[]
+    for node in ServerNode.objects.all():
+        if node.is_local:
+            url = f'http://127.0.0.1:8000/service/authors/{request.user.id}/followers'
+            auth = ('localserver', 'pwdlocal')
+            response = requests.get(url, auth=auth)
+        else:
+            url = f'{node.host}/service/authors/{request.user.id}/followers'
+            auth = (node.sending_username, node.sending_password)
+            response = requests.get(url, auth=auth)
+        try:
+            data = response.json()
+            authors = data['items']
+            for gauthor in authors:
+                mauthId=gauthor['id']
+                if node.is_local:
+                    url1 = f'{mauthId}/followers/{request.user.id}'
+                    auth = ('localserver', 'pwdlocal')
+                else:
+                    url1 = f'{node.host}/service/authors/{mauthId}/followers/{request.user.id}'
+                    auth = (node.sending_username, node.sending_password)
+                response1 = requests.get(url1, auth=auth)
+                try:
+                    #data1 = response1.json()
+                    if (response1.status_code == 200):
+                        if gauthor not in f_qs:
+                            f_qs.append(gauthor)
+                except Exception as e:
+                    print('Error: URL =', url)
+                    print(e)
+        except Exception as e:
+            print('Error: URL =', url)
+            print(e)
+
+
+    f_qs1 = list(set(f_qs))
     context = {
-        'authors': authors,
-        'f_qs': f_qs,
+        'authors': f_qs1,
+        'f_qs': authors,
     }
+########################
+
+
+#
+#    f_qs_list = []
+#    authors = Friends.objects.filter(sender=request.user, status='accepted').values_list('receiver', flat=True)
+#    for qs in authors:
+#        cross_qs = Friends.objects.filter(sender=qs, receiver=request.user, status='accepted').count()
+#        if cross_qs > 0:
+#            f_qs_list.append(qs)
+#    f_qs = Author.objects.filter(id__in=f_qs_list)
+#    context = {
+#        'authors': authors,
+#        'f_qs': f_qs,
+    #}
     return render(request, 'authors/friends_list.html', context)
 
 

@@ -29,7 +29,7 @@
                 'source_author_url': source_url,
             };
             //console.log(data);
-            putFollower.open("PUT", target.id+"/followers/"+source_id, true);
+            putFollower.open("PUT", target.id +"/followers/"+source_id, true);
             putFollower.setRequestHeader("Content-type", "application/json");
             putFollower.setRequestHeader("Authorization", "Basic " + btoa(userNameLocal+":"+passwordLocal));
             putFollower.setRequestHeader('X-CSRF-TOKEN', '{{csrfToken}}');
@@ -54,7 +54,7 @@
                     <form action="{% url 'pending_action_view' %}" method="POST" class='pending_action_view' id='{{author.id}}' >
                        {% csrf_token %}
                        <input type="hidden" name="user" value={{author.id}}>
-                       <button type="submit" name="accept" value="A" onclick="acceptFollow('{{author.id}}', '{{author.get_profile_url}}');">
+                       <button type="submit" name="accept" value="A" onclick="acceptFollow('{{author.id}}', '{{author.get_id_url}}');" >
                              Accept
                        </button>
                        <button type="submit" name="accept" value="R">
@@ -62,7 +62,7 @@
                        </button>
 
                     </form>
-                    <button id="accpetput" onclick="acceptFollow('{{author.id}}', '{{author.get_id_url}}');" >AcceptPut</button>
+
                 </div>
             </div>
              {% endif %}
