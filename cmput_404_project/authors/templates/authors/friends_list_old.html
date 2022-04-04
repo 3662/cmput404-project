@@ -10,13 +10,15 @@
         <h1>List of Friends</h1>
         <div class="f_qs">
             {% for qs in f_qs %}
+             {% if qs.id in authors %}
               <div class="f_qs">
-                <p> <b> Display Name: </b> {{qs.displayName}} </p>
+                <p> <b> Display Name: </b> {{qs.first_name}} {{qs.last_name}} </p>
                 <p> <b> ID: </b> {{qs.id}} </p>
                 <p> <b> Profile Image: </b> {{qs.profile_image}} </p>
                 <p> <b> URL: </b> {{qs.url}} </p>
                 <p> <b> ////////////////////////////////////////////// </b> </p>
               </div>
+             {% endif %}
             {% endfor %}
         </div>
     </body>
