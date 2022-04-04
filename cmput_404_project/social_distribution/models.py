@@ -56,6 +56,26 @@ class Author(AbstractUser):
     def __str__(self):
         return self.username
 
+class Follower(models.Model):
+
+    class Meta:
+        verbose_name = 'Follower'
+
+    # source_author follows target_author
+    # target_author always exist in local server
+    # source_author may exist in remote servers.
+    target_author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='target_author')
+    source_author_id = models.UUIDField(default=None, null=True, editable=False)
+    source_author_url = models.URLField(max_length=1000, editable=False, null=False)
+    date_created = models.DateTimeField(default=timezone.now, editable=False)
+
+    def get_detail_dict(self):
+        '''Returns a dict containing following author's information'''
+        author_q = Author.objects.filter(id=self.source_author_id)
+        if author_q.exists():
+            return author_q.get().get_detail_dict()
+        return request_detail_dict(self.source_author_url)
+
 
 class Post(models.Model):
 
@@ -85,20 +105,18 @@ class Post(models.Model):
     title = models.CharField(max_length=100, default='')
     description = models.TextField(max_length=150, default='')
     content_type = models.CharField(max_length=18, choices=CONTENT_TYPE_CHOICES, default='text/plain')
-    content = models.TextField(max_length=1000, default='')
+    content = models.TextField(max_length=10000, default='')
     categories = models.CharField(max_length=100, default='')
     count = models.IntegerField(default=0)
     published = models.DateTimeField(default=timezone.now, editable=False)
     modified = models.DateTimeField(default=timezone.now)
     visibility = models.CharField(max_length=7, choices=VISIBILITY_CHOICES, default='PUBLIC')
-    # authors = Author.objects.all()
-    # author_choices = []
-    # for person in authors:
-    #     author_choices.append((person.id, person.get_full_name()))
-    # recepient = models.UUIDField(null=True, choices=author_choices, default=None)
     unlisted = models.BooleanField(default=False)
     liked = models.ManyToManyField(Author, blank=True, related_name='likes')
     comments_id = models.UUIDField(default=uuid.uuid4, editable=False)
+    recipient = models.UUIDField(Author, null=True, default=None)
+    share_from = models.ForeignKey(Author, on_delete=models.SET_NULL, null=True, default=None, related_name='shared')
+
 
     type = 'post'
 
@@ -143,6 +161,8 @@ class Post(models.Model):
         d['published'] = self.get_iso_published()
         d['visibility'] = self.visibility
         d['unlisted'] = self.unlisted
+        if self.share_from:
+            d['share_from'] = self.share_from.get_detail_dict()
 
         return d
 
@@ -155,6 +175,7 @@ class Post(models.Model):
 
         data = {}
         data['type'] = 'comments'
+        data['count'] = self.count
         data['page'] = page
         data['size'] = size
         data['post'] = self.get_id_url()
@@ -367,8 +388,9 @@ def request_detail_dict(object_url) -> dict:
     Then, returns a parsed json data.
     '''
     o = urlparse(object_url)
+    o.scheme
     headers = {}
-    b64_basic_auth = get_b64_server_credential(o.netloc)
+    b64_basic_auth = get_b64_server_credential(f"{o.scheme}://{o.netloc}")
     if b64_basic_auth:
         headers['Authorization'] = b64_basic_auth
     res = requests.get(object_url, headers=headers)

@@ -1,13 +1,24 @@
 <!-- templates/registration/login.html -->
-{% extends 'base.html' %}
-
-{% block title %}Login{% endblock %}
-
-{% block content %}
-<h2>Log In</h2>
-<form method="post">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">Log In</button>
-</form>
-{% endblock %}
+<style>
+  h1.title {
+    background-color: purple;
+    color: white;
+    text-align: center;
+  }
+</style>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Login</title>
+</head>
+<body>
+  <h1 class="title">Social Distribution - Team 9</h1>
+  <h2>Log In</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Log In</button>
+  </form>
+</body>
+</html>

@@ -1,12 +1,24 @@
-{% extends 'base.html' %}
-
-{% block title %}Sign Up{% endblock %}
-
-{% block content %}
+<!-- templates/registration/signup.html -->
+<style>
+  h1.title {
+    background-color: purple;
+    color: white;
+    text-align: center;
+  }
+</style>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Sign Up</title>
+</head>
+<body>
+  <h1 class="title">Social Distribution - Team 9</h1>
   <h2>Sign up</h2>
   <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
     <button type="submit">Sign Up</button>
   </form>
-{% endblock %}
+</body>
+</html>

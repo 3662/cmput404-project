@@ -59,6 +59,7 @@ class PostLikesView(View):
 
         data = {}
         data['type'] = 'liked'
+        data['count'] = likes.count()
         data['items'] = [l.get_detail_dict() for l in likes]
         return data
 
@@ -118,5 +119,6 @@ class CommentLikesView(View):
 
         data = {}
         data['type'] = 'liked'
+        data['count'] = likes.count()
         data['items'] = [l.get_detail_dict() for l in likes]
         return data

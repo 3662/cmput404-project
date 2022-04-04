@@ -6,6 +6,62 @@
         <title>Authors</title>
         <button class="btn"><i class="fa fa-home" ></i> <a href="/">Home</a></button>
     </head>
+    <script>
+        const host = "127.0.0.1:8000"; //{{author.host}};
+        const userNameLocal = "localserver";
+        const passwordLocal = "pwdlocal";
+        var sender = {
+            'type': 'author',
+            'id': '{{friend.get_id_url}}',
+            'url': '{{friend.get_profile_url}}',
+            'host': '{{friend.host}}',
+            'displayName': '{{friend.get_full_name}}',
+            'github': '{{friend.github}}',
+            'profileImage': '{{friend.profile_image}}',
+        };
+        var recv = {
+            'type': 'author',
+            'id': '{{author.get_id_url}}',
+            'url': '{{author.get_profile_url}}',
+            'host': '{{author.host}}',
+            'displayName': '{{author.get_full_name}}',
+            'github': '{{author.github}}',
+            'profileImage': '{{author.profile_image}}',
+            };
+        function sendFollow(){
+            //var sBtn = document.getElementById("send")
+            var sendFollow = new XMLHttpRequest();
+            const hostServerURL = sender.host;
+            var data = {
+                "type": "follow",
+                "summary": sender.displayName + " wants to follow " + recv.displayName,
+                "actor": sender,
+                "object": recv
+                };
+            sendFollow.open("POST", recv.id+"/inbox", true);
+            sendFollow.setRequestHeader("Authorization", "Basic " + btoa(userNameLocal+":"+passwordLocal));
+            sendFollow.setRequestHeader("Content-type", "application/json");
+            sendFollow.setRequestHeader('X-CSRF-TOKEN', '{{csrfToken}}');
+            sendFollow.send(JSON.stringify(data));
+            console.log(sendFollow.responseText);
+        }
+
+        function deleteFollower(){
+            var delFollower = new XMLHttpRequest();
+            console.log("recv  ", recv);
+            console.log("sender  ", sender);
+            const hostServerURL = sender.host;
+
+            delFollower.open("DELETE", recv.id+"/followers/"+"{{friend.id}}", true);
+            //sendFollow.setRequestHeader("Content-type", "application/json");
+            // TODO: add authorization header
+            delFollower.setRequestHeader("Authorization", "Basic " + btoa(userNameLocal+":"+passwordLocal));
+            delFollower.setRequestHeader('X-CSRF-TOKEN', '{{csrfToken}}');
+            delFollower.send();
+            console.log(delFollower.responseText);
+        }
+
+    </script>
     <body>
         <h1>List of Authors</h1>
         <div class="authors">
@@ -28,28 +84,28 @@
                        {% csrf_token %}
                        <input type="hidden" name="user" value={{author.id}}>
                             {% if author.id in f_send %}
-                                <button type="submit" class="ui button like-btn{{author.id}}" disabled="disabled">
+                                <button type="submit" class="ui button like-btn{{author.id}}" disabled="disabled" id="wait">
                                    Waiting for response
                                 </button>
-                                <button type="submit" name="action_flag" value="R" class="ui button like-btn{{author.id}}")>
+                                <button type="submit" name="action_flag" value="R" class="ui button like-btn{{author.id}}") id="waitRevoke">
                                     Revoke/Withdraw
                                 </button>
                             {% else %}
                                 {% if author.id in f_accept %}
                                     {% if author.id in cross_qs %}
-                                       <button type="submit" class="ui button like-btn{{author.id}}" disabled="disabled">
+                                       <button type="submit" class="ui button like-btn{{author.id}}" disabled="disabled" id="friend">
                                           Friend
                                        </button>
                                     {% else %}
-                                       <button type="submit" class="ui button like-btn{{author.id}}" disabled="disabled">
+                                       <button type="submit" class="ui button like-btn{{author.id}}" disabled="disabled" id="following">
                                           Following
                                        </button>
                                     {% endif %}
-                                    <button type="submit" name="action_flag" value="F" class="ui button like-btn{{author.id}}")>
+                                    <button type="submit" name="action_flag" value="F" class="ui button like-btn{{author.id}}" id="revoke" onclick="deleteFollower();">
                                          Revoke/Withdraw
                                     </button>
                                 {% else %}
-                                    <button type="submit" name="action_flag" value="I" class="ui button like-btn{{author.id}}">
+                                    <button type="submit" name="action_flag" value="I" class="ui button like-btn{{author.id}}" id="send" onclick="sendFollow();">
                                        Send Follow Request
                                     </button>
                                 {% endif %}

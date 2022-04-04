@@ -1,43 +1,141 @@
 <!-- templates/authors/profile.html -->
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-  <title>Profile of {{author.get_full_name}}</title>
-  <button class="btn"><i class="fa fa-home" ></i> <a href="/">Home</a></button>
-  <style>
-      /* temporary quick styles for testing */
-      body {
-          font-family: Arial;
-      }
-      .box {
-          border: 1px solid grey;
-          padding: 10px;
-          margin: 5px;
-      }
+{% extends 'base.html' %}
+{% block head %}
+<title>Profile of {{author.get_full_name}}</title>
+<style>
+    body {
+        font-family: Arial;
+    }
+    .box {
+        border: 3px solid purple;
+        padding: 10px;
+        margin: 5px;
+    }
+    h1.title {
+        background-color: purple;
+        color: white;
+        text-align: center;
+    }
+    div.commentBox {
+        border: 3px solid purple;
+        margin-left: 10%;
+        margin-right: 10%;
+        margin-top:  5px;
+        margin-bottom: 5px;
+        padding-top: 5px;
+        padding-bottom: 5px;
+    }
+    .markdown img {
+        width: 20%;
+        overflow: hidden;
+    }
 
-      .profile_image {
-          border: 1px solid grey;
-          width: 100px;
-          height: 100px;
-      }
+    .profile_image {
+        border: 1px solid grey;
+        width: 100px;
+        height: 100px;
+    }
 
-      .align-center {
-          text-align: center;
-          align-content: center;
-      }
-  </style>
-</head>
-<body>
+    .align-center {
+        text-align: center;
+        align-content: center;
+    }
+
+    .individual_post {
+        text-align: center;
+        border: 1px solid gray;
+        border-radius: 20px;
+        padding: 20px;
+        box-shadow: 4px 7px 10px 0px grey;
+        background-color: white;
+        margin: 50px auto;
+    }
+    p.post_title {
+        padding-top: 5px;
+        padding-bottom: 5px;
+        font-size: 250%;
+        font-weight: bold;
+    }
+    p.post_title_2 {
+        padding-top: 3px;
+        padding-bottom: 3px;
+        font-size: 120%;
+        font-weight: bold;
+    }
+    a {
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+    p {
+        margin-top: 1px;
+        margin-bottom: 1px;
+    }
+</style>
+{% endblock %}
+{% block content %}
+{% if not_found %}
+    <div>Profile Not Found</div>
+{% else %}
+    <script>
+        //const hostServerURL = "https://cmput404-project-team9.herokuapp.com/";
+        const userNameLocal = "localserver";
+        const passwordLocal = "pwdlocal";
+
+        var sender = {
+            'type': 'author',
+            'id': '{{friend.get_id_url}}',
+            'url': '{{friend.get_profile_url}}',
+            'host': '{{friend.host}}',
+            'displayName': '{{friend.get_full_name}}',
+            'github': '{{friend.github}}',
+            'profileImage': '{{friend.profile_image}}',
+        };
+        var recv = {
+             'type': 'author',
+             'id': '{{author.get_id_url}}',
+             'url': '{{author.get_profile_url}}',
+             'host': '{{author.host}}',
+             'displayName': '{{author.get_full_name}}',
+             'github': '{{author.github}}',
+             'profileImage': '{{author.profile_image}}',
+        };
+        function sendFollowRequest(){
+            var sendFollow = new XMLHttpRequest();
+            console.log("recv  ", recv);
+            console.log("sender  ", sender);
+            const hostServerURL = sender.host;
+            var data = {
+                "type": "follow",
+                "summary": sender.displayName + " wants to follow " + recv.displayName,
+                "actor": sender,
+                "object": recv
+                };
+            //var btn = document.getElementById("send")
+            //btn.click(function(){
+            // });
+            sendFollow.open("POST", recv.id+"/inbox", true);
+            sendFollow.setRequestHeader("Authorization", "Basic " + btoa(userNameLocal+":"+passwordLocal));
+            sendFollow.setRequestHeader("Content-type", "application/json");
+            //sendFollow.setRequestHeader('X-CSRF-TOKEN', '{{csrfToken}}');
+            sendFollow.send(JSON.stringify(data));
+            console.log(sendFollow.responseText)
+        }
+
+        function revokeFollow(){
+            var delFollower = new XMLHttpRequest();
+            delFollower.open("DELETE", recv.id+"/followers/"+"{{friend.id}}", true);
+            delFollower.setRequestHeader("Authorization", "Basic " + btoa(userNameLocal+":"+passwordLocal));
+            delFollower.setRequestHeader('X-CSRF-TOKEN', '{{csrfToken}}');
+            delFollower.send();
+        }
+    </script>
+    <h1 class="title">Profile</h1>
     <div class="box align-center">
         <p>
-            <img class="profile_image" src="{{author.profile_image}}">
+            <img class="profile_image" src="{% if host_is_local %}{{author.profile_image}}{% else %}{{author.profileImage}}{% endif %}">
         </p>
-        <h1>{{author.get_full_name}}</h1>
-        <p><b>Username:</b> {{author}}</p>
-        <p><b>Host:</b> {{author.host}}</p>
-        <p><b>GitHub:</b> {{author.github}}</p>
+        <h1>{% if host_is_local %}{{author.get_full_name}}{% else %}{{author.displayName}}{% endif %}</h1>
+        <p><b>GitHub:</b> <a href="{{author.github}}">{{author.github}}</a></p>
     </div>
     <div class="box">
         {% if is_my_profile %}
@@ -46,17 +144,26 @@
             <p><a href="{% url 'pending_action_list_view' %}">Pending Requests</a></p>
             <p><a href="{% url 'accounts:manage_profile' %}">Edit my profile</a></p>
             <p><a href="{% url 'friend_view' %}">My Friends</a></p>
-            <p><a href="{% url 'follower_view' %}">My Followers</a></p>
+            <p><a href="{% url 'follower_view' id=author.id %}">My Followers</a></p>
             <p><a href="{% url 'logout' %}">Log Out</a></p>
         {% else %}
+            <!-- Link to followers of foreign authors -->
+            {% if host_is_local %}
+            <p><a href="{% url 'follower_view' id=author.id %}">View Followers</a></p>
+            {% else %}
+            <p><a href="{% url 'follower_view' %}?url={{author.url}}">View Followers</a></p>
+            {% endif %}
+
+
+            {% if friend_status == '1' %}{% else %}{% endif %}
             <!-- <p><a href="#">Send A Request</a> (Not implemented yet)</p> -->
             <div class="author">
                     <form action="{% url 'author_profile_view' %}" method="POST" class='author_friend_view' id='{{author.id}}' >
-                       {% csrf_token %}
-                       <input type="hidden" name="user" value={{author.id}}>
+                        {% csrf_token %}
+                        <input type="hidden" name="user" value={{author.id}}>
                             {% if author.id in f_send %}
                                 <button type="submit" class="ui button like-btn{{author.id}}" disabled="disabled">
-                                   Waiting for response
+                                    Waiting for response
                                 </button>
                                 <button type="submit" name="action_flag" value="R" class="ui button like-btn{{author.id}}")>
                                     Revoke/Withdraw
@@ -64,20 +171,20 @@
                             {% else %}
                                 {% if author.id in f_accept %}
                                     {% if author.id in cross_qs %}
-                                       <button type="submit" class="ui button like-btn{{author.id}}" disabled="disabled">
-                                          Friend
-                                       </button>
+                                        <button type="submit" class="ui button like-btn{{author.id}}" disabled="disabled">
+                                            Friend
+                                        </button>
                                     {% else %}
-                                       <button type="submit" class="ui button like-btn{{author.id}}" disabled="disabled">
-                                          Following
-                                       </button>
+                                        <button type="submit" class="ui button like-btn{{author.id}}" disabled="disabled">
+                                            Following
+                                        </button>
                                     {% endif %}
-                                    <button type="submit" name="action_flag" value="F" class="ui button like-btn{{author.id}}")>
-                                         Revoke/Withdraw
+                                    <button type="submit" name="action_flag" value="F" class="ui button like-btn{{author.id}}" onclick="revokeFollow();">
+                                            Revoke/Withdraw
                                     </button>
                                 {% else %}
-                                    <button type="submit" name="action_flag" value="I" class="ui button like-btn{{author.id}}">
-                                       Send Follow Request
+                                    <button type="submit" name="action_flag" value="I" class="ui button like-btn" id="send" onclick="sendFollowRequest()">
+                                        Send Follow Request
                                     </button>
                                 {% endif %}
                             {% endif %}
@@ -85,35 +192,55 @@
                 </div>
         {% endif %}
     </div>
-    
-    <h1>Posts:</h1>
-    <div class="box">
-        {% for post in posts %}
-            <div class="box">
-                <h2>{{post.title}}</h2>
-                <p><b> Published: </b> {{post.published}}</p>
-                {% if post.image != null and post.image != '' %}
-                    <img src="{{post.image}}"> 
-                {% endif %}
-                <p> <b> Description: </b> {{post.description}} </p>
-                <!-- <div class="author"> -->
-                    <form action="{% url 'like_post2' %}" method="POST" class='PostLike' id='{{post.id}}'>
-                       {% csrf_token %}
-                       <input type="hidden" name="post_id" value={{post.id}}>
-                       <button type="submit" class="ui button like-btn{{post.id}}">
-                        {% if sender in post.liked.all %}
-                               UnLike
-                        {% else %}
-                               Like
-                        {% endif %}
-                       </button>
-                    </form>
-                <!-- </div> -->
-                {% if is_my_profile %}
-                    <a href="{% url 'edit_post' id=post.id %}"> Edit Post</a>
-                {% endif %}
+    <h1 class="title">Posts</h1>
+    {% for post in posts %}
+    <div class="individual_post">
+        <p> Published: {{post.published}} </p>
+        <p><a href="/authors/profile?url={{post.author.url}}">{{post.author.displayName}}</a></p>
+        <p> Categories: {{post.categories}} </p>
+        <p> Content Type: {{post.contentType}} {{post.content_type}} </p>
+        <p class="post_title"> {{post.title}} </p>
+        <p class="post_title_2"> Description </p>
+        <p> {{post.description}} </p>
+        <p class="post_title_2"> Content </p>
+        {% if post.contentType == 'image/png;base64' or post.contentType == 'image/jpeg;base64' or post.content_type == 'image/png;base64' or post.content_type == 'image/jpeg;base64' %}
+            <img src="{{post.content}}" alt="Image not found."/>    
+        {% elif post.contentType == 'text/markdown' %}
+            <div class="markdown">
+                {{post.content|safe}}
             </div>
-        {% endfor %}
+        {% else %}
+            <p> {{post.content}} </p>
+        {% endif %}
+
+        <p>TODO: Make likes and comments work for foreign posts</p>
+
+        <div class="author">
+            <form action="{% url 'like_post1' %}" method="POST" class='PostLike' id='{{post.id}}'>
+                {% csrf_token %}
+                <input type="hidden" name="post_id" value={{post.id}}>
+                <button type="submit" class="ui button like-btn{{post.id}}">
+                {% if author in post.liked.all %}
+                        UnLike
+                {% else %}
+                        Like
+                {% endif %}
+                </button>
+            </form>
+        </div>
+        <div class="comments">
+            <!-- <p><b>Comments...</b></p> -->
+            <h2> Comments: </h2>
+            {% for comment in post.commentsSrc.comments %}
+                <div class="commentBox">
+                    <p> Published: {{comment.published}} </p> 
+                    <p> Author: {{comment.author.displayName}} </p> 
+                    <p> Comment: {{comment.comment}} </p> 
+                </div>
+            {%endfor%}
+        </div>
     </div>
-</body>
-</html>
+
+    {% endfor %}
+{% endif %}
+{% endblock %}

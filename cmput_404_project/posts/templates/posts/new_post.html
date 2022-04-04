@@ -1,11 +1,153 @@
-{% block title %}Create Post {% endblock %}
-{% block content %}
-<h2>Create a Post</h2>
-<form method="post">
-    <table>
-        {{ form }}
-    </table>
-    {% csrf_token %}
-    <button type="create_post">Create post</button>
-</form>
+{% extends 'base.html' %}
+{% block head %}
+<title>Create A New Post</title>
+<style>
+    main {
+        background-color: thistle;
+    }
+    .box {
+        border: 1px solid gray;
+        border-radius: 20px;
+        padding: 20px;
+        width: fit-content;
+        box-shadow: 4px 7px 10px 0px grey;
+        margin: auto;
+        background-color: white;
+    }
+    textarea {
+        height: 40px; /* Initial height */
+    }
+    .create-post-btn {
+        padding: 10px 100px;
+        font-size: large;
+        margin: 0px 20px;
+        cursor: pointer;
+        color: white;
+        background-color: purple;
+    }
+    /* .table {
+        margin-left: auto;
+        margin-right: auto;
+    } */
+
+    #preview {
+        object-fit: contain;
+    }
+
+</style>
 {% endblock %}
+{% block content %}
+<div class="box">
+    <h2 style="text-align: center;">Create a Post</h2>
+    <form id="form">
+        <table class="table">
+            {{ form }}
+        </table>
+        <div class="bottom-wrapper">
+            <p style="text-align: center;">
+                <label for="imgloader">Upload image content:</label>
+                <input type="file" id="imgloader" name="img" accept="image/png, image/jpeg">
+            </p>
+            <!-- <p><img id="preview"/></p> -->
+            <p>
+                {% csrf_token %}
+                <button class="create-post-btn" type="create_post">Create post</button>
+
+            </p>
+
+        </div>
+    </form>
+</div>
+
+<script>
+    const hostServerURL = "/service/";
+    const userNameLocal = "localserver";
+    const passwordLocal = "pwdlocal";
+
+    function init() {
+        document.getElementById("form").reset();
+        document.getElementById("form").addEventListener("submit", handler);
+
+        console.log("{{author_id}}")
+    }
+
+    const getFormJSON = (form) => {
+        const data = new FormData(form);
+        return Array.from(data.keys()).reduce((result, key) => {
+            result[key] = data.get(key);
+            return result;
+        }, {});
+    };
+
+    // Handles POST requests for form comments
+    const handler = (event) => {
+        console.log("POSTing");
+        event.preventDefault();
+
+        // Retrieves the form element that was submitted and transform it into a JSON object
+        var JSONform = getFormJSON(event.target);
+        
+        console.log(JSONform);
+
+        var newPost = {
+            'title': JSONform.title,
+            'description': JSONform.description,
+            'content_type': JSONform.content_type,
+            'content': JSONform.content,
+            'image': JSONform.image,
+            'categories': JSONform.categories,
+            'visibility': JSONform.visibility,
+        }
+
+        console.log(newPost);
+
+        var postURL = hostServerURL+"authors/"+"{{author_id}}"+"/posts";
+
+        var xhr = new XMLHttpRequest();
+
+        console.log(postURL)
+
+        xhr.open("POST", postURL);
+        xhr.setRequestHeader("Content-Type", "application/json")
+        xhr.setRequestHeader("Authorization", "Basic " + btoa(userNameLocal+":"+passwordLocal));
+        xhr.setRequestHeader('X-CSRFToken', '{{ csrf_token }}')
+
+        JSONform['category'] = "trash";
+
+        xhr.send(JSON.stringify(newPost));
+
+        init();
+        history.back()
+    }
+
+    function createUI() {
+        let contentInput = document.querySelector('textarea[name="content"]');
+        let imgloader = document.querySelector('#imgloader');
+        imgloader.oninput = function() {
+            let file = this.files[0];
+            let imgTag = document.querySelector('#preview');
+            // let dataUrl = URL.createObjectURL(file);
+            // imgTag.height = imgTag.width = 400;
+            // imgTag.src = dataUrl;
+            // contentInput.value = dataUrl;
+            let reader = new FileReader();
+            reader.onload = () => {
+                // let imgTag = document.querySelector('#preview');
+                // imgTag.height = imgTag.width = 400;
+                let result = reader.result;
+                // imgTag.src = result;
+                contentInput.value = result;
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    window.addEventListener('load', event => {
+        init();
+        createUI();
+    });
+
+</script>
+
+{% endblock %}
+

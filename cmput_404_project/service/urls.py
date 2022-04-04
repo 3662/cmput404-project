@@ -20,4 +20,6 @@ urlpatterns = [
     path('authors/<uuid:author_id>/posts/<uuid:post_id>/comments/<uuid:comment_id>/likes', views.CommentLikesView.as_view(), name='comment_likes'),
     path('authors/<uuid:author_id>/inbox', views.InboxView.as_view(), name='inbox'),
     # path('authors/<uuid:author_id>/inbox/', views.InboxView.as_view(), name='inbox'),
+    path('proxy', views.ProxyView.as_view(), name='proxy'),
 ]
+
