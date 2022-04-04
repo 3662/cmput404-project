@@ -25,7 +25,7 @@ Retrieve and display a single author
 """
 def display_author(request, id):
     author = Author.objects.get(id=id)
-    posts = Post.objects.filter(author=author).order_by('-published')
+    posts = Post.objects.filter(author=author, visibility='PUBLIC').order_by('-published')
     sender = Author.objects.get(username=request.user)
     s_qs = Friends.objects.filter(sender=sender, status='send').values_list('receiver', flat=True)
     r_qs = Friends.objects.filter(sender=sender, status='accepted').values_list('receiver', flat=True)

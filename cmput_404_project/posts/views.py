@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from social_distribution.models import Author, Post, Comment, Like
+from social_distribution.models import Author, Post, Comment, Like, Friends
 from django.http import HttpResponse
 from .forms import PostForm, PostLike, PrivatePostForm, CommentForm
 from django.utils import timezone
@@ -81,19 +81,47 @@ def delete_post(request, id):
 
     return redirect("/")
 
+def create_post(form, author, visibility='PUBLIC', recipient=''):
+    obj = form.save(commit=False)  
+    obj.author = author
+    obj.visibility = visibility
+    if recipient is not '':
+        obj.recipient = recipient
+
+    # TODO set proper URls
+    obj.source = ""
+    obj.origin = ""
+
+    obj.save()
+
+def get_friends_list(request):
+    f_qs_list = []
+    friends_list = []
+    authors = Friends.objects.filter(sender=request.user, status='accepted').values_list('receiver', flat=True)
+    for qs in authors:
+        cross_qs = Friends.objects.filter(sender=qs, receiver=request.user, status='accepted').count()
+        if cross_qs > 0:
+            f_qs_list.append(qs)
+    f_qs = Author.objects.filter(id__in=f_qs_list)
+    for qs in f_qs:
+        if qs.id in authors:
+            friends_list.append(qs.id)
+    print(friends_list)
+    return friends_list
+
 def new_post(request):
     if request.method == "POST":
         form = PostForm(request.POST)
-        obj = form.save(commit=False)                
-        obj.author = request.user
-        obj.visibility = form.cleaned_data["visibility"]
+        form.save(commit=False)
+        if form.cleaned_data["visibility"] == "FRIENDS":
+            friends = get_friends_list(request)
+            for friend in friends:
+                form = PostForm(request.POST)
+                form.save(commit=False)
+                create_post(form, request.user, 'PRIVATE', friend)
 
-        # TODO set proper URls
-        obj.source = ""
-        obj.origin = ""
-
-        obj.save()
-
+        else:
+            create_post(form, request.user, form.cleaned_data["visibility"])
         return redirect("/")
     else:
         form = PostForm()
@@ -103,19 +131,7 @@ def new_post(request):
 def new_private_post(request):
     if request.method == "POST":
         form = PrivatePostForm(request.POST)
-        if not form.is_valid():
-            print('ERRORS', form.errors)
-        obj = form.save(commit=False)  
-        obj.author = request.user
-        obj.visibility = 'PRIVATE'
-        obj.recipient = request.POST.get('recipient')
-        print('NOW', obj.recipient)
-
-        # TODO set proper URls
-        obj.source = ""
-        obj.origin = ""
-
-        obj.save()
+        create_post(form, request.user, 'PRIVATE', request.POST.get('recipient'))
 
         return redirect("/")
     else:
